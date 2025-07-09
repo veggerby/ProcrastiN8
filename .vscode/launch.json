@@ -4,6 +4,17 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        {
+            "name": ".NET Core Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/test/ProcrastiN8.Tests/bin/Debug/net9.0/ProcrastiN8.Tests.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/test/ProcrastiN8.Tests/",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
     ],
     "compounds": [
        {

@@ -7,7 +7,7 @@
 			"file": "${workspaceFolder}/ProcrastiN8.sln",
 			"group": "build",
 			"problemMatcher": [],
-			"label": "dotnet: build ProcrastiN8.sln"
+			"label": "build"
 		}
 	]
 }
