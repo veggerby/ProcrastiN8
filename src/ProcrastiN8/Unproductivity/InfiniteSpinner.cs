@@ -13,7 +13,18 @@ public static class InfiniteSpinner
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.InfiniteSpinner");
 
-    private static readonly CommentaryService CommentaryService = new();
+    private static CommentaryService CommentaryService = new();
+
+    // Default tick rate for infinite spinner (ms)
+    private const int DefaultTickRateMs = 500;
+
+    /// <summary>
+    /// Allows test code to inject a custom CommentaryService for mocking or fault injection.
+    /// </summary>
+    public static void SetCommentaryService(CommentaryService service)
+    {
+        CommentaryService = service ?? throw new ArgumentNullException(nameof(service));
+    }
 
     /// <summary>
     /// Starts an infinite spinner loop that chews CPU cycles, emits fake activity, and accomplishes nothing.
@@ -24,7 +35,7 @@ public static class InfiniteSpinner
         CancellationToken cancellationToken = default)
     {
         logger ??= new DefaultLogger();
-        tickRate ??= TimeSpan.FromMilliseconds(500);
+        tickRate ??= TimeSpan.FromMilliseconds(DefaultTickRateMs);
 
         using var activity = ActivitySource.StartActivity("InfiniteSpinner.Spin", ActivityKind.Internal);
         activity?.SetTag("spinner.tickRate.ms", tickRate.Value.TotalMilliseconds);

@@ -6,6 +6,9 @@ namespace ProcrastiN8.Services;
 
 public class DelayService
 {
+    // Increment value for delay metric
+    private const int DelayIncrement = 1;
+
     public async Task DelayWithProcrastinationAsync(string reason, TimeSpan delay, CancellationToken ct)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -18,7 +21,7 @@ public class DelayService
             (long)stopwatch.Elapsed.TotalSeconds,
             KeyValuePair.Create<string, object?>("reason", reason));
 
-        ProcrastinationMetrics.DelaysTotal.Add(1);
+        ProcrastinationMetrics.DelaysTotal.Add(DelayIncrement);
         ProcrastinationMetrics.SnoozeDurations.Record(stopwatch.Elapsed.TotalSeconds);
     }
 }

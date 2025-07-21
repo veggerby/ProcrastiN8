@@ -4,6 +4,9 @@ namespace ProcrastiN8.Services;
 
 public class RetryService
 {
+    // Increment value for retry metric
+    private const int RetryIncrement = 1;
+
     public async Task<T> RetryUntilDone<T>(Func<Task<T>> action, int maxAttempts)
     {
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
@@ -14,7 +17,7 @@ public class RetryService
             }
             catch
             {
-                ProcrastinationMetrics.RetryAttempts.Add(1);
+                ProcrastinationMetrics.RetryAttempts.Add(RetryIncrement);
                 await Task.Delay(500);
             }
         }

@@ -1,0 +1,107 @@
+name: CI & Release
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+      - name: Restore dependencies
+        run: dotnet restore ProcrastiN8.sln
+      - name: Build
+        run: dotnet build ProcrastiN8.sln --configuration Release --no-restore
+      - name: Test
+        run: dotnet test ProcrastiN8.sln --no-build --verbosity normal --collect:"XPlat Code Coverage"
+      - name: Publish Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test/ProcrastiN8.Tests/TestResults
+
+  pack:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v1
+        with:
+          versionSpec: '5.x'
+      - name: Run GitVersion
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v1
+      - name: Restore dependencies
+        run: dotnet restore ProcrastiN8.sln
+      - name: Build
+        run: dotnet build ProcrastiN8.sln --configuration Release --no-restore
+      - name: Fetch GitHub Release Notes
+        id: get_release_notes
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = process.env.GITHUB_REF.split('/').pop();
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: tag
+            });
+            core.setOutput('body', release.body || '');
+      - name: Write release notes to file
+        if: startsWith(github.ref, 'refs/tags/')
+        run: echo "$RELEASE_NOTES" > RELEASE_NOTES.txt
+        env:
+          RELEASE_NOTES: ${{ steps.get_release_notes.outputs.body || 'No release notes provided.' }}
+      - name: Pack
+        run: |
+          VERSION_SUFFIX=""
+          RELEASE_NOTES_ARG=""
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            VERSION_SUFFIX="-pr${{ github.event.pull_request.number }}.${{ github.run_number }}"
+          fi
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            RELEASE_NOTES_ARG="/p:PackageReleaseNotes=\"$(cat RELEASE_NOTES.txt)\""
+          fi
+          dotnet pack src/ProcrastiN8/ProcrastiN8.csproj --configuration Release --no-build --output ./nupkg /p:Version=${{ steps.gitversion.outputs.nuGetVersionV2 }}$VERSION_SUFFIX $RELEASE_NOTES_ARG
+      - name: Upload NuGet Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: ./nupkg
+
+  publish:
+    needs: pack
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+      - name: Download NuGet Package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: ./nupkg
+      - name: Publish to NuGet.org
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}

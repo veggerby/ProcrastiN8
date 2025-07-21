@@ -1,0 +1,13 @@
+mode: ContinuousDelivery
+branches:
+  main:
+    regex: ^main$
+    increment: Patch
+    is-mainline: true
+  feature:
+    regex: ^features?[/-]
+    increment: Minor
+    is-mainline: false
+ignore:
+  sha: []
+commit-message-incrementing: Enabled

@@ -14,6 +14,9 @@ public static class BusyWaitSimulator
 
     private static readonly CommentaryService CommentaryService = new();
 
+    // Minimum milliseconds between commentary logs during busy wait
+    private const long CommentarySourceBusyWait = 1;
+
     /// <summary>
     /// Runs a CPU-bound busy-wait loop for the given duration or until cancelled.
     /// </summary>
@@ -43,10 +46,10 @@ public static class BusyWaitSimulator
                 {
                     CommentaryService.LogRandomRemark();
 
-                    ProcrastinationMetrics.CommentaryTotal.Add(1,
+                    ProcrastinationMetrics.CommentaryTotal.Add(CommentarySourceBusyWait,
                         KeyValuePair.Create<string, object?>("source", "BusyWaitSimulator"));
 
-                    ProcrastinationMetrics.ExcusesGenerated.Add(1,
+                    ProcrastinationMetrics.ExcusesGenerated.Add(CommentarySourceBusyWait,
                         KeyValuePair.Create<string, object?>("category", "cpu-bound-delay"));
                 }
 

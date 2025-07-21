@@ -1,9 +1,11 @@
-# Contributing to Shardis
+# 🐢 Contributing to ProcrastiN8
 
-First off — thank you for considering contributing to Shardis!
-This project exists because of people like you who want to build better systems, not just bigger ones.
+First off — **thank you** for considering a contribution to **ProcrastiN8**.
+This project exists because of people like you who believe in building *better* systems — not just *bigger* ones.
 
-Shardis is still early in its journey, and every contribution — big or small — makes a real difference.
+ProcrastiN8 is still in its early stages (deliberately so), and **every contribution matters** — whether it's a bug fix, feature idea, doc update, or philosophical debate about laziness-as-a-service™.
+
+Let’s build the most overengineered productivity avoidance toolkit the world never needed.
 
 ---
 
@@ -45,8 +47,8 @@ Please follow these basic guidelines to keep everything smooth:
 ## 🛠 Local Setup
 
 - Clone the repository.
-- Build the solution (`Shardis.sln`) using .NET 8 or later.
-- Run the tests (`Shardis.Tests`) to make sure everything passes before you push.
+- Build the solution (`ProcrastiN8.sln`) using .NET 8 or later.
+- Run the tests (`ProcrastiN8.Tests`) to make sure everything passes before you push.
 
 ```bash
 dotnet build
@@ -59,24 +61,24 @@ dotnet test
 
 | Folder | Purpose |
 |:-------|:--------|
-| `/Shardis` | Core library: routing, models, persistence abstractions |
-| `/Shardis.Tests` | Unit and integration tests |
-| `/SampleApp` | Example usage (coming soon) |
+| `/src/ProcrastiN8` | Core library: quantum procrastination, lazy tasks, metrics, services |
+| `/test/ProcrastiN8.Tests` | Unit and integration tests |
+| `/docs` | Documentation |
 
 ---
 
 ## 🛡️ Code of Conduct
 
 Be kind.
-Shardis welcomes contributors from all backgrounds and skill levels. No toxicity, no gatekeeping. We’re here to build together.
+ProcrastiN8 welcomes contributors from all backgrounds and skill levels. No toxicity, no gatekeeping. We’re here to build together.
 
 ---
 
 ## 📢 Final Thoughts
 
-Shardis isn't trying to reinvent databases.
-It’s about making scalable design accessible to every .NET developer, without the usual pain.
+ProcrastiN8 isn't trying to reinvent productivity tools.
+It’s about making creative procrastination accessible to every .NET developer, with a bit of quantum weirdness and humor.
 
 Thank you for helping make that happen.
 
-— The Shardis Team
+— The ProcrastiN8 Team

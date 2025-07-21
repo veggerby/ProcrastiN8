@@ -11,11 +11,30 @@ namespace ProcrastiN8.JustBecause;
 /// </summary>
 public sealed class QuantumEntanglementRegistry<T>
 {
-    private readonly ConcurrentBag<QuantumPromise<T>> _entangled = new();
+    // Holds all entangled quantum promises
+    private readonly ConcurrentBag<QuantumPromise<T>> _entangled = [];
 
+    // Random number generator for all quantum effects
     private static readonly Random _rng = new();
+    // Activity source for tracing entanglement operations
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumEntanglement");
 
+    // Minimum delay (ms) for ripple collapse propagation
+    private const int RippleCollapseMinDelayMs = 300;
+    // Maximum delay (ms) for ripple collapse propagation
+    private const int RippleCollapseMaxDelayMs = 1300;
+    // Probability that a ripple collapse will occur (50%)
+    private const double RippleCollapseProbability = 0.5;
+    // Minimum delay (ms) for ripple entropy propagation
+    private const int RippleEntropyMinDelayMs = 100;
+    // Maximum delay (ms) for ripple entropy propagation
+    private const int RippleEntropyMaxDelayMs = 700;
+    // Probability that a ripple entropy event will occur (25%)
+    private const double RippleEntropyProbability = 0.25;
+
+    /// <summary>
+    /// Adds a quantum promise to the entangled set.
+    /// </summary>
     public void Entangle(QuantumPromise<T> quantum)
     {
         if (quantum == null)
@@ -53,7 +72,7 @@ public sealed class QuantumEntanglementRegistry<T>
 
             foreach (var other in array.Where(p => !ReferenceEquals(p, chosen)))
             {
-                RippleCollapse(other, cancellationToken);
+                QuantumEntanglementRegistry<T>.RippleCollapse(other, cancellationToken);
             }
 
             sw.Stop();
@@ -67,22 +86,25 @@ public sealed class QuantumEntanglementRegistry<T>
         {
             activity?.SetTag("collapse.status", "failure");
             activity?.SetTag("collapse.error", ex.GetType().Name);
-            RippleEntropy(array, cancellationToken);
+            QuantumEntanglementRegistry<T>.RippleEntropy(array, cancellationToken);
             throw;
         }
     }
 
-    private void RippleCollapse(QuantumPromise<T> other, CancellationToken cancellationToken)
+    /// <summary>
+    /// Attempts to collapse another promise after a random delay, with a chance of success.
+    /// </summary>
+    private static void RippleCollapse(QuantumPromise<T> other, CancellationToken cancellationToken)
     {
         QuantumEntanglementMetrics.RippleAttempts.Add(1);
 
         Task.Run(async () =>
         {
-            await Task.Delay(_rng.Next(300, 1300), cancellationToken);
+            await Task.Delay(_rng.Next(RippleCollapseMinDelayMs, RippleCollapseMaxDelayMs), cancellationToken);
 
             try
             {
-                if (_rng.NextDouble() < 0.5)
+                if (_rng.NextDouble() < RippleCollapseProbability)
                 {
                     await other.ObserveAsync(cancellationToken);
                 }
@@ -94,16 +116,19 @@ public sealed class QuantumEntanglementRegistry<T>
         }, cancellationToken);
     }
 
-    private void RippleEntropy(IEnumerable<QuantumPromise<T>> others, CancellationToken cancellationToken)
+    /// <summary>
+    /// Attempts to propagate entropy to all promises after a random delay, with a chance of success.
+    /// </summary>
+    private static void RippleEntropy(IEnumerable<QuantumPromise<T>> others, CancellationToken cancellationToken)
     {
         foreach (var promise in others)
         {
             Task.Run(async () =>
             {
-                await Task.Delay(_rng.Next(100, 700), cancellationToken);
+                await Task.Delay(_rng.Next(RippleEntropyMinDelayMs, RippleEntropyMaxDelayMs), cancellationToken);
                 try
                 {
-                    if (_rng.NextDouble() < 0.25)
+                    if (_rng.NextDouble() < RippleEntropyProbability)
                     {
                         QuantumEntanglementMetrics.RippleAttempts.Add(1);
                         await promise.ObserveAsync(cancellationToken);
@@ -117,5 +142,8 @@ public sealed class QuantumEntanglementRegistry<T>
         }
     }
 
+    /// <summary>
+    /// Returns a string representation of the entangled set.
+    /// </summary>
     public override string ToString() => $"[Entangled Set: {_entangled.Count} promises]";
 }

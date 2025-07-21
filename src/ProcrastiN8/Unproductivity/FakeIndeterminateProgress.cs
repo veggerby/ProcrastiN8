@@ -11,11 +11,22 @@ namespace ProcrastiN8.Unproductivity;
 /// </summary>
 public static class FakeIndeterminateProgress
 {
+    // Activity source for tracing fake progress
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.FakeIndeterminateProgress");
 
+    // Random number generator for progress simulation
     private static readonly Random Rng = new();
+    // Service for generating excuses (used in progress commentary)
     private static readonly ExcuseService ExcuseService = new();
+    // Service for logging random commentary
     private static readonly CommentaryService CommentaryService = new();
+
+    // Default update interval for fake indeterminate progress (ms)
+    private const int DefaultUpdateIntervalMs = 800;
+    // Minimum minutes before fake progress can complete
+    private const int MinCompletionMinutes = 4;
+    // Maximum minutes before fake progress can complete
+    private const int MaxCompletionMinutes = 15;
 
     /// <summary>
     /// Begins simulating misleading progress with regressions, stalling, and eventual surprise completion.
@@ -28,8 +39,8 @@ public static class FakeIndeterminateProgress
         CancellationToken cancellationToken = default)
     {
         logger ??= new DefaultLogger();
-        updateInterval ??= TimeSpan.FromMilliseconds(800);
-        minTimeBeforeCompletion ??= TimeSpan.FromMinutes(Rng.Next(4, 16)); // 4–15 minutes
+        updateInterval ??= TimeSpan.FromMilliseconds(DefaultUpdateIntervalMs);
+        minTimeBeforeCompletion ??= TimeSpan.FromMinutes(Rng.Next(MinCompletionMinutes, MaxCompletionMinutes + 1)); // 4–15 minutes
 
         using var activity = ActivitySource.StartActivity("FakeIndeterminateProgress.Show", ActivityKind.Internal);
         activity?.SetTag("progress.style", "infinite-windows-style");
@@ -50,12 +61,12 @@ public static class FakeIndeterminateProgress
                 if (!stalled)
                 {
                     // Simulate progress with random jumps and occasional regressions
-                    double delta = Rng.NextDouble() * 10;
-                    bool regress = Rng.Next(0, 10) == 0;
+                    double delta = Rng.NextDouble() * 10; // Random progress increment (0-10%)
+                    bool regress = Rng.Next(0, 10) == 0; // 10% chance to regress
 
                     if (regress && progress > 10)
                     {
-                        progress -= Rng.NextDouble() * 5;
+                        progress -= Rng.NextDouble() * 5; // Random regression (0-5%)
                     }
                     else
                     {
@@ -111,8 +122,6 @@ public static class FakeIndeterminateProgress
         {
             logger.Error(ex, "[FakeProgress] Unexpected error while faking progress.");
             ProcrastinationMetrics.TasksNeverDone.Add(1);
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            throw;
         }
     }
 }
