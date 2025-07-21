@@ -5,9 +5,12 @@ namespace ProcrastiN8.Services;
 
 public class CommentaryService
 {
-    public void LogRandomRemark(IProcrastiLogger? logger = null)
+    // Increment value for commentary metric
+    private const int CommentaryIncrement = 1;
+
+    public virtual void LogRandomRemark(IProcrastiLogger? logger = null)
     {
-        ProcrastinationMetrics.CommentaryTotal.Add(1);
+        ProcrastinationMetrics.CommentaryTotal.Add(CommentaryIncrement);
         CommentaryGenerator.LogRandomCommentary(logger);
     }
 }

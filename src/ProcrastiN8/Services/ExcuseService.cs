@@ -6,10 +6,12 @@ namespace ProcrastiN8.Services;
 public class ExcuseService
 {
     private static readonly string[] Categories = { "existential", "technical debt", "calendar", "weather" };
+    // Increment value for excuse metric
+    private const int ExcuseIncrement = 1;
 
     public string GenerateExcuse(string category = "existential")
     {
-        ProcrastinationMetrics.ExcusesGenerated.Add(1,
+        ProcrastinationMetrics.ExcusesGenerated.Add(ExcuseIncrement,
             KeyValuePair.Create<string, object?>("category", category));
 
         return ExcuseGenerator.GetRandomExcuse();

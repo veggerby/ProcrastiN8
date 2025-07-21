@@ -2,6 +2,9 @@ namespace ProcrastiN8.Common;
 
 public static class ExcuseGenerator
 {
+    // The year used in API-related excuses
+    private const int ApiYear = 2017;
+
     private static readonly string[] Openings =
     [
         "Still",
@@ -33,7 +36,7 @@ public static class ExcuseGenerator
     [
         "the backlog",
         "my motivation",
-        "an API from 2017",
+        $"an API from {ApiYear}",
         "a vague requirement",
         "inner demons",
         "a sprint goal",

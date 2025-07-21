@@ -4,37 +4,61 @@ namespace ProcrastiN8.Metrics;
 
 public static class ProcrastinationMetrics
 {
-    private static readonly Meter Meter = new("ProcrastiN8.Core", "1.0.0");
+    /// <summary>
+    /// Version number for ProcrastinationMetrics.
+    /// </summary>
+    private const double ProcrastinationMetricsVersion = 1.0;
 
-    // Total time spent procrastinating (in seconds)
+    /// <summary>
+    /// The OpenTelemetry Meter for ProcrastinationMetrics.
+    /// </summary>
+    private static readonly Meter Meter = new("ProcrastiN8.Core", $"{ProcrastinationMetricsVersion}.0");
+
+    /// <summary>
+    /// Counts the total time spent procrastinating (in seconds).
+    /// </summary>
     public static readonly Counter<long> TotalTimeProcrastinated =
         Meter.CreateCounter<long>("procrastin8_total_time_seconds", description: "Total time spent procrastinating");
 
-    // Total number of generated excuses
+    /// <summary>
+    /// Counts the total number of generated excuses.
+    /// </summary>
     public static readonly Counter<long> ExcusesGenerated =
         Meter.CreateCounter<long>("procrastin8_excuses_total", description: "Total number of excuses generated");
 
-    // Number of delayed tasks
+    /// <summary>
+    /// Counts the total number of task delays.
+    /// </summary>
     public static readonly Counter<long> DelaysTotal =
         Meter.CreateCounter<long>("procrastin8_delays_total", description: "Total number of task delays");
 
-    // Histogram of snooze durations (in seconds)
+    /// <summary>
+    /// Records the duration of task snoozes (in seconds).
+    /// </summary>
     public static readonly Histogram<double> SnoozeDurations =
         Meter.CreateHistogram<double>("procrastin8_snooze_duration_seconds", description: "Duration of task snoozes");
 
-    // Number of witty commentary messages emitted
+    /// <summary>
+    /// Counts the total number of commentary remarks logged.
+    /// </summary>
     public static readonly Counter<long> CommentaryTotal =
         Meter.CreateCounter<long>("procrastin8_commentary_total", description: "Total number of commentary remarks logged");
 
-    // Number of retry attempts before acting
+    /// <summary>
+    /// Counts the number of retries before performing a task.
+    /// </summary>
     public static readonly Counter<long> RetryAttempts =
         Meter.CreateCounter<long>("procrastin8_retry_attempts_total", description: "Number of retries before performing a task");
 
-    // Tasks eventually completed
+    /// <summary>
+    /// Counts the total number of tasks completed.
+    /// </summary>
     public static readonly Counter<long> TasksCompleted =
         Meter.CreateCounter<long>("procrastin8_tasks_completed_total", description: "Total number of tasks completed");
 
-    // Tasks that were never completed
+    /// <summary>
+    /// Counts the number of tasks that were completely abandoned.
+    /// </summary>
     public static readonly Counter<long> TasksNeverDone =
         Meter.CreateCounter<long>("procrastin8_tasks_never_done_total", description: "Tasks that were completely abandoned");
 }

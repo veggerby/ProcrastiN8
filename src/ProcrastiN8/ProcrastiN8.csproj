@@ -1,9 +1,46 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <!-- Target & language settings -->
+    <TargetFrameworks>net6.0;net8.0;net9.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- Packaging metadata -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>ProcrastiN8</PackageId>
+    <Authors>Jesper Veggerby</Authors>
+    <Company>ProcrastiN8</Company>
+    <Description>Absurdly elaborate .NET tools for stalling, faking progress, and pretending to be productive. Satirical, but production-grade.</Description>
+    <PackageTags>procrastination;productivity;quantum;humor;dotnet;library;fakeprogress;chaosengineering;satire</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/veggerby/ProcrastiN8</PackageProjectUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <Version Condition="'$(Version)' == ''">0.0.0-dev</Version> <!-- Default if not set -->
+    <PackageReleaseNotes Condition="'$(PackageReleaseNotes)' == ''">Built by procrastination, driven by satire.</PackageReleaseNotes>
+
+    <!-- Repository info -->
+    <RepositoryUrl>https://github.com/veggerby/ProcrastiN8</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+    <!-- Symbols & source -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <IncludeSource>true</IncludeSource>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EnableSourceLink>true</EnableSourceLink>
+
+    <!-- CI/CD & build determinism -->
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <Deterministic>true</Deterministic>
+
+    <!-- Legal -->
+    <Copyright>Copyright © 2025 Jesper Veggerby</Copyright>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="icon.png" Pack="true" PackagePath="" />
+  </ItemGroup>
 
 </Project>

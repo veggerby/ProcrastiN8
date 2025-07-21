@@ -26,6 +26,9 @@ public static class FakeProgress
         "Almost there. Probably.",
     };
 
+    // Default step duration for fake progress (ms)
+    private const int DefaultStepDurationMs = 750;
+
     /// <summary>
     /// Fakes a sequence of progress updates, optionally configurable in length and pacing.
     /// </summary>
@@ -36,7 +39,7 @@ public static class FakeProgress
         CancellationToken cancellationToken = default)
     {
         logger ??= new DefaultLogger();
-        stepDuration ??= TimeSpan.FromMilliseconds(750);
+        stepDuration ??= TimeSpan.FromMilliseconds(DefaultStepDurationMs);
         steps ??= FakeStages.Length;
 
         using var activity = ActivitySource.StartActivity("FakeProgress.Show", ActivityKind.Internal);

@@ -10,12 +10,14 @@ namespace ProcrastiN8.LazyTasks;
 /// </summary>
 public static class DelayedExecution
 {
-    private static readonly Random Rng = new();
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.LazyTasks.DelayedExecution");
 
     private static readonly ExcuseService ExcuseService = new();
     private static readonly DelayService DelayService = new();
     private static readonly CommentaryService CommentaryService = new();
+
+    // Minimum allowed delay for delayed execution (ms)
+    private const int MinDelayMs = 500;
 
     /// <summary>
     /// Executes a synchronous action after a delay, possibly with a snooze buffer and existential commentary.
@@ -27,7 +29,7 @@ public static class DelayedExecution
         IProcrastiLogger? logger = null,
         CancellationToken cancellationToken = default)
     {
-        if (delay < TimeSpan.FromMilliseconds(500))
+        if (delay < TimeSpan.FromMilliseconds(MinDelayMs))
         {
             throw new ArgumentOutOfExcusesException("Whoa, not so fast. This is ProcrastiN8, not ExecuteNow.");
         }
@@ -79,7 +81,7 @@ public static class DelayedExecution
         IProcrastiLogger? logger = null,
         CancellationToken cancellationToken = default)
     {
-        if (delay < TimeSpan.FromMilliseconds(500))
+        if (delay < TimeSpan.FromMilliseconds(MinDelayMs))
         {
             throw new ArgumentOutOfExcusesException("This task is trying way too hard to be on time.");
         }

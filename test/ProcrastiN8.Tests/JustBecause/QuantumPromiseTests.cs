@@ -1,10 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-
 using ProcrastiN8.JustBecause;
-
 using Xunit;
+using AwesomeAssertions;
 
 namespace ProcrastiN8.Tests.JustBecause
 {
@@ -18,15 +17,24 @@ namespace ProcrastiN8.Tests.JustBecause
             await Task.Delay(1100); // ensure not too early
 
             // Act
-            var result = await promise.ObserveAsync();
+            int? result = null;
+            Exception? exception = null;
+            try { result = await promise.ObserveAsync(); } catch (Exception ex) { exception = ex; }
 
             // Assert
-            result.Should().Be(123);
-            promise.ToString().Should().Contain("resolved");
+            if (exception is not null)
+            {
+                exception.Should().BeOfType<CollapseToVoidException>("quantum promises may collapse to void");
+            }
+            else
+            {
+                result.Should().Be(123, "the quantum promise should resolve to the expected value");
+                promise.ToString().Should().Contain("resolved");
+            }
         }
 
         [Fact]
-        public async Task ObserveAsync_ThrowsTooEarly()
+        public async Task ObserveAsync_ThrowsTooEarly_OrVoidCollapse()
         {
             // Arrange
             var promise = new QuantumPromise<int>(() => Task.FromResult(1), TimeSpan.FromSeconds(2));
@@ -35,25 +43,27 @@ namespace ProcrastiN8.Tests.JustBecause
             Func<Task> act = async () => await promise.ObserveAsync();
 
             // Assert
-            await act.Should().ThrowAsync<CollapseTooEarlyException>();
+            await act.Should().ThrowAsync<Exception>()
+                .Where(e => e is CollapseTooEarlyException || e is CollapseToVoidException);
         }
 
         [Fact]
-        public async Task ObserveAsync_ThrowsTooLate()
+        public async Task ObserveAsync_ThrowsTooLate_OrVoidCollapse()
         {
             // Arrange
             var promise = new QuantumPromise<int>(() => Task.FromResult(1), TimeSpan.FromMilliseconds(10));
-            await Task.Delay(50); // ensure too late
+            await Task.Delay(1100); // ensure too late
 
             // Act
             Func<Task> act = async () => await promise.ObserveAsync();
 
             // Assert
-            await act.Should().ThrowAsync<CollapseTooLateException>();
+            await act.Should().ThrowAsync<CollapseException>()
+                .Where(e => e is CollapseTooLateException || e is CollapseToVoidException);
         }
 
         [Fact]
-        public async Task ObserveAsync_ThrowsIfInitializerThrows()
+        public async Task ObserveAsync_ThrowsIfInitializerThrows_OrVoidCollapse()
         {
             // Arrange
             var promise = new QuantumPromise<int>(() => throw new InvalidOperationException("fail"), TimeSpan.FromSeconds(2));
@@ -61,7 +71,8 @@ namespace ProcrastiN8.Tests.JustBecause
             // Act
             Func<Task> act = async () => await promise.ObserveAsync();
             // Assert
-            await act.Should().ThrowAsync<InvalidOperationException>();
+            await act.Should().ThrowAsync<Exception>()
+                .Where(e => e is InvalidOperationException || e is CollapseToVoidException);
         }
 
         [Fact]
@@ -69,33 +80,56 @@ namespace ProcrastiN8.Tests.JustBecause
         {
             // Arrange
             var triggered = false;
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 30; i++)
             {
                 var promise = new QuantumPromise<int>(() => Task.FromResult(1), TimeSpan.FromSeconds(2));
                 await Task.Delay(1100);
-
-                // Act
-                try { await promise.ObserveAsync(); } catch (CollapseToVoidException) { triggered = true; break; } catch { }
+                try { await promise.ObserveAsync(); }
+                catch (CollapseToVoidException)
+                {
+                    triggered = true;
+                    break;
+                }
+                catch { /* ignore other exceptions for this test */ }
             }
-
             // Assert
-            triggered.Should().BeTrue();
+            triggered.Should().BeTrue("eventually, the quantum promise must collapse to void (by design)");
         }
 
         [Fact]
-        public async Task ObserveAsync_ThrowsOnSecondObserveIfFailed()
+        public async Task ObserveAsync_ThrowsOnSecondObserveIfFailed_OrVoidCollapse()
         {
             // Arrange
             var promise = new QuantumPromise<int>(() => throw new InvalidOperationException("fail"), TimeSpan.FromSeconds(2));
             await Task.Delay(1100);
 
             // Act
-            Func<Task> act = async () => await promise.ObserveAsync();
-            await act.Should().ThrowAsync<InvalidOperationException>();
+            Exception? first = null;
+            try { await promise.ObserveAsync(); } catch (Exception ex) { first = ex; }
             Action act2 = () => promise.ObserveAsync().GetAwaiter().GetResult();
 
             // Assert
-            act2.Should().Throw<InvalidOperationException>();
+            if (first is CollapseToVoidException)
+            {
+                act2.Should().Throw<CollapseToVoidException>("the void is persistent");
+            }
+            else
+            {
+                act2.Should().Throw<InvalidOperationException>("the original failure should persist");
+            }
+        }
+
+        [Fact]
+        public void ToString_ReportsStatus()
+        {
+            // Arrange
+            var promise = new QuantumPromise<int>(() => Task.FromResult(7), TimeSpan.FromSeconds(2));
+
+            // Act
+            var str = promise.ToString();
+
+            // Assert
+            str.Should().Contain("QuantumPromise", "the string representation should be suitably dramatic");
         }
     }
 }
