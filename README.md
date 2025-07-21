@@ -14,6 +14,10 @@
 * `BusyWaitSimulator`: Burn cycles under the guise of being *very* busy.
 * `RetryUntilCancelled`: Retries operations forever (or until someone gives up).
 * `QuantumEntanglementRegistry`: Link async operations through questionable physics metaphors.
+* `ExcuseGenerator`: Generate plausible (or implausible) reasons for delay.
+* `CommentaryService`: Structured procrastination commentary, fully injectable.
+* `DelayStrategy`: Pluggable, testable delay logic (coming soon).
+* `ProcrastinationMetrics`: Track and analyze your stalling performance (coming soon).
 * `[Todo]` attributes and schedulers that do absolutely nothing.
 * Randomized exception injectors — because chaos is healthy.
 * Extensions for generating excuses, procrastinating DateTimes, and more.
@@ -27,13 +31,15 @@
 ### 🔧 Installation
 
 ```bash
-dotnet add package ProcrastiN8
+dotnet add package ProcrastiN8 --prerelease
+# Because release-readiness is a social construct.
 ```
 
 Or via the NuGet Package Manager:
 
 ```powershell
-Install-Package ProcrastiN8
+Install-Package ProcrastiN8 -Prerelease
+# Because final releases are for the overly decisive.
 ```
 
 ---
@@ -75,9 +81,70 @@ Task Eventually.Do(
 ```
 
 * `within`: Maximum delay before action is executed (default: 30s).
-* `excuse`: Optional string to justify the delay.
+* `excuse`: Optional string to justify the delay (see `ExcuseGenerator`).
 * `logger`: Optional logger (custom `IProcrastiLogger` interface).
 * Logs procrastination chatter while stalling.
+
+### `RetryUntilCancelled`
+
+```csharp
+Task RetryUntilCancelled.Do(
+    Func<Task> action,
+    IProcrastiLogger? logger = null,
+    IExcuseProvider? excuseProvider = null,
+    IRetryStrategy? retryStrategy = null,
+    CancellationToken cancellationToken = default)
+```
+
+* Retries the action until cancellation or despair.
+* Fully injectable for testability (excuses, delays, logging).
+
+### `QuantumEntanglementRegistry<T>`
+
+```csharp
+public class QuantumEntanglementRegistry<T>
+```
+
+* Entangle and collapse async operations in ways that defy reason.
+* Thread-safe, for those who pretend it matters.
+
+### `FakeProgress`, `InfiniteSpinner`, `BusyWaitSimulator`
+
+* Simulate the appearance of productivity with endless progress, spinning, or busy-waiting.
+* All support cancellation and logging.
+
+---
+
+## 🧪 Testing Standards
+
+ProcrastiN8 is built for testability and over-abstraction:
+
+* **Unit tests:** xUnit
+* **Mocks:** NSubstitute (no exceptions)
+* **Assertions:** AwesomeAssertions (for expressive, readable tests)
+* **Delays/timing:** Always injectable/faked
+* **Logging:** Always via `IProcrastiLogger` or test double
+* **Absurdity:** Every test must acknowledge the futility of its own existence
+
+Example:
+
+```csharp
+[Fact]
+public async Task Eventually_Should_Delay_Execution_And_Log_Excuse()
+{
+    var logger = Substitute.For<IProcrastiLogger>();
+    var called = false;
+
+    await Eventually.Do(() =>
+    {
+        called = true;
+        return Task.CompletedTask;
+    }, excuse: "Just five more minutes", logger: logger);
+
+    called.Should().BeTrue("eventual execution is still execution");
+    await logger.Received().Info(Arg.Is<string>(m => m.Contains("Just five more minutes")));
+}
+```
 
 ---
 
@@ -89,7 +156,9 @@ Task Eventually.Do(
 | `BusyWaitSimulator.Run()`     | Consumes time with zero productivity.                                      |
 | `RetryUntilCancelled`         | Retries until you cancel or give in. No exponential backoff — just hope.   |
 | `QuantumEntanglementRegistry` | Links promises. Collapse one and see what happens. No guarantees.          |
-| `FakeProgress.Start()`        | Loops endlessly at \~98%. Adds legitimacy to indecision.                   |
+| `FakeProgress.Start()`        | Loops endlessly at ~98%. Adds legitimacy to indecision.                    |
+| `DelayStrategy`               | Pluggable, testable delay logic (coming soon).                             |
+| `ProcrastinationMetrics`      | Track and analyze your stalling performance (coming soon).                 |
 
 ---
 
@@ -120,10 +189,13 @@ await Eventually.Do(action, logger: logger);
 * [x] `QuantumEntanglementRegistry` for chaotic promise behavior
 * [x] `FakeProgress`, `InfiniteSpinner`, and `BusyWaitSimulator`
 * [x] `RetryUntilCancelled` with structured commentary
+* [x] Robust, over-abstracted test suite (NSubstitute, AwesomeAssertions)
 * [ ] `DelayStrategy` support (e.g., exponential backoff with excuses)
 * [ ] `ProcrastinationMetrics` (e.g. average delay, skipped deadlines)
 * [ ] NuGet sub-packages: `ProcrastiN8.Logging.MEL`, `ProcrastiN8.Tracing`
 * [ ] Integration with GPT for dynamically generated excuses
+* [ ] Remove `--pre-release` from install instructions
+  *(*ETA: when the universe reaches heat death*)*
 
 ---
 
