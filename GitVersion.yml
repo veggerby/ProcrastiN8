@@ -5,14 +5,14 @@ branches:
     increment: Patch
     is-mainline: true
     tag: ''
-    prerelease-tag: 'prerelease.{CommitsSinceVersionSource}'
+    pre-release-tag: 'prerelease.{CommitsSinceVersionSource}'
     prevent-increment-of-merged-branch-version: true
   feature:
     regex: ^features?[/-]
     increment: Minor
     is-mainline: false
     tag: 'feature'
-    prerelease-tag: 'feature.{BranchName}.{CommitsSinceVersionSource}'
+    pre-release-tag: 'feature.{BranchName}.{CommitsSinceVersionSource}'
 ignore:
   sha: []
 commit-message-incrementing: Enabled
