@@ -4,15 +4,13 @@ branches:
     regex: ^main$
     increment: Patch
     is-mainline: true
-    tag: ''
-    pre-release-tag: 'prerelease.{CommitsSinceVersionSource}'
+    tag: 'prerelease'
     prevent-increment-of-merged-branch-version: true
   feature:
     regex: ^features?[/-]
     increment: Minor
     is-mainline: false
     tag: 'feature'
-    pre-release-tag: 'feature.{BranchName}.{CommitsSinceVersionSource}'
 ignore:
   sha: []
 commit-message-incrementing: Enabled
