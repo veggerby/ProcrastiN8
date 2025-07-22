@@ -19,7 +19,7 @@
     <PackageIcon>icon.png</PackageIcon>
     <Version Condition="'$(Version)' == ''">0.0.0-dev</Version> <!-- Default if not set -->
     <PackageReleaseNotes Condition="'$(PackageReleaseNotes)' == ''">Built by procrastination, driven by satire.</PackageReleaseNotes>
-    <PackageReadmeFile>../../../../README.md</PackageReadmeFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <!-- Repository info -->
     <RepositoryUrl>https://github.com/veggerby/ProcrastiN8</RepositoryUrl>
@@ -42,6 +42,7 @@
 
   <ItemGroup>
     <None Include="icon.png" Pack="true" PackagePath="" />
+    <None Include="../../../../README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>
