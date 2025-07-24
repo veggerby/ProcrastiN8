@@ -8,7 +8,7 @@ namespace ProcrastiN8.JustBecause;
 /// A promise that exists in a state of superposition until observed. Observation may collapse the value,
 /// throw an exception, or result in existential expiration. Do not use in production. Ever.
 /// </summary>
-public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan schrodingerWindow)
+public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan schrodingerWindow) : IQuantumPromise<T>
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumPromise");
 
