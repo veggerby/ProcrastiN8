@@ -1,40 +1,44 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
+using ProcrastiN8.JustBecause.CollapseBehaviors;
 using ProcrastiN8.Metrics;
 
 namespace ProcrastiN8.JustBecause;
 
 /// <summary>
-/// Manages entangled QuantumPromise instances. Collapsing one may trigger collapse or decay in others.
-/// Entanglement is non-local and non-consensual.
+/// Manages a non-local, non-consensual registry of entangled <see cref="QuantumPromise{T}"/> instances.
+/// Collapsing one may trigger collapse or decay in others, with no regard for fairness or quantum ethics.
 /// </summary>
-public sealed class QuantumEntanglementRegistry<T>
+/// <remarks>
+/// <para>
+/// This class simulates quantum entanglement with the same rigor as a TED Talk given by a blockchain startup.
+/// It is not suitable for physics, security, or any application with consequences.
+/// </para>
+/// <para>
+/// Thread safety is provided by <see cref="ConcurrentBag{QuantumPromise}"/>, but the quantum effects are entirely untrustworthy.
+/// </para>
+/// <para>
+/// All operations are traced for metrics and activity, in case auditors wish to observe the collapse of productivity in real time.
+/// </para>
+/// </remarks>
+public sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behavior = null)
 {
     // Holds all entangled quantum promises
     private readonly ConcurrentBag<QuantumPromise<T>> _entangled = [];
+    // Behavior for collapsing quantum promises
+    private readonly ICollapseBehavior<T> _collapseBehavior = behavior ?? CollapseBehaviorFactory.Create<T>(QuantumComplianceLevel.Entanglish);
 
     // Random number generator for all quantum effects
     private static readonly Random _rng = new();
     // Activity source for tracing entanglement operations
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumEntanglement");
 
-    // Minimum delay (ms) for ripple collapse propagation
-    private const int RippleCollapseMinDelayMs = 300;
-    // Maximum delay (ms) for ripple collapse propagation
-    private const int RippleCollapseMaxDelayMs = 1300;
-    // Probability that a ripple collapse will occur (50%)
-    private const double RippleCollapseProbability = 0.5;
-    // Minimum delay (ms) for ripple entropy propagation
-    private const int RippleEntropyMinDelayMs = 100;
-    // Maximum delay (ms) for ripple entropy propagation
-    private const int RippleEntropyMaxDelayMs = 700;
-    // Probability that a ripple entropy event will occur (25%)
-    private const double RippleEntropyProbability = 0.25;
-
     /// <summary>
-    /// Adds a quantum promise to the entangled set.
+    /// Adds a <see cref="QuantumPromise{T}"/> to the entangled set.
     /// </summary>
+    /// <param name="quantum">The quantum promise to entangle.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="quantum"/> is null.</exception>
     public void Entangle(QuantumPromise<T> quantum)
     {
         if (quantum == null)
@@ -50,6 +54,10 @@ public sealed class QuantumEntanglementRegistry<T>
     /// Collapses one randomly chosen entangled promise and ripples to others.
     /// This function is completely unfair and does not respect promise autonomy.
     /// </summary>
+    /// <param name="cancellationToken">A token to cancel the collapse operation.</param>
+    /// <returns>The result of the collapse, or null if collapse yields nothing.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if no entangled promises are available for collapse.</exception>
+    /// <exception cref="Exception">Propagates any exception thrown during collapse behavior.</exception>
     public async Task<T?> CollapseOneAsync(CancellationToken cancellationToken = default)
     {
         if (_entangled.IsEmpty)
@@ -68,12 +76,7 @@ public sealed class QuantumEntanglementRegistry<T>
 
         try
         {
-            T result = await chosen.ObserveAsync(cancellationToken);
-
-            foreach (var other in array.Where(p => !ReferenceEquals(p, chosen)))
-            {
-                QuantumEntanglementRegistry<T>.RippleCollapse(other, cancellationToken);
-            }
+            var result = await _collapseBehavior.CollapseAsync(_entangled, cancellationToken);
 
             sw.Stop();
             QuantumEntanglementMetrics.CollapseLatency.Record(sw.Elapsed.TotalMilliseconds);
@@ -86,64 +89,13 @@ public sealed class QuantumEntanglementRegistry<T>
         {
             activity?.SetTag("collapse.status", "failure");
             activity?.SetTag("collapse.error", ex.GetType().Name);
-            QuantumEntanglementRegistry<T>.RippleEntropy(array, cancellationToken);
             throw;
         }
     }
 
     /// <summary>
-    /// Attempts to collapse another promise after a random delay, with a chance of success.
+    /// Returns a string representation of the entangled set, suitable for existential dread.
     /// </summary>
-    private static void RippleCollapse(QuantumPromise<T> other, CancellationToken cancellationToken)
-    {
-        QuantumEntanglementMetrics.RippleAttempts.Add(1);
-
-        Task.Run(async () =>
-        {
-            await Task.Delay(_rng.Next(RippleCollapseMinDelayMs, RippleCollapseMaxDelayMs), cancellationToken);
-
-            try
-            {
-                if (_rng.NextDouble() < RippleCollapseProbability)
-                {
-                    await other.ObserveAsync(cancellationToken);
-                }
-            }
-            catch
-            {
-                QuantumEntanglementMetrics.RippleFailures.Add(1);
-            }
-        }, cancellationToken);
-    }
-
-    /// <summary>
-    /// Attempts to propagate entropy to all promises after a random delay, with a chance of success.
-    /// </summary>
-    private static void RippleEntropy(IEnumerable<QuantumPromise<T>> others, CancellationToken cancellationToken)
-    {
-        foreach (var promise in others)
-        {
-            Task.Run(async () =>
-            {
-                await Task.Delay(_rng.Next(RippleEntropyMinDelayMs, RippleEntropyMaxDelayMs), cancellationToken);
-                try
-                {
-                    if (_rng.NextDouble() < RippleEntropyProbability)
-                    {
-                        QuantumEntanglementMetrics.RippleAttempts.Add(1);
-                        await promise.ObserveAsync(cancellationToken);
-                    }
-                }
-                catch
-                {
-                    QuantumEntanglementMetrics.RippleFailures.Add(1);
-                }
-            }, cancellationToken);
-        }
-    }
-
-    /// <summary>
-    /// Returns a string representation of the entangled set.
-    /// </summary>
+    /// <returns>A string describing the number of entangled promises.</returns>
     public override string ToString() => $"[Entangled Set: {_entangled.Count} promises]";
 }

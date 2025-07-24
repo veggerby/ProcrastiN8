@@ -1,11 +1,5 @@
-using ProcrastiN8.Unproductivity;
-using NSubstitute;
-using Xunit;
-using AwesomeAssertions;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using ProcrastiN8.Services;
+using ProcrastiN8.Unproductivity;
 
 namespace ProcrastiN8.Tests.Unproductivity;
 

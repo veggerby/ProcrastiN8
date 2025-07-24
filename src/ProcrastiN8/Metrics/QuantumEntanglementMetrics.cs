@@ -41,4 +41,16 @@ internal static class QuantumEntanglementMetrics
     /// </summary>
     public static readonly Histogram<double> CollapseLatency =
         Meter.CreateHistogram<double>("quantum_entanglement.collapse_latency", unit: "ms", description: "Latency of primary collapse");
+
+    /// <summary>
+    /// Counts the number of quantum fork events, representing attempts to split entangled states for no good reason.
+    /// </summary>
+    public static readonly Counter<long> Forks =
+        Meter.CreateCounter<long>("quantum_entanglement.forks", unit: "count", description: "Quantum fork events");
+
+    /// <summary>
+    /// Counts the number of failed quantum fork attempts, which are as inevitable as they are pointless.
+    /// </summary>
+    public static readonly Counter<long> ForkFailures =
+        Meter.CreateCounter<long>("quantum_entanglement.fork_failures", unit: "count", description: "Failed quantum fork attempts");
 }
