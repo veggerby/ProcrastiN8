@@ -10,23 +10,11 @@ public class QuantumPromiseTests
     {
         // Arrange
         var promise = new PredictableQuantumPromise<int>(123);
-        await Task.Delay(1100); // ensure not too early
-
         // Act
-        int? result = null;
-        Exception? exception = null;
-        try { result = await promise.ObserveAsync(); } catch (Exception ex) { exception = ex; }
-
+        var result = await promise.ObserveAsync();
         // Assert
-        if (exception is not null)
-        {
-            exception.Should().BeOfType<CollapseToVoidException>("quantum promises may collapse to void"); // This branch should never be hit with PredictableQuantumPromise
-        }
-        else
-        {
-            result.Should().Be(123, "the quantum promise should resolve to the expected value");
-            promise.ToString().Should().Contain("PredictableQuantumPromise");
-        }
+        result.Should().Be(123, "the quantum promise should resolve to the expected value");
+        promise.ToString().Should().Contain("PredictableQuantumPromise");
     }
 
     [Fact]
@@ -34,12 +22,10 @@ public class QuantumPromiseTests
     {
         // Arrange
         var promise = new QuantumPromise<int>(() => Task.FromResult(1), TimeSpan.FromSeconds(2));
-
         // Act
         Func<Task> act = async () => await promise.ObserveAsync();
-
         // Assert
-        await act.Should().ThrowAsync<Exception>()
+        await act.Should().ThrowAsync<CollapseException>()
             .Where(e => e is CollapseTooEarlyException || e is CollapseToVoidException);
     }
 
@@ -49,10 +35,8 @@ public class QuantumPromiseTests
         // Arrange
         var promise = new QuantumPromise<int>(() => Task.FromResult(1), TimeSpan.FromMilliseconds(10));
         await Task.Delay(1100); // ensure too late
-
         // Act
         Func<Task> act = async () => await promise.ObserveAsync();
-
         // Assert
         await act.Should().ThrowAsync<CollapseException>()
             .Where(e => e is CollapseTooLateException || e is CollapseToVoidException);
