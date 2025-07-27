@@ -2,14 +2,9 @@ using ProcrastiN8.Metrics;
 
 namespace ProcrastiN8.JustBecause.CollapseBehaviors;
 
-public sealed class CopenhagenCollapseBehavior<T> : ICollapseBehavior<T>
+public sealed class CopenhagenCollapseBehavior<T>(IObserverContext? context = null) : ICollapseBehavior<T>
 {
-    private readonly IObserverContext _observerContext;
-
-    public CopenhagenCollapseBehavior(IObserverContext? context = null)
-    {
-        _observerContext = context ?? new DefaultObserverContext();
-    }
+    private readonly IObserverContext _observerContext = context ?? new DefaultObserverContext();
 
     public async Task<T?> CollapseAsync(IEnumerable<IQuantumPromise<T>> entangled, CancellationToken cancellationToken)
     {

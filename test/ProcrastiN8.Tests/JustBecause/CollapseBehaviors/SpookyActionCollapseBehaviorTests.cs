@@ -1,5 +1,6 @@
 using ProcrastiN8.JustBecause;
 using ProcrastiN8.JustBecause.CollapseBehaviors;
+using ProcrastiN8.Tests.Common;
 
 namespace ProcrastiN8.Tests.JustBecause.CollapseBehaviors;
 
@@ -9,10 +10,9 @@ public class SpookyActionCollapseBehaviorTests
     public async Task CollapseAsync_Should_Collapse_All_Entangled_Promises()
     {
         // Arrange
-        var promise1 = new QuantumPromise<string>(() => Task.FromResult("spooky1"), TimeSpan.FromSeconds(1));
-        var promise2 = new QuantumPromise<string>(() => Task.FromResult("spooky2"), TimeSpan.FromSeconds(1));
-        await Task.Delay(1100); // ensure not too early
-        var entangled = new List<QuantumPromise<string>> { promise1, promise2 };
+        var promise1 = new PredictableQuantumPromise<string>("spooky1");
+        var promise2 = new PredictableQuantumPromise<string>("spooky2");
+        var entangled = new List<IQuantumPromise<string>> { promise1, promise2 };
         var behavior = new SpookyActionCollapseBehavior<string>();
 
         // Act

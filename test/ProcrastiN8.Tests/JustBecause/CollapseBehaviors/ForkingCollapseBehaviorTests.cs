@@ -1,5 +1,6 @@
 using ProcrastiN8.JustBecause;
 using ProcrastiN8.JustBecause.CollapseBehaviors;
+using ProcrastiN8.Tests.Common;
 
 namespace ProcrastiN8.Tests.JustBecause.CollapseBehaviors;
 
@@ -9,9 +10,8 @@ public class ForkingCollapseBehaviorTests
     public async Task CollapseAsync_Should_Observe_And_Fork()
     {
         // Arrange
-        var chosen = new QuantumPromise<string>(() => Task.FromResult("forked"), TimeSpan.FromSeconds(1));
-        await Task.Delay(1100); // ensure not too early
-        var entangled = new List<QuantumPromise<string>> { chosen };
+        var chosen = new PredictableQuantumPromise<string>("forked");
+        var entangled = new List<IQuantumPromise<string>> { chosen };
         var behavior = new ForkingCollapseBehavior<string>();
 
         // Act
