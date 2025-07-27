@@ -48,10 +48,10 @@ public class InfiniteSpinnerTests
         true.Should().BeTrue("time was wasted, as intended");
     }
 
-    private class FailingCommentaryService : CommentaryService
+    private class FailingCommentaryService(Exception exception) : CommentaryService
     {
-        private readonly Exception _exception;
-        public FailingCommentaryService(Exception exception) => _exception = exception;
+        private readonly Exception _exception = exception;
+
         public override void LogRandomRemark(IProcrastiLogger? logger = null) => throw _exception;
     }
 

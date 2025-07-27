@@ -1,5 +1,6 @@
 using ProcrastiN8.JustBecause;
 using ProcrastiN8.JustBecause.CollapseBehaviors;
+using ProcrastiN8.Tests.Common;
 
 namespace ProcrastiN8.Tests.JustBecause.CollapseBehaviors;
 
@@ -9,10 +10,9 @@ public class RandomUnfairCollapseBehaviorTests
     public async Task CollapseAsync_Should_Observe_One_And_Ripple_Others()
     {
         // Arrange
-        var chosen = new QuantumPromise<string>(() => Task.FromResult("observed"), TimeSpan.FromSeconds(1));
-        var other = new QuantumPromise<string>(() => Task.FromResult("rippled"), TimeSpan.FromSeconds(1));
-        await Task.Delay(1100); // ensure not too early
-        var entangled = new List<QuantumPromise<string>> { chosen, other };
+        var chosen = new PredictableQuantumPromise<string>("observed");
+        var other = new PredictableQuantumPromise<string>("rippled");
+        var entangled = new List<IQuantumPromise<string>> { chosen, other };
         var behavior = new RandomUnfairCollapseBehavior<string>();
 
         // Act

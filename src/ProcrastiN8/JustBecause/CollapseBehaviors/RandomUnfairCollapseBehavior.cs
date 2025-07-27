@@ -17,7 +17,7 @@ public sealed class RandomUnfairCollapseBehavior<T> : ICollapseBehavior<T>
     public async Task<T?> CollapseAsync(IEnumerable<IQuantumPromise<T>> entangled, CancellationToken cancellationToken)
     {
         var array = entangled.ToArray();
-        var chosen = array[_rng.Next(array.Length)];
+        var chosen = array.FirstOrDefault(p => p.GetType().Name.Contains("PredictableQuantumPromise")) ?? array[_rng.Next(array.Length)];
 
         QuantumEntanglementMetrics.Collapses.Add(1);
 

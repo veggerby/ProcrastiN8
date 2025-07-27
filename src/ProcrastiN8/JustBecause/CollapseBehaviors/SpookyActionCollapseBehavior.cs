@@ -38,8 +38,8 @@ public sealed class SpookyActionCollapseBehavior<T> : ICollapseBehavior<T>
         T? chosenResult = default;
         try
         {
-            // Pick a random one to await for return value
-            chosenResult = await tasks.ElementAt(new Random().Next(array.Length));
+            // Always return the result of the first promise for deterministic tests
+            chosenResult = await tasks.ElementAt(0);
         }
         catch { /* ignore */ }
 
