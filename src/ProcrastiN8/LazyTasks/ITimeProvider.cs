@@ -15,13 +15,3 @@ public interface ITimeProvider
     /// <param name="cancellationToken">A token to cancel the wait.</param>
     Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken = default);
 }
-
-/// <summary>
-/// Default implementation of <see cref="ITimeProvider"/> using <see cref="Task.Delay"/>.
-/// </summary>
-public sealed class SystemTimeProvider : ITimeProvider
-{
-    /// <inheritdoc />
-    public Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken = default)
-        => Task.Delay(delay, cancellationToken);
-}

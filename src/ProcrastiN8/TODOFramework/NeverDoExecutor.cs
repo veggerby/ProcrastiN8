@@ -21,17 +21,19 @@ public class NeverDoExecutor(IProcrastiLogger? logger = null, IExcuseProvider? e
     /// <param name="action">The action to never execute.</param>
     /// <param name="excuse">An optional excuse to log for not executing.</param>
     /// <param name="cancellationToken">A token to cancel the non-execution process.</param>
-    public Task NeverAsync(Func<Task> action, string? excuse = null, CancellationToken cancellationToken = default)
+    public async Task NeverAsync(Func<Task> action, string? excuse = null, CancellationToken cancellationToken = default)
     {
         if (action is null)
+        {
             throw new ArgumentNullException(nameof(action));
+        }
 
-        var reason = excuse ?? _excuseProvider?.GetExcuse() ?? "Deferred indefinitely.";
+        var reason = excuse ?? (await (_excuseProvider?.GetExcuseAsync() ?? Task.FromResult("Deferred indefinitely.")));
         _logger?.Info($"Never executing action: {reason}");
 
         // Return a Task that never completes, unless cancellation is requested.
         var tcs = new TaskCompletionSource<object?>();
         cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken));
-        return tcs.Task;
+        await tcs.Task; // Await the task to ensure proper async behavior
     }
 }

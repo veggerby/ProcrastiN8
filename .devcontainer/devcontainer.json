@@ -56,7 +56,8 @@
 				"redhat.vscode-yaml",
 				"github.vscode-github-actions",
 				"bierner.markdown-mermaid",
-				"humao.rest-client"
+				"humao.rest-client",
+				"GitHub.vscode-pull-request-github"
 			]
 		}
 	},

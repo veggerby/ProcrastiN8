@@ -13,7 +13,7 @@ public class TodoSchedulerTests
         var logger = Substitute.For<IProcrastiLogger>();
         var excuseProvider = Substitute.For<IExcuseProvider>();
         var delayStrategy = Substitute.For<IDelayStrategy>();
-        excuseProvider.GetExcuse().Returns("Because reasons");
+        excuseProvider.GetExcuseAsync().Returns("Because reasons");
         delayStrategy.DelayAsync(Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
         var scheduler = new TodoScheduler(logger, excuseProvider, delayStrategy);
         var cts = new CancellationTokenSource();
@@ -26,7 +26,7 @@ public class TodoSchedulerTests
 
         // assert
         logger.Received().Info(Arg.Is<string>(msg => msg.Contains("Deferring TODO: TodoMethod")));
-        excuseProvider.Received().GetExcuse();
+        await excuseProvider.Received().GetExcuseAsync();
         // The TODO task is never actually executed, only deferred
         // This test is as unproductive as the code it tests
     }

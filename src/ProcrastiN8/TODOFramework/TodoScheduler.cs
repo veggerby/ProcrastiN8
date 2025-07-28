@@ -41,8 +41,16 @@ public class TodoScheduler(IProcrastiLogger? logger = null, IExcuseProvider? exc
                 break;
             }
 
-            var excuse = _excuseProvider?.GetExcuse() ?? "Pending further review.";
-            _logger?.Info($"Deferring TODO: {method.Name} — {excuse}");
+            if (_excuseProvider is not null)
+            {
+                var excuse = await _excuseProvider.GetExcuseAsync();
+                _logger?.Info($"Deferring TODO: {method.Name} because: {excuse}");
+            }
+            else
+            {
+                _logger?.Info($"Deferring TODO: {method.Name} — Pending further review.");
+            }
+
             if (_delayStrategy != null)
             {
                 await _delayStrategy.DelayAsync(cancellationToken);

@@ -28,7 +28,7 @@ public static class DateTimePostponer
 
         if (excuseProvider is not null && logger is not null)
         {
-            var excuse = excuseProvider.GetExcuse();
+            var excuse = excuseProvider.GetExcuseAsync().GetAwaiter().GetResult();
             logger.Info($"Postponed from {dateTime:o} to {result:o}: {excuse}");
         }
 
@@ -55,6 +55,14 @@ public static class DateTimePostponer
     {
         // Simulate deliberation delay
         await Task.Delay(TimeSpan.FromMilliseconds(137), cancellationToken);
-        return dateTime.Postpone(postponeBy, strategy, excuseProvider, logger);
+        var result = dateTime.Postpone(postponeBy, strategy, excuseProvider, logger);
+
+        if (excuseProvider is not null && logger is not null)
+        {
+            var excuse = await excuseProvider.GetExcuseAsync();
+            logger.Info($"Postponed from {dateTime:o} to {result:o}: {excuse}");
+        }
+
+        return result;
     }
 }

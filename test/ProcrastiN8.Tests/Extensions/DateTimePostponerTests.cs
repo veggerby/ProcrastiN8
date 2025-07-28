@@ -46,7 +46,7 @@ public class DateTimePostponerTests
         var postponeBy = TimeSpan.FromMinutes(15);
         var logger = Substitute.For<IProcrastiLogger>();
         var excuseProvider = Substitute.For<IExcuseProvider>();
-        excuseProvider.GetExcuse().Returns("The server needed a nap.");
+        excuseProvider.GetExcuseAsync().Returns("The server needed a nap.");
 
         // act
         var result = original.Postpone(postponeBy, null, excuseProvider, logger);

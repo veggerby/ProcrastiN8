@@ -1,4 +1,3 @@
-
 using ProcrastiN8.JustBecause;
 namespace ProcrastiN8.Common;
 
@@ -9,15 +8,15 @@ public static class ExcuseGenerator
 
     private static readonly string[] Openings =
     [
-        "Still",
-        "Currently",
-        "Temporarily",
-        "Reluctantly",
-        "Accidentally",
-        "Emotionally",
-        "Spiritually",
-        "Hypothetically",
-        "Existentially"
+        "In a shocking twist",
+        "Due to unforeseen quantum entanglements",
+        "After consulting the Oracle",
+        "Following a heated debate with my inner monologue",
+        "In light of recent cosmic events",
+        "As foretold by the prophecy",
+        "After a thorough risk assessment by Schrödinger's cat",
+        "Because the multiverse demanded it",
+        "In a parallel timeline"
     ];
 
     private static readonly string[] Verbs =
