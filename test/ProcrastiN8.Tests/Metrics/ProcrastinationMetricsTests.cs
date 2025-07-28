@@ -7,13 +7,13 @@ public class ProcrastinationMetricsTests
     [Fact]
     public void Metrics_AreAccessible()
     {
-        // Arrange
+        // arrange
         // (no setup needed)
 
-        // Act
+        // act
         // (no action needed)
 
-        // Assert
+        // assert
         Assert.NotNull(ProcrastinationMetrics.TotalTimeProcrastinated);
         Assert.NotNull(ProcrastinationMetrics.ExcusesGenerated);
         Assert.NotNull(ProcrastinationMetrics.DelaysTotal);

@@ -7,13 +7,13 @@ public class ExcuseServiceTests
     [Fact]
     public void GenerateExcuse_ReturnsNonEmptyString()
     {
-        // Arrange
+        // arrange
         var service = new ExcuseService();
 
-        // Act
+        // act
         var result = service.GenerateExcuse();
 
-        // Assert
+        // assert
         result.Should().NotBeNullOrWhiteSpace();
     }
 }

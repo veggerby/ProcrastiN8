@@ -43,11 +43,11 @@ It includes:
 
 ---
 
-## 🔨 CODE GENERATION STANDARDS
+### 🔨 CODE GENERATION STANDARDS
 
 ### 🧑‍💻 Language & Style
 
-* **Language:** C# 10+, targeting .NET 6+
+* **Language:** C# 10+, targeting .NET 8+
 * **Structure:** Adhere to the existing namespace layout (`ProcrastiN8.*`)
 * **Naming:** Prioritize clarity and dramatic intent
 
@@ -68,6 +68,64 @@ Organize code under `src/ProcrastiN8.[Component]/...`, with clear division:
 /src/ProcrastiN8.Experimental/...
 ```
 
+### 🧼 Formatting & Structural Rules
+
+* **Always use file-scoped namespaces.**
+  ✅ Correct:
+
+  ```csharp
+  namespace ProcrastiN8.Something;
+
+  public class ExcuseGenerator { }
+  ```
+
+  ❌ Incorrect:
+
+  ```csharp
+  namespace ProcrastiN8.Something
+  {
+      public class ExcuseGenerator { }
+  }
+  ```
+
+* **Use primary constructors** when feasible and clear.
+  ✅ Example:
+
+  ```csharp
+  namespace ProcrastiN8.Something;
+
+  public class MyClass(string foo)
+  {
+      public string Foo { get; } = foo;
+  }
+  ```
+
+* **Avoid unnecessary `using` statements.**
+  All `using` directives must be minimal and relevant to the file. No imports should remain if unused.
+
+* **Always wrap single-line control blocks in curly braces `{}`.**
+  ✅ Correct:
+
+  ```csharp
+  if (condition)
+  {
+      Handle();
+  }
+  ```
+
+  ❌ Incorrect:
+
+  ```csharp
+  if (condition) Handle();
+  ```
+
+* **Ensure appropriate whitespace:**
+
+  * Add blank lines between logical sections (e.g., method groups, Arrange/Act/Assert blocks).
+  * Avoid over-nesting, dense vertical layouts, and logic stacking.
+
+> 💡 **Copilot Chat Note**: Elegance in ProcrastiN8 is not in brevity but in formality. Make it readable as if a compliance officer might audit it — even if the method just spins indefinitely.
+
 ---
 
 ## 🧪 TESTING STANDARDS
@@ -77,6 +135,7 @@ Organize code under `src/ProcrastiN8.[Component]/...`, with clear division:
 * Use **NSubstitute** for mocking — no exceptions
 * Use **AwesomeAssertions** for fluent, expressive assertions
 * Include at least one comment or output line that makes light of the absurdity
+* Be structured into **clearly commented arrange / act / assert** sections with appropriate whitespace for readability
 
 ### ✔️ Test Types
 
@@ -88,26 +147,31 @@ Organize code under `src/ProcrastiN8.[Component]/...`, with clear division:
 | Delays / Timing Logic | Faked via injected strategies          |
 | Logging               | Stubbed `IProcrastiLogger` substitutes |
 
-**Example:**
+**Test Structure Example:**
 
 ```csharp
 [Fact]
 public async Task Eventually_Should_Delay_Execution_And_Log_Excuse()
 {
+    // arrange
     var logger = Substitute.For<IProcrastiLogger>();
     var called = false;
 
+    // act
     await Eventually.Do(() =>
     {
         called = true;
         return Task.CompletedTask;
     }, excuse: "Just five more minutes", logger: logger);
 
+    // assert
     called.Should().BeTrue("eventual execution is still execution");
 
     await logger.Received().Info(Arg.Is<string>(m => m.Contains("Just five more minutes")));
 }
 ```
+
+> 💡 **Note for Copilot Chat**: The `// arrange`, `// act`, and `// assert` comments are **not optional** — they are part of the readability standard. Space them out with blank lines to honor the absurd gravity of our unserious testing discipline.
 
 ---
 
@@ -183,3 +247,8 @@ Before suggesting code, Copilot Chat must ensure:
 * [ ] No actual runtime dependencies were added
 * [ ] The tone is dead serious — even if the feature isn’t
 * [ ] The implementation enables procrastination, not productivity
+* [ ] All `if`, `else`, `while`, `for`, `foreach` blocks use curly braces
+* [ ] Readability is preserved through consistent whitespace and blank lines
+* [ ] File-scoped namespaces are used (`namespace Foo.Bar;`)
+* [ ] No unused `using` directives remain
+* [ ] Primary constructors are used where possible and beneficial
