@@ -24,10 +24,12 @@ public class DefaultDelayStrategy_AbstractionTests
     public async Task DelayAsync_UsesRandomizedDelayFromProvider()
     {
         var delayProvider = Substitute.For<IDelayProvider>();
+        var randomProvider = Substitute.For<ProcrastiN8.JustBecause.IRandomProvider>();
+        randomProvider.Next(Arg.Any<int>()).Returns(42); // Always returns 42
         var strategy = new DefaultDelayStrategy(
             minDelay: TimeSpan.FromMilliseconds(50),
             maxDelay: TimeSpan.FromMilliseconds(150),
-            randomFunc: _ => 42, // Always returns 42
+            randomProvider: randomProvider,
             delayProvider: delayProvider
         );
 

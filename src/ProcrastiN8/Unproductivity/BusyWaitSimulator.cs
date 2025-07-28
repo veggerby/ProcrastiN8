@@ -8,11 +8,19 @@ namespace ProcrastiN8.Unproductivity;
 /// <summary>
 /// Simulates doing heavy work by consuming CPU in a loop without yielding. Looks busy, achieves nothing.
 /// </summary>
+using ProcrastiN8.JustBecause;
+
 public static class BusyWaitSimulator
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.BusyWaitSimulator");
 
     private static CommentaryService CommentaryService = new();
+    private static IRandomProvider _randomProvider = new RandomProvider();
+
+    public static void SetRandomProvider(IRandomProvider provider)
+    {
+        _randomProvider = provider;
+    }
 
     // Minimum milliseconds between commentary logs during busy wait
     private const long CommentarySourceBusyWait = 1;
@@ -54,7 +62,7 @@ public static class BusyWaitSimulator
                 }
 
                 // Waste CPU – do nothing in a tight loop
-                Math.Sqrt(new Random().NextDouble() * 9999); // token calculation to avoid optimizations
+                Math.Sqrt(_randomProvider.NextDouble() * 9999); // token calculation to avoid optimizations
             }
 
             stopwatch.Stop();
