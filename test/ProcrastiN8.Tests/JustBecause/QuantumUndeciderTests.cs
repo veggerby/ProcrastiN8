@@ -27,22 +27,33 @@ public class QuantumUndeciderTests
         }
     }
 
-    [Fact(Skip = "This test is flaky and needs to be stabilized")]
+    [Fact]
     public async Task ObserveDecisionAsync_ThrowsOnCollapseTooEarly_Sometimes()
     {
         // Arrange
-        // (no setup needed)
+        var triggered = false;
+        var mockRandomProvider = Substitute.For<IRandomProvider>();
+        QuantumUndecider.SetRandomProvider(mockRandomProvider);
+        mockRandomProvider.NextDouble().Returns(0.2, 0.05, 0.05); // Ensure specific sequence of values
 
         // Act
-        var triggered = false;
         for (int i = 0; i < 30; i++)
         {
-            try { await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(true)); }
-            catch (SuperpositionCollapseException) { triggered = true; break; }
+            try
+            {
+                await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(false));
+            }
+            catch (CollapseTooEarlyException)
+            {
+                triggered = true;
+                break;
+            }
+            catch { /* ignore other exceptions for this test */ }
         }
 
         // Assert
-        triggered.Should().BeTrue("eventually, the waveform must collapse under scrutiny");
+        triggered.Should().BeTrue("eventually, the quantum undecider must throw CollapseTooEarlyException (by design)");
+        mockRandomProvider.Received().NextDouble(); // Ensure the mock is being used
     }
 
     [Fact]
@@ -72,18 +83,21 @@ public class QuantumUndeciderTests
     public async Task DelayUntilInevitabilityAsync_ThrowsOnEntropyDecay_Sometimes()
     {
         // Arrange
-        // (no setup needed)
+        var mockRandomProvider = Substitute.For<IRandomProvider>();
+        QuantumUndecider.SetRandomProvider(mockRandomProvider);
+
+        // Ensure entropy collapse condition is triggered
+        mockRandomProvider.Next(Arg.Any<int>(), Arg.Any<int>()).Returns(100); // Arbitrary delay
+        mockRandomProvider.NextDouble().Returns(0.1); // Trigger entropy collapse
+
+        var logger = Substitute.For<IProcrastiLogger>();
 
         // Act
-        var triggered = false;
-        for (int i = 0; i < 30; i++)
-        {
-            try { await QuantumUndecider.DelayUntilInevitabilityAsync(TimeSpan.FromMilliseconds(100)); }
-            catch (SuperpositionCollapseException) { triggered = true; break; }
-        }
+        Func<Task> act = async () => await QuantumUndecider.DelayUntilInevitabilityAsync(
+            TimeSpan.FromSeconds(1), logger);
 
         // Assert
-        triggered.Should().BeTrue("eventually, entropy must win");
+        await act.Should().ThrowAsync<SuperpositionCollapseException>("entropy must win sometimes");
     }
 
     [Fact]
@@ -94,11 +108,24 @@ public class QuantumUndeciderTests
         void Handler(string s) => observed = s;
         QuantumUndecider.OnEntangledDecision += Handler;
 
-        // Act
-        await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(true));
+        try
+        {
+            var mockRandomProvider = Substitute.For<IRandomProvider>();
+            QuantumUndecider.SetRandomProvider(mockRandomProvider);
 
-        // Assert
-        observed.Should().NotBeNullOrWhiteSpace("the entangled callback should always be triggered");
-        QuantumUndecider.OnEntangledDecision -= Handler;
+            // Ensure callback is triggered by aligning with the "It depends." decision state
+            mockRandomProvider.NextDouble().Returns(0.2); // Ensure partial decision condition is met
+            mockRandomProvider.Next(Arg.Any<int>(), Arg.Any<int>()).Returns(2); // Index for "It depends."
+
+            // Act
+            await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(true));
+
+            // Assert
+            observed.Should().Be("It depends.", "the entangled callback should always be triggered with the correct state");
+        }
+        finally
+        {
+            QuantumUndecider.OnEntangledDecision -= Handler;
+        }
     }
 }
