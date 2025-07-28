@@ -12,7 +12,7 @@ public static class BusyWaitSimulator
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.BusyWaitSimulator");
 
-    private static readonly CommentaryService CommentaryService = new();
+    private static CommentaryService CommentaryService = new();
 
     // Minimum milliseconds between commentary logs during busy wait
     private const long CommentarySourceBusyWait = 1;
@@ -70,5 +70,27 @@ public static class BusyWaitSimulator
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Asynchronously simulates a busy wait by burning CPU cycles for the given duration or until cancelled.
+    /// </summary>
+    /// <param name="logger">Logger for busy wait updates.</param>
+    /// <param name="cancellationToken">Token to cancel the busy wait.</param>
+    /// <returns>A task representing the busy wait operation.</returns>
+    public static Task SimulateBusyWaitAsync(
+        TimeSpan duration,
+        IProcrastiLogger? logger = null,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => BurnCpuCycles(duration, logger, cancellationToken), cancellationToken);
+    }
+
+    /// <summary>
+    /// Allows test code to inject a custom CommentaryService for mocking or fault injection.
+    /// </summary>
+    public static void SetCommentaryService(CommentaryService service)
+    {
+        CommentaryService = service ?? throw new ArgumentNullException(nameof(service));
     }
 }
