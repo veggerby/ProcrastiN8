@@ -7,11 +7,16 @@ public class TaskDelayProviderTests
     [Fact]
     public async Task DelayAsync_WaitsForSpecifiedDuration()
     {
-        var provider = new TaskDelayProvider();
-        var before = DateTime.UtcNow;
-        await provider.DelayAsync(TimeSpan.FromMilliseconds(10));
-        var after = DateTime.UtcNow;
-        (after - before).TotalMilliseconds.Should().BeGreaterThanOrEqualTo(10, "even a trivial delay is a triumph of stalling");
+        // arrange
+        var mockTimeProvider = Substitute.For<ITimeProvider>();
+        var provider = new TaskDelayProvider(mockTimeProvider);
+        var delay = TimeSpan.FromMilliseconds(10);
+
+        // act
+        await provider.DelayAsync(delay);
+
+        // assert
+        await mockTimeProvider.Received(1).DelayAsync(delay, Arg.Any<CancellationToken>());
     }
 
     [Fact]

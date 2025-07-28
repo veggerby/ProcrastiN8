@@ -1,7 +1,3 @@
-using AwesomeAssertions;
-
-using NSubstitute;
-
 using ProcrastiN8.JustBecause;
 
 namespace ProcrastiN8.Tests.JustBecause;

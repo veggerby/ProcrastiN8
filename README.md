@@ -129,6 +129,24 @@ Expected output:
 
 ---
 
+## 🤖 OpenAI Excuse Provider
+
+ProcrastiN8 includes an `OpenAIExcuseProvider` that fetches creative excuses from OpenAI's ChatGPT API. This provider is ideal for generating topical and humorous excuses for procrastination.
+
+### Usage
+
+```csharp
+using ProcrastiN8.Common;
+
+var excuseProvider = new OpenAIExcuseProvider("your-api-key");
+var excuse = await excuseProvider.GetExcuseAsync();
+Console.WriteLine(excuse);
+```
+
+> **Note:** You need an OpenAI API key to use this feature.
+
+---
+
 ## 📦 NuGet
 
 ProcrastiN8 is available on [NuGet](https://www.nuget.org/packages/ProcrastiN8/#readme-body-tab)

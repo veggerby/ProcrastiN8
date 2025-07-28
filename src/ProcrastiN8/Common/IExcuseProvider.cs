@@ -9,8 +9,8 @@ namespace ProcrastiN8.Common;
 public interface IExcuseProvider
 {
     /// <summary>
-    /// Gets an excuse for the current delay or non-action.
+    /// Asynchronously gets an excuse for the current delay or non-action.
     /// </summary>
-    /// <returns>A string containing a plausible excuse.</returns>
-    string GetExcuse();
+    /// <returns>A task that represents the asynchronous operation. The task result contains a string with a plausible excuse.</returns>
+    Task<string> GetExcuseAsync();
 }

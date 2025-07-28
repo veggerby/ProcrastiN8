@@ -28,6 +28,11 @@ ProcrastiN8
 │   ├── EnumerableExtensions.cs
 │   ├── StringExcuses.cs
 │   └── DateTimePostponer.cs
+├── Common/
+│   ├── CommentaryGenerator.cs
+│   ├── ExcuseGenerator.cs
+│   ├── OpenAIExcuseProvider.cs
+│   └── ...
 └── README.md
 ```
 
@@ -45,6 +50,7 @@ ProcrastiN8
 - [QuantumUndecider](./quantum-undecider.md)
 - [CommentaryGenerator](./commentary-generator.md)
 - [ExcuseGenerator](./excuse-generator.md)
+- [OpenAIExcuseProvider](./openai-excuse-provider.md)
 - [TODO Framework](./todo-framework.md)
 - [Just Because Utilities](./just-because-utilities.md)
 - [Extensions](./extensions.md)

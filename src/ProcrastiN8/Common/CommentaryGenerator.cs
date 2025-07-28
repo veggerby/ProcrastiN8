@@ -1,4 +1,3 @@
-
 using ProcrastiN8.JustBecause;
 namespace ProcrastiN8.Common;
 
@@ -19,16 +18,16 @@ public static class CommentaryGenerator
 
     private static readonly string[] Phrases =
     [
-        "productivity is a myth perpetuated by calendars",
-        "we've officially entered the Maybe Phase",
-        "task has transcended priority and entered the void",
-        "effort is currently rate-limited by vibes",
-        "delay has been successfully ritualized",
-        "this is now someone else's spiritual burden",
-        "the deadline is just a polite suggestion",
-        "progress is currently being simulated",
-        "motivation is currently garbage collected",
-        "we're pivoting to a non-actionable framework"
+        "the task has entered a Schrödinger state",
+        "we're now operating on borrowed time from a parallel universe",
+        "the deliverable has been reclassified as a philosophical concept",
+        "progress is being measured in quantum leaps",
+        "the deadline has achieved sentience and is negotiating terms",
+        "we've outsourced this task to a black hole",
+        "the project is now a case study in chaos theory",
+        "we're pivoting to a Schrödinger's deliverable model",
+        "the timeline has been folded into a Möbius strip",
+        "we're currently beta-testing reality"
     ];
 
     private static readonly string[] Suffixes =
