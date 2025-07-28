@@ -13,7 +13,7 @@ public static class FakeProgress
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.FakeProgress");
 
     private static readonly ExcuseService ExcuseService = new();
-    private static readonly CommentaryService CommentaryService = new();
+    private static CommentaryService CommentaryService = new();
 
     private static readonly string[] FakeStages = new[]
     {
@@ -84,5 +84,13 @@ public static class FakeProgress
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Allows test code to inject a custom CommentaryService for mocking or fault injection.
+    /// </summary>
+    public static void SetCommentaryService(CommentaryService service)
+    {
+        CommentaryService = service ?? throw new ArgumentNullException(nameof(service));
     }
 }

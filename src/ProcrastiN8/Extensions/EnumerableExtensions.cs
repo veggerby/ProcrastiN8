@@ -13,7 +13,16 @@ public static class EnumerableExtensions
     /// <returns>An infinite enumerable of the source's elements, repeated forever.</returns>
     public static IEnumerable<T> LoopForever<T>(this IEnumerable<T> source)
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (!source.Any())
+        {
+            yield break; // If the source is empty, we cannot loop forever
+        }
+
         while (true)
         {
             foreach (var item in source)

@@ -18,7 +18,7 @@ public static class FakeIndeterminateProgress
     // Service for generating excuses (used in progress commentary)
     private static readonly ExcuseService ExcuseService = new();
     // Service for logging random commentary
-    private static readonly CommentaryService CommentaryService = new();
+    private static CommentaryService CommentaryService = new();
 
     // Default update interval for fake indeterminate progress (ms)
     private const int DefaultUpdateIntervalMs = 800;
@@ -122,5 +122,13 @@ public static class FakeIndeterminateProgress
             logger.Error(ex, "[FakeProgress] Unexpected error while faking progress.");
             ProcrastinationMetrics.TasksNeverDone.Add(1);
         }
+    }
+
+    /// <summary>
+    /// Allows test code to inject a custom CommentaryService for mocking or fault injection.
+    /// </summary>
+    public static void SetCommentaryService(CommentaryService service)
+    {
+        CommentaryService = service ?? throw new ArgumentNullException(nameof(service));
     }
 }
