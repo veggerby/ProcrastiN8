@@ -22,4 +22,3 @@ assembly-file-versioning-format: '{Major}.{Minor}.{Patch}.{CommitsSinceVersionSo
 assembly-informational-format: '{FullSemVer}'
 
 continuous-delivery-fallback-tag: prerelease
-label: prerelease
