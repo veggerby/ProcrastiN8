@@ -1,3 +1,4 @@
+
 using ProcrastiN8.JustBecause;
 
 namespace ProcrastiN8.Tests.Common;
@@ -8,6 +9,12 @@ namespace ProcrastiN8.Tests.Common;
 public class PredictableQuantumPromise<T>(T value) : IQuantumPromise<T>
 {
     private readonly T _value = value;
+
+    public DateTimeOffset CreationTime => DateTimeOffset.MinValue;
+
+    public T Value => _value;
+
+    DateTimeOffset IQuantumPromise<T>.CreationTime => CreationTime;
 
     public Task<T> ObserveAsync(CancellationToken cancellationToken = default)
     {

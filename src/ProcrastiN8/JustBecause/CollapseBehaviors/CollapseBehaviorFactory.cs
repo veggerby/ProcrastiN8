@@ -12,6 +12,9 @@ public static class CollapseBehaviorFactory
             QuantumComplianceLevel.ManyWorlds => new ForkingCollapseBehavior<T>(),
             QuantumComplianceLevel.BellInequalityPlus => new SpookyActionCollapseBehavior<T>(),
             QuantumComplianceLevel.EnterpriseQuantum => new EnterpriseQuantumCollapseBehavior<T>(),
+            QuantumComplianceLevel.ReverseEntropy => new ReverseEntropyCollapseBehavior<T>(),
+            QuantumComplianceLevel.HeisenLogging => new HeisenLoggingCollapseBehavior<T>(),
+            QuantumComplianceLevel.StringTheoryCollapse => new StringTheoryCollapseBehavior<T>(),
             _ => new SilentFailureCollapseBehavior<T>()
         };
     }
