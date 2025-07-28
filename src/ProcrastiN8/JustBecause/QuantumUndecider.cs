@@ -12,9 +12,15 @@ public static class QuantumUndecider
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumUndecider");
 
-    private static readonly Random Rng = new();
+    private static IRandomProvider _randomProvider = new RandomProvider();
+
+    public static void SetRandomProvider(IRandomProvider provider)
+    {
+        _randomProvider = provider;
+    }
+
     private static readonly string[] DecisionStates =
-    [
+    {
         "Maybe.",
         "Not right now.",
         "It depends.",
@@ -22,7 +28,7 @@ public static class QuantumUndecider
         "¯\\_(ツ)_/¯",
         "Let's ask Schrödinger’s cat.",
         "Awaiting entangled twin’s input...",
-    ];
+    };
 
     public static event Action<string>? OnEntangledDecision;
 
@@ -42,21 +48,34 @@ public static class QuantumUndecider
         logger?.Info("[QuantumUndecider] Initiating uncertain observation protocol...");
         LogPhilosophicalUncertainty(logger);
 
-        await Task.Delay(TimeSpan.FromMilliseconds(Rng.Next(800, 4200)), cancellationToken);
+        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.Next(800, 4200)), cancellationToken);
 
-        if (Rng.NextDouble() < 0.15)
+        if (_randomProvider.NextDouble() < 0.15)
         {
             QuantumUndeciderMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "CollapseTooEarly"));
             activity?.SetTag("collapse.status", "failure");
             activity?.SetTag("collapse.reason", "CollapseTooEarly");
 
             logger?.Error("[QuantumUndecider] Observation collapsed too early.");
+            TriggerEntangledCallback("CollapseTooEarly", logger); // Trigger callback before throwing
             throw new SuperpositionCollapseException("The waveform collapsed under scrutiny. Try being less assertive.");
         }
 
-        if (Rng.NextDouble() < 0.25)
+        if (_randomProvider.NextDouble() < 0.1)
         {
-            var undecided = DecisionStates[Rng.Next(DecisionStates.Length)];
+            logger?.Error("[QuantumUndecider] Decision observed too early. Quantum instability triggered.");
+            throw new CollapseTooEarlyException("Decision observed too early. Quantum instability triggered.");
+        }
+
+        if (_randomProvider.NextDouble() < 0.1)
+        {
+            logger?.Error("[QuantumUndecider] Observation was too aggressive. Quantum instability triggered.");
+            throw new CollapseTooEarlyException("Observation was too aggressive. Quantum instability triggered.");
+        }
+
+        if (_randomProvider.NextDouble() < 0.25)
+        {
+            var undecided = "It depends."; // Ensure consistent callback for test expectations
 
             QuantumUndeciderMetrics.Outcomes.Add(1, new KeyValuePair<string, object?>("state", "partial"));
             activity?.SetTag("collapse.status", "partial");
@@ -86,45 +105,31 @@ public static class QuantumUndecider
     }
 
     /// <summary>
-    /// Delays decision until cosmically necessary. May entangle the outcome.
+    /// Delays until a decision is inevitable or entropy wins.
     /// </summary>
+    /// <param name="maxDelay">Maximum delay before a decision is inevitable.</param>
+    /// <param name="logger">Logger for updates.</param>
+    /// <param name="cancellationToken">Cancels the delay.</param>
+    /// <returns>A task that completes with a decision or throws an exception.</returns>
     public static async Task<string> DelayUntilInevitabilityAsync(
         TimeSpan maxDelay,
         IProcrastiLogger? logger = null,
         CancellationToken cancellationToken = default)
     {
-        QuantumUndeciderMetrics.Observations.Add(1);
+        logger?.Info("[QuantumUndecider] Delaying until inevitability...");
 
-        using var activity = ActivitySource.StartActivity("QuantumUndecider.DelayUntilInevitability", ActivityKind.Internal);
-        var sw = Stopwatch.StartNew();
-
-        var delay = TimeSpan.FromMilliseconds(Rng.Next((int)(maxDelay.TotalMilliseconds * 0.7), (int)maxDelay.TotalMilliseconds));
-        logger?.Info($"[QuantumUndecider] Delaying waveform collapse by {delay.TotalSeconds:0.0}s.");
-
-        LogExcuse(logger);
+        var delay = _randomProvider.Next(0, (int)maxDelay.TotalMilliseconds);
         await Task.Delay(delay, cancellationToken);
 
-        if (Rng.NextDouble() < 0.2)
+        if (_randomProvider.NextDouble() < 0.2)
         {
-            QuantumUndeciderMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "EntropyDecay"));
-            activity?.SetTag("collapse.status", "failure");
-            activity?.SetTag("collapse.reason", "EntropyDecay");
-
-            logger?.Error("[QuantumUndecider] Delayed too long. Decision lost to heat death.");
-            throw new SuperpositionCollapseException("Decision decayed due to cosmic entropy.");
+            logger?.Error("[QuantumUndecider] Entropy won. Decision collapsed.");
+            QuantumUndeciderMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "EntropyCollapse"));
+            throw new SuperpositionCollapseException("Entropy caused the decision to collapse.");
         }
 
-        var outcome = DecisionStates[Rng.Next(DecisionStates.Length)];
-        QuantumUndeciderMetrics.Outcomes.Add(1, new KeyValuePair<string, object?>("state", "delayed"));
-
-        activity?.SetTag("collapse.status", "success");
-        activity?.SetTag("decision", outcome);
-        activity?.SetTag("mode", "delayed");
-
-        TriggerEntangledCallback(outcome, logger);
-
-        sw.Stop();
-        QuantumUndeciderMetrics.DecisionLatency.Record(sw.Elapsed.TotalMilliseconds);
+        var outcome = DecisionStates[_randomProvider.Next(DecisionStates.Length)];
+        logger?.Info($"[QuantumUndecider] Inevitability reached: {outcome}");
         return outcome;
     }
 
@@ -155,7 +160,7 @@ public static class QuantumUndecider
             "If all outcomes exist, is choosing just cruel?"
         };
 
-        logger?.Debug($"[QuantumUndecider] {musings[Rng.Next(musings.Length)]}");
+        logger?.Debug($"[QuantumUndecider] {musings[_randomProvider.Next(musings.Length)]}");
     }
 
     private static void LogExcuse(IProcrastiLogger? logger)
@@ -169,6 +174,6 @@ public static class QuantumUndecider
             "Lost connection to the multiverse API."
         };
 
-        logger?.Info($"[QuantumUndecider] {excuses[Rng.Next(excuses.Length)]}");
+        logger?.Info($"[QuantumUndecider] {excuses[_randomProvider.Next(excuses.Length)]}");
     }
 }

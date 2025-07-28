@@ -53,15 +53,47 @@ public class QuantumPromiseTests
         await act.Should().ThrowAsync<InvalidOperationException>("the predictable promise should always throw");
     }
 
-    [Fact(Skip = "This test is flaky and needs to be stabilized")]
+    [Fact]
+    public async Task ObserveDecisionAsync_TriggersEntangledCallback()
+    {
+        // Arrange
+        string? observed = null;
+        void Handler(string s) => observed = s;
+        QuantumUndecider.OnEntangledDecision += Handler;
+
+        try
+        {
+            var mockRandomProvider = Substitute.For<IRandomProvider>();
+            QuantumUndecider.SetRandomProvider(mockRandomProvider);
+
+            // Ensure callback is triggered by aligning with the "It depends." decision state
+            mockRandomProvider.NextDouble().Returns(0.2); // Ensure partial decision condition is met
+            mockRandomProvider.Next(Arg.Any<int>(), Arg.Any<int>()).Returns(2); // Index for "It depends."
+
+            // Act
+            await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(true));
+
+            // Assert
+            observed.Should().Be("It depends.", "the entangled callback should always be triggered with the correct state");
+        }
+        finally
+        {
+            QuantumUndecider.OnEntangledDecision -= Handler;
+        }
+    }
+
+    [Fact]
     public async Task ObserveAsync_ThrowsVoidCollapseSometimes()
     {
         // Arrange
         var triggered = false;
-        for (int i = 0; i < 30; i++)
+        var mockRandomProvider = Substitute.For<IRandomProvider>();
+        mockRandomProvider.NextDouble().Returns(0.05); // Ensure CollapseToVoidException is triggered
+
+        for (int i = 0; i < 3; i++) // Reduce iterations
         {
-            var promise = new QuantumPromise<int>(() => Task.FromResult(1), TimeSpan.FromSeconds(2));
-            await Task.Delay(1100);
+            var promise = new QuantumPromise<int>(() => Task.FromResult(1), TimeSpan.FromSeconds(2), randomProvider: mockRandomProvider);
+            await Task.Delay(500); // Reduce delay
             try { await promise.ObserveAsync(); }
             catch (CollapseToVoidException)
             {
@@ -70,6 +102,7 @@ public class QuantumPromiseTests
             }
             catch { /* ignore other exceptions for this test */ }
         }
+
         // Assert
         triggered.Should().BeTrue("eventually, the quantum promise must collapse to void (by design)");
     }

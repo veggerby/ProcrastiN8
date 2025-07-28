@@ -8,7 +8,7 @@ namespace ProcrastiN8.JustBecause;
 /// A promise that exists in a state of superposition until observed. Observation may collapse the value,
 /// throw an exception, or result in existential expiration. Do not use in production. Ever.
 /// </summary>
-public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan schrodingerWindow) : IQuantumPromise<T>, ICopenhagenCollapsible<T>
+public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan schrodingerWindow, IRandomProvider? randomProvider = null) : IQuantumPromise<T>, ICopenhagenCollapsible<T>
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumPromise");
 
@@ -20,8 +20,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     private bool _isObserved = false;
     private Task<T>? _evaluationTask;
     private Exception? _collapseFailure;
-
-    private static readonly Random _rng = new();
+    private readonly IRandomProvider _randomProvider = randomProvider ?? new RandomProvider();
 
     // Minimum milliseconds after creation before observation is allowed (quantum instability window)
     private const int MinObservationDelayMs = 200;
@@ -82,7 +81,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
 
             var timeSinceCreation = DateTimeOffset.UtcNow - _creationTime;
 
-            if (timeSinceCreation < TimeSpan.FromMilliseconds(_rng.Next(MinObservationDelayMs, MaxObservationDelayMs)))
+            if (timeSinceCreation < TimeSpan.FromMilliseconds(_randomProvider.Next(MinObservationDelayMs, MaxObservationDelayMs)))
             {
                 _collapseFailure = new CollapseTooEarlyException("You peeked too soon. Quantum instability triggered.");
                 QuantumPromiseMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "TooEarly"));
@@ -100,7 +99,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
                 throw _collapseFailure;
             }
 
-            if (_rng.NextDouble() < VoidCollapseProbability)
+            if (_randomProvider.NextDouble() < VoidCollapseProbability)
             {
                 _collapseFailure = new CollapseToVoidException("The promise evaporated into existential nothingness.");
                 QuantumPromiseMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "VoidCollapse"));
@@ -118,7 +117,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     {
         var sw = Stopwatch.StartNew();
 
-        await Task.Delay(_rng.Next(100, 1000), cancellationToken); // simulate quantum weirdness
+        await Task.Delay(_randomProvider.Next(100, 1000), cancellationToken); // simulate quantum weirdness
 
         var result = await _lazyInitializer.Invoke();
 
@@ -159,7 +158,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
         }
 
         // Simulate collapse latency for optics
-        await Task.Delay(_rng.Next(CollapseConsensusMinDelayMs, CollapseConsensusMaxDelayMs), cancellationToken);
+        await Task.Delay(_randomProvider.Next(CollapseConsensusMinDelayMs, CollapseConsensusMaxDelayMs), cancellationToken);
         QuantumPromiseMetrics.Collapses.Add(1);
     }
 

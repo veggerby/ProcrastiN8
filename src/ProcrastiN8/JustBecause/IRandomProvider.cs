@@ -11,6 +11,11 @@ public interface IRandomProvider
     int Next(int maxValue);
 
     /// <summary>
+    /// Returns a random integer within the specified range.
+    /// </summary>
+    int Next(int minValue, int maxValue);
+
+    /// <summary>
     /// Returns a random double between 0.0 and 1.0.
     /// </summary>
     double NextDouble();
