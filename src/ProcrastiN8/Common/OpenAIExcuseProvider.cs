@@ -14,7 +14,7 @@ namespace ProcrastiN8.Common;
 public class OpenAIExcuseProvider(string apiKey, HttpClient httpClient) : IExcuseProvider
 {
     private readonly string _apiKey = apiKey;
-    private readonly HttpClient _httpClient = httpClient ?? new HttpClient();
+    private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
     /// <inheritdoc />
     public async Task<string> GetExcuseAsync()
