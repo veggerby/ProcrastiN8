@@ -2,9 +2,9 @@ using ProcrastiN8.Metrics;
 
 namespace ProcrastiN8.JustBecause.CollapseBehaviors;
 
-public sealed class RandomUnfairCollapseBehavior<T> : ICollapseBehavior<T>
+public sealed class RandomUnfairCollapseBehavior<T>(IRandomProvider? randomProvider = null) : ICollapseBehavior<T>
 {
-    private readonly IRandomProvider _randomProvider;
+    private readonly IRandomProvider _randomProvider = randomProvider ?? new RandomProvider();
 
     private const int RippleCollapseMinDelayMs = 300;
     private const int RippleCollapseMaxDelayMs = 1300;
@@ -13,11 +13,6 @@ public sealed class RandomUnfairCollapseBehavior<T> : ICollapseBehavior<T>
     private const int RippleEntropyMinDelayMs = 100;
     private const int RippleEntropyMaxDelayMs = 700;
     private const double RippleEntropyProbability = 0.25;
-
-    public RandomUnfairCollapseBehavior(IRandomProvider? randomProvider = null)
-    {
-        _randomProvider = randomProvider ?? new RandomProvider();
-    }
 
     public async Task<T?> CollapseAsync(IEnumerable<IQuantumPromise<T>> entangled, CancellationToken cancellationToken)
     {

@@ -1,3 +1,6 @@
+---
+applyTo: '**'
+---
 # 🧠 ProcrastiN8 – GitHub Copilot Chat Instructions
 
 > *These instructions define how Copilot Chat and ChatGPT should behave when assisting with the **ProcrastiN8** codebase. They are serious. About not being serious.*

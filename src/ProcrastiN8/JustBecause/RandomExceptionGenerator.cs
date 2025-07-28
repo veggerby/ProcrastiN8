@@ -25,6 +25,22 @@ public class RandomExceptionGenerator(IRandomProvider randomProvider, IEnumerabl
         throw _exceptionFactories[index]();
     }
 
+    /// <summary>
+    /// Generates a randomly selected exception from the available factories.
+    /// </summary>
+    /// <returns>A randomly selected <see cref="Exception"/>.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when no exception factories are available.</exception>
+    public Exception GenerateException()
+    {
+        if (_exceptionFactories == null || !_exceptionFactories.Any())
+        {
+            throw new InvalidOperationException("No exception factories available.");
+        }
+
+        var index = _randomProvider.Next(_exceptionFactories.Count());
+        return _exceptionFactories.ElementAt(index).Invoke();
+    }
+
     private static List<Func<Exception>> GetDefaultFactories() => new()
     {
         () => new InvalidOperationException("Operation was invalid, but not unexpected."),
