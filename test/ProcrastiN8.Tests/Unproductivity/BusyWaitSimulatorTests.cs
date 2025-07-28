@@ -1,8 +1,5 @@
-using System.Threading;
-using System.Threading.Tasks;
 using ProcrastiN8.Unproductivity;
 using ProcrastiN8.Services;
-using Xunit;
 
 namespace ProcrastiN8.Tests.Unproductivity;
 
