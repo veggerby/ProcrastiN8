@@ -9,4 +9,9 @@ public interface IRandomProvider
     /// Returns a non-negative random integer less than the specified maximum.
     /// </summary>
     int Next(int maxValue);
+
+    /// <summary>
+    /// Returns a random double between 0.0 and 1.0.
+    /// </summary>
+    double NextDouble();
 }

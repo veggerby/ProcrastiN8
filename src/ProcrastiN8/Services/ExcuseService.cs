@@ -9,6 +9,11 @@ public class ExcuseService
     // Increment value for excuse metric
     private const int ExcuseIncrement = 1;
 
+    public static void SetRandomProvider(ProcrastiN8.JustBecause.IRandomProvider provider)
+    {
+        ExcuseGenerator.SetRandomProvider(provider);
+    }
+
     public string GenerateExcuse(string category = "existential")
     {
         ProcrastinationMetrics.ExcusesGenerated.Add(ExcuseIncrement,

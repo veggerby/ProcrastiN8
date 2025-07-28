@@ -22,17 +22,18 @@ namespace ProcrastiN8.JustBecause;
 /// All operations are traced for metrics and activity, in case auditors wish to observe the collapse of productivity in real time.
 /// </para>
 /// </remarks>
-internal sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behavior = null) : IQuantumEntanglementRegistry<T>
+internal sealed class QuantumEntanglementRegistry<T> : IQuantumEntanglementRegistry<T>
 {
-    // Holds all entangled quantum promises
     private readonly ConcurrentBag<QuantumPromise<T>> _entangled = [];
-    // Behavior for collapsing quantum promises
-    private readonly ICollapseBehavior<T> _collapseBehavior = behavior ?? CollapseBehaviorFactory.Create<T>(QuantumComplianceLevel.Entanglish);
-
-    // Random number generator for all quantum effects
-    private static readonly Random _rng = new();
-    // Activity source for tracing entanglement operations
+    private readonly ICollapseBehavior<T> _collapseBehavior;
+    private readonly IRandomProvider _randomProvider;
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumEntanglement");
+
+    public QuantumEntanglementRegistry(ICollapseBehavior<T>? behavior = null, IRandomProvider? randomProvider = null)
+    {
+        _collapseBehavior = behavior ?? CollapseBehaviorFactory.Create<T>(QuantumComplianceLevel.Entanglish);
+        _randomProvider = randomProvider ?? new RandomProvider();
+    }
 
     /// <summary>
     /// Adds a <see cref="QuantumPromise{T}"/> to the entangled set.
@@ -86,7 +87,7 @@ internal sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behav
         var sw = Stopwatch.StartNew();
 
         var array = _entangled.ToArray();
-        var chosen = array[_rng.Next(array.Length)];
+        var chosen = array[_randomProvider.Next(array.Length)];
 
         QuantumEntanglementMetrics.Collapses.Add(1);
         activity?.SetTag("entangled.count", array.Length);

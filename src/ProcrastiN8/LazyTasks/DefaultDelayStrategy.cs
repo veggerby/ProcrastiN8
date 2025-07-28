@@ -13,25 +13,44 @@ namespace ProcrastiN8.LazyTasks;
 /// <param name="maxDelay">The maximum delay duration.</param>
 /// <param name="randomFunc">An optional random function for testability.</param>
 /// <param name="delayProvider">The delay provider to use for actual delays.</param>
-public class DefaultDelayStrategy(
-    TimeSpan? minDelay = null,
-    TimeSpan? maxDelay = null,
-    Func<int, int>? randomFunc = null,
-    IDelayProvider? delayProvider = null) : IDelayStrategy
+using ProcrastiN8.JustBecause;
+
+public class DefaultDelayStrategy : IDelayStrategy
 {
-    private readonly TimeSpan _minDelay = minDelay ?? TimeSpan.FromSeconds(1);
-    private readonly TimeSpan _maxDelay = maxDelay ?? TimeSpan.FromSeconds(3);
-    private readonly Func<int, int>? _randomFunc = randomFunc;
-    private readonly IDelayProvider _delayProvider = delayProvider ?? new TaskDelayProvider();
+    private readonly TimeSpan _minDelay;
+    private readonly TimeSpan _maxDelay;
+    private readonly IRandomProvider _randomProvider;
+    private readonly IDelayProvider _delayProvider;
+
+    public DefaultDelayStrategy(
+        TimeSpan? minDelay = null,
+        TimeSpan? maxDelay = null,
+        IRandomProvider? randomProvider = null,
+        IDelayProvider? delayProvider = null)
+    {
+        _minDelay = minDelay ?? TimeSpan.FromSeconds(1);
+        _maxDelay = maxDelay ?? TimeSpan.FromSeconds(3);
+        _randomProvider = randomProvider ?? new RandomProvider();
+        _delayProvider = delayProvider ?? new TaskDelayProvider();
+    }
 
     /// <inheritdoc />
     public async Task DelayAsync(CancellationToken cancellationToken = default)
     {
         var minMs = (int)_minDelay.TotalMilliseconds;
         var maxMs = (int)_maxDelay.TotalMilliseconds;
-        int delayMs = minMs == maxMs && _randomFunc is null
-            ? minMs
-            : minMs + (_randomFunc?.Invoke(maxMs - minMs + 1) ?? new Random().Next(maxMs - minMs + 1));
+        int delayMs;
+
+        if (minMs == maxMs)
+        {
+            delayMs = minMs;
+        }
+        else
+        {
+            delayMs = minMs + _randomProvider.Next(maxMs - minMs + 1);
+            Console.WriteLine($"RandomProvider.Next called with max: {maxMs - minMs + 1}, returned delay: {delayMs}");
+        }
+
         await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(delayMs), cancellationToken);
     }
 }

@@ -19,7 +19,6 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
 
     private bool _isObserved = false;
     private Task<T>? _evaluationTask;
-    private T? _value;
     private Exception? _collapseFailure;
 
     private static readonly Random _rng = new();
@@ -130,7 +129,6 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
         activity?.SetTag("collapse.status", "success");
         activity?.SetTag("collapse.duration_ms", sw.Elapsed.TotalMilliseconds);
 
-        _value = result;
         return result;
     }
 
@@ -156,7 +154,6 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
             }
 
             _isObserved = true;
-            _value = value;
             _collapseFailure = null;
             _evaluationTask = Task.FromResult(value);
         }

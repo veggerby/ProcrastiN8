@@ -6,9 +6,16 @@ namespace ProcrastiN8.JustBecause.CollapseBehaviors;
 /// Implements the Copenhagen interpretation: observation collapses all entangled promises, but only the chosen one determines the returned value.
 /// All other entangled promises are forcibly collapsed to the same value, bypassing quantum uncertainty.
 /// </summary>
-public sealed class CopenhagenCollapseBehavior<T>(IObserverContext? context = null) : ICollapseBehavior<T>
+public sealed class CopenhagenCollapseBehavior<T> : ICollapseBehavior<T>
 {
-    private readonly IObserverContext _observerContext = context ?? new DefaultObserverContext();
+    private readonly IObserverContext _observerContext;
+    private readonly IRandomProvider _randomProvider;
+
+    public CopenhagenCollapseBehavior(IObserverContext? context = null, IRandomProvider? randomProvider = null)
+    {
+        _observerContext = context ?? new DefaultObserverContext();
+        _randomProvider = randomProvider ?? new RandomProvider();
+    }
 
     public async Task<T?> CollapseAsync(IEnumerable<IQuantumPromise<T>> entangled, CancellationToken cancellationToken)
     {
@@ -24,7 +31,7 @@ public sealed class CopenhagenCollapseBehavior<T>(IObserverContext? context = nu
             return default;
         }
 
-        var chosenIndex = new Random().Next(array.Length);
+        var chosenIndex = _randomProvider.Next(array.Length);
         var chosen = array[chosenIndex];
         QuantumEntanglementMetrics.Collapses.Add(1);
 

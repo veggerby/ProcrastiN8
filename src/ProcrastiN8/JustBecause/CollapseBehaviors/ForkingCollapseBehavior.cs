@@ -9,14 +9,19 @@ namespace ProcrastiN8.JustBecause.CollapseBehaviors;
 /// </summary>
 public sealed class ForkingCollapseBehavior<T> : ICollapseBehavior<T>
 {
-    private static readonly Random _rng = new();
+    private readonly IRandomProvider _randomProvider;
     private const int MaxForks = 3;
     private const int MaxForkDepth = 2;
+
+    public ForkingCollapseBehavior(IRandomProvider? randomProvider = null)
+    {
+        _randomProvider = randomProvider ?? new RandomProvider();
+    }
 
     public async Task<T?> CollapseAsync(IEnumerable<IQuantumPromise<T>> entangled, CancellationToken cancellationToken)
     {
         var array = entangled.ToArray();
-        var chosen = array.FirstOrDefault(p => p.GetType().Name.Contains("PredictableQuantumPromise")) ?? array[_rng.Next(array.Length)];
+        var chosen = array.FirstOrDefault(p => p.GetType().Name.Contains("PredictableQuantumPromise")) ?? array[_randomProvider.Next(array.Length)];
 
         QuantumEntanglementMetrics.Collapses.Add(1);
 
@@ -41,18 +46,18 @@ public sealed class ForkingCollapseBehavior<T> : ICollapseBehavior<T>
         if (depth > MaxForkDepth)
             return;
 
-        int forkCount = _rng.Next(1, MaxForks + 1);
+        int forkCount = 1 + _randomProvider.Next(MaxForks);
         QuantumEntanglementMetrics.Forks.Add(forkCount);
 
         for (int i = 0; i < forkCount; i++)
         {
             Task.Run(async () =>
             {
-                await Task.Delay(_rng.Next(100, 400), cancellationToken);
+                await Task.Delay(100 + _randomProvider.Next(300), cancellationToken);
 
                 try
                 {
-                    var forkedBehavior = new ForkingCollapseBehavior<T>();
+                    var forkedBehavior = new ForkingCollapseBehavior<T>(_randomProvider);
                     await forkedBehavior.CollapseAsync(entangled, cancellationToken);
                 }
                 catch

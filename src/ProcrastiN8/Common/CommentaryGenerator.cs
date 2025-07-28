@@ -1,3 +1,5 @@
+
+using ProcrastiN8.JustBecause;
 namespace ProcrastiN8.Common;
 
 public static class CommentaryGenerator
@@ -48,7 +50,12 @@ public static class CommentaryGenerator
         "📉", "🌀", "🔁", "💤", "😵‍💫", "🫠", "🙃", "🛸", "🤹‍♂️", ""
     ];
 
-    private static readonly Random Rng = new();
+    private static IRandomProvider _randomProvider = new ProcrastiN8.JustBecause.RandomProvider();
+
+    public static void SetRandomProvider(ProcrastiN8.JustBecause.IRandomProvider provider)
+    {
+        _randomProvider = provider;
+    }
 
     public static string GetRandomCommentary()
     {
@@ -66,5 +73,5 @@ public static class CommentaryGenerator
         logger?.Debug($"[{context}] {message}");
     }
 
-    private static string GetRandom(string[] array) => array[Rng.Next(array.Length)];
+    private static string GetRandom(string[] array) => array[_randomProvider.Next(array.Length)];
 }

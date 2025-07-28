@@ -8,6 +8,8 @@ namespace ProcrastiN8.LazyTasks;
 /// <summary>
 /// Provides methods to execute asynchronous actions after a random delay, simulating procrastination with logging, tracing, and metrics.
 /// </summary>
+using ProcrastiN8.JustBecause;
+
 public static class Eventually
 {
     // Default maximum delay for 'eventually' procrastination (seconds)
@@ -30,6 +32,13 @@ public static class Eventually
     /// Service for generating and logging random commentary during procrastination.
     /// </summary>
     private static readonly CommentaryService CommentaryService = new();
+
+    private static IRandomProvider _randomProvider = new RandomProvider();
+
+    public static void SetRandomProvider(IRandomProvider provider)
+    {
+        _randomProvider = provider;
+    }
 
     /// <summary>
     /// Executes an async action after a random delay, with logging, tracing, and metrics support.
@@ -93,7 +102,7 @@ public static class Eventually
     /// <returns>A random TimeSpan between 0 and max.</returns>
     private static TimeSpan GetDelay(TimeSpan max)
     {
-        var jitter = new Random().NextDouble() * max.TotalMilliseconds;
+        var jitter = _randomProvider.NextDouble() * max.TotalMilliseconds;
         return TimeSpan.FromMilliseconds(jitter);
     }
 
