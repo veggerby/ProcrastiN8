@@ -109,4 +109,39 @@ public class QuantumPromiseTests
         // Assert
         str.Should().Contain("QuantumPromise", "the string representation should be suitably dramatic");
     }
+
+    [Fact]
+    public async Task ObserveAsync_DelegatesToEntanglementRegistry()
+    {
+        // arrange
+        var registry = Substitute.For<IQuantumEntanglementRegistry<int>>();
+        var promise = new QuantumPromise<int>(() => Task.FromResult(42), TimeSpan.FromSeconds(2));
+        registry.ObserveAsync(promise, Arg.Any<CancellationToken>()).Returns(Task.FromResult(99));
+        // Use internal method to set registry (simulate entanglement)
+        typeof(QuantumPromise<int>).GetMethod("SetEntanglementRegistry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .Invoke(promise, new object[] { registry });
+
+        // act
+        var result = await promise.ObserveAsync();
+
+        // assert
+        result.Should().Be(99, "entangled promises must defer to their registry for collapse");
+        await registry.Received(1).ObserveAsync(promise, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CollapseToValueAsync_ForciblyResolvesPromise()
+    {
+        // arrange
+        var promise = new QuantumPromise<string>(() => Task.FromResult("never used"), TimeSpan.FromSeconds(2));
+        var collapsible = (ICopenhagenCollapsible<string>)promise;
+
+        // act
+        await collapsible.CollapseToValueAsync("collapsed");
+        var result = await promise.ObserveAsync();
+
+        // assert
+        result.Should().Be("collapsed", "Copenhagen collapse forcibly resolves the promise");
+        promise.ToString().Should().Contain("resolved");
+    }
 }

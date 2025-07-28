@@ -1,9 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using NSubstitute;
-using Xunit;
-using AwesomeAssertions;
 using ProcrastiN8.Common;
 using ProcrastiN8.Extensions;
 

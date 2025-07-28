@@ -1,5 +1,4 @@
 using ProcrastiN8.Metrics;
-using Xunit;
 
 namespace ProcrastiN8.Tests.Metrics;
 

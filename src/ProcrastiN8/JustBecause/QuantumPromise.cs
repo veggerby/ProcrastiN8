@@ -51,6 +51,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
             // The registry will coordinate the collapse and return the value for this promise
             return await _entanglementRegistry.ObserveAsync(this, cancellationToken);
         }
+
         // Otherwise, collapse independently (legacy, discouraged)
         return await ObserveInternalAsync(cancellationToken);
     }

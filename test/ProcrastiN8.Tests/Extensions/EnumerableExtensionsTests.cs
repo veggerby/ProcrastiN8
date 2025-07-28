@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using NSubstitute;
-using Xunit;
-using AwesomeAssertions;
 using ProcrastiN8.Extensions;
 
 namespace ProcrastiN8.Tests.Extensions;
