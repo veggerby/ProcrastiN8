@@ -29,6 +29,15 @@ jobs:
         with:
           name: test-results
           path: test/ProcrastiN8.Tests/TestResults
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./test/ProcrastiN8.Tests/TestResults/**/coverage.cobertura.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   pack:
     needs: build-test
