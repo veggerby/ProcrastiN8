@@ -13,11 +13,11 @@ public static class StringExcuses
     /// <param name="context">The context for which an excuse is needed.</param>
     /// <param name="excuseProvider">An optional excuse provider for elaborate excuses. If null, a default excuse is generated.</param>
     /// <returns>A plausible excuse string, possibly over-engineered.</returns>
-    public static string ToExcuse(this string context, IExcuseProvider? excuseProvider = null)
+    public static async Task<string> ToExcuse(this string context, IExcuseProvider? excuseProvider = null)
     {
         if (excuseProvider is not null)
         {
-            return $"Unable to process '{context}' because: {excuseProvider.GetExcuse()}";
+            return $"Unable to process '{context}' because: {await excuseProvider.GetExcuseAsync()}";
         }
 
         // Fallback to a deterministic, but still plausible, excuse
@@ -31,9 +31,9 @@ public static class StringExcuses
     /// <param name="prefix">A custom prefix to prepend to the excuse.</param>
     /// <param name="excuseProvider">An optional excuse provider for elaborate excuses.</param>
     /// <returns>A plausible excuse string with a custom prefix.</returns>
-    public static string ToExcuseWithPrefix(this string context, string prefix, IExcuseProvider? excuseProvider = null)
+    public static async Task<string> ToExcuseWithPrefix(this string context, string prefix, IExcuseProvider? excuseProvider = null)
     {
-        var excuse = context.ToExcuse(excuseProvider);
+        var excuse = await context.ToExcuse(excuseProvider);
         return $"{prefix}{excuse}";
     }
 }

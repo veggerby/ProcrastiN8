@@ -8,13 +8,25 @@ public class QuantumUndeciderTests
     public async Task ObserveDecisionAsync_ReturnsDefinitiveOrPartialOrThrows()
     {
         // Arrange
-        // (no setup needed)
+        var mockRandomProvider = Substitute.For<IRandomProvider>();
+        QuantumUndecider.SetRandomProvider(mockRandomProvider);
 
-        // Act
+        // Ensure predictable behavior for the test
+        mockRandomProvider.NextDouble().Returns(0.05, 0.2, 0.05, 0.19, 0.3, 0.8); // Adjusted sequence of values
+        mockRandomProvider.Next(Arg.Any<int>(), Arg.Any<int>()).Returns(2); // Index for "It depends."
+
         string? result = null;
         Exception? exception = null;
-        try { result = await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(true)); }
-        catch (Exception ex) { exception = ex; }
+
+        // Act
+        try
+        {
+            result = await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(true));
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
 
         // Assert
         if (exception is not null)

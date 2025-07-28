@@ -15,8 +15,8 @@ public class ExcuseProvider(Func<string>? customExcuseFunc = null) : IExcuseProv
     private readonly Func<string>? _customExcuseFunc = customExcuseFunc;
 
     /// <inheritdoc />
-    public string GetExcuse()
+    public Task<string> GetExcuseAsync()
     {
-        return _customExcuseFunc?.Invoke() ?? ExcuseGenerator.GetRandomExcuse();
+        return Task.FromResult(_customExcuseFunc?.Invoke() ?? ExcuseGenerator.GetRandomExcuse());
     }
 }
