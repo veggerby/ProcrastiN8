@@ -7,13 +7,13 @@ public class ExcuseGeneratorTests
     [Fact]
     public void GetRandomExcuse_ReturnsNonEmptyString()
     {
-        // Arrange
+        // arrange
         // (no setup needed)
 
-        // Act
+        // act
         var result = ExcuseGenerator.GetRandomExcuse();
 
-        // Assert
+        // assert
         result.Should().NotBeNullOrWhiteSpace();
     }
 }

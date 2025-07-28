@@ -7,26 +7,26 @@ public class CommentaryGeneratorTests
     [Fact]
     public void GetRandomCommentary_ReturnsNonEmptyString()
     {
-        // Arrange
+        // arrange
         // (no setup needed)
 
-        // Act
+        // act
         var result = CommentaryGenerator.GetRandomCommentary();
 
-        // Assert
+        // assert
         result.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
     public void LogRandomCommentary_DoesNotThrow()
     {
-        // Arrange
+        // arrange
         // (no setup needed)
 
-        // Act
+        // act
         var ex = Record.Exception(() => CommentaryGenerator.LogRandomCommentary(null));
 
-        // Assert
+        // assert
         ex.Should().BeNull();
     }
 }

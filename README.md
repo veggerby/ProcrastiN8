@@ -2,7 +2,12 @@
 
 ProcrastiN8 is a C#/.NET utility library for simulating productivity, stalling, and quantum-level procrastination. All features are absurd in concept, but real in implementation.
 
-[![NuGet](https://img.shields.io/nuget/v/ProcrastiN8.svg?style=flat-square)](https://www.nuget.org/packages/ProcrastiN8/#readme-body-tab)
+## ✨ Project Status
+
+![SHIT Compliant](https://img.shields.io/badge/style-SHIT-green?style=flat-square)
+![Build](https://img.shields.io/github/actions/workflow/status/veggerby/ProcrastiN8/ci-release.yml?label=build&style=flat-square)
+![Coverage](https://img.shields.io/codecov/c/github/veggerby/ProcrastiN8?style=flat-square)
+![NuGet](https://img.shields.io/nuget/vpre/ProcrastiN8?label=nuget&style=flat-square)
 
 ---
 

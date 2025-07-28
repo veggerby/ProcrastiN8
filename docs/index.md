@@ -33,66 +33,32 @@ ProcrastiN8
 
 ---
 
-## 🧰 Example Features
+## 📚 Feature Documentation
 
-### 1. **LazyTasks.Eventually**
-
-```csharp
-await ProcrastiN8.LazyTasks.Eventually.Do(() => DoSomethingImportant(), within: TimeSpan.FromDays(3));
-```
-
-> Wraps a task in a humorous delay. Logs "I'll get to it" messages at intervals. Optional `ExcuseGenerator`.
-
----
-
-### 2. **TODOFramework.TodoAttribute**
-
-```csharp
-[Todo("Refactor this someday", Priority = -1)]
-public void LegacyThing() => Console.WriteLine("Still works ¯\\_(ツ)_/¯");
-```
-
-> A `[Todo]` attribute that plugs into a `TodoScheduler` which... never runs.
-
----
-
-### 3. **Unproductivity.FakeProgress**
-
-```csharp
-var bar = new FakeProgress("Deploying to Production");
-bar.Start(); // increments endlessly, loops at 98%
-```
-
-> Simulates being productive. Great for impressing managers or livestreams.
-
----
-
-### 4. **JustBecause.RandomExceptionGenerator**
-
-```csharp
-var chaos = new RandomExceptionGenerator();
-chaos.MaybeThrow(); // 5% chance of throwing an ArgumentOutOfExcusesException
-```
-
-> Encourages resilience through randomness.
-
----
-
-### 5. **Extensions.StringExcuses**
-
-```csharp
-"Unit test not written".ToExcuse()
-// => "I was waiting for more requirements"
-```
-
-> Converts any string into a semi-believable excuse using GPT-like prompt mapping.
+- [Eventually](./eventually.md)
+- [RetryUntilCancelled](./retry-until-cancelled.md)
+- [FakeProgress](./fake-progress.md)
+- [InfiniteSpinner](./infinite-spinner.md)
+- [BusyWaitSimulator](./busy-wait-simulator.md)
+- [QuantumPromise](./quantum-promise.md)
+- [QuantumEntanglementRegistry](./quantum-entanglement-registry.md)
+- [QuantumUndecider](./quantum-undecider.md)
+- [CommentaryGenerator](./commentary-generator.md)
+- [ExcuseGenerator](./excuse-generator.md)
+- [TODO Framework](./todo-framework.md)
+- [Just Because Utilities](./just-because-utilities.md)
+- [Extensions](./extensions.md)
 
 ---
 
 ## 🧪 Real Use Cases (Almost)
 
-* Decorate legacy code with meaningful-but-ignored `[Todo]` tags
-* Delay side-effects in tests with `Eventually`
-* Troll teammates with infinite progress bars
-* Add realism to internal tools by introducing unexplainable latency
-* Practice failure handling with chaos monkey–style `MaybeThrow()`
+- Decorate legacy code with meaningful-but-ignored `[Todo]` tags
+- Delay side-effects in tests with `Eventually`
+- Troll teammates with infinite progress bars
+- Add realism to internal tools by introducing unexplainable latency
+- Practice failure handling with chaos monkey–style `RandomExceptionGenerator`
+
+---
+
+For API details, see XML docs in source files.

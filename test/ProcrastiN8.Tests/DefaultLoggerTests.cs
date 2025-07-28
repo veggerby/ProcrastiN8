@@ -5,48 +5,48 @@ public class DefaultLoggerTests
     [Fact]
     public void Debug_DoesNotThrow()
     {
-        // Arrange
+        // arrange
         var logger = new DefaultLogger();
 
-        // Act
+        // act
         var ex = Record.Exception(() =>
         {
             logger.Debug("test {0}", 1);
         });
 
-        // Assert
+        // assert
         ex.Should().BeNull();
     }
 
     [Fact]
     public void Error_DoesNotThrow()
     {
-        // Arrange
+        // arrange
         var logger = new DefaultLogger();
 
-        // Act
+        // act
         var ex = Record.Exception(() =>
         {
             logger.Error("error {0}", 2);
         });
 
-        // Assert
+        // assert
         ex.Should().BeNull();
     }
 
     [Fact]
     public void Info_DoesNotThrow()
     {
-        // Arrange
+        // arrange
         var logger = new DefaultLogger();
 
-        // Act
+        // act
         var ex = Record.Exception(() =>
         {
             logger.Info("info {0}", 3);
         });
 
-        // Assert
+        // assert
         ex.Should().BeNull();
     }
 }

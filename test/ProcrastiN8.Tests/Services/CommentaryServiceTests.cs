@@ -7,14 +7,14 @@ public class CommentaryServiceTests
     [Fact]
     public void LogRandomRemark_DoesNotThrow()
     {
-        // Arrange
+        // arrange
         var service = new CommentaryService();
         var logger = Substitute.For<IProcrastiLogger>();
 
-        // Act
+        // act
         var ex = Record.Exception(() => service.LogRandomRemark(logger));
 
-        // Assert
+        // assert
         ex.Should().BeNull();
     }
 }
