@@ -96,13 +96,3 @@ chaos.MaybeThrow(); // 5% chance of throwing an ArgumentOutOfExcusesException
 * Troll teammates with infinite progress bars
 * Add realism to internal tools by introducing unexplainable latency
 * Practice failure handling with chaos monkey–style `MaybeThrow()`
-
----
-
-## 📦 NuGet Package Metadata
-
-* **ID:** `ProcrastiN8`
-* **Author:** `veggerby.dev`
-* **License:** MIT (because who cares?)
-* **Version:** `0.0.8-beta` (and it’ll never leave beta)
-* **Tags:** `procrastination`, `excuses`, `chaos-engineering`, `humor`, `todo`, `lazy`
