@@ -46,6 +46,23 @@ public class QuantumEntanglementRegistryTests
     }
 
     [Fact]
+    public async Task ObserveAsync_CollapsesViaRegistryAndBehavior()
+    {
+        // Arrange
+        var behavior = Substitute.For<ICollapseBehavior<int>>();
+        var reg = new QuantumEntanglementRegistry<int>(behavior);
+        var promise = MakePromise(42);
+        reg.Entangle(promise);
+        behavior.CollapseAsync(Arg.Any<IEnumerable<IQuantumPromise<int>>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<int>(42));
+        // Act
+        var result = await reg.ObserveAsync(promise);
+        // Assert
+        result.Should().Be(42, "the registry should coordinate collapse and return the observed value");
+        await behavior.Received(1).CollapseAsync(Arg.Any<IEnumerable<IQuantumPromise<int>>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void Entangle_ThrowsOnNull()
     {
         // Arrange
@@ -54,6 +71,18 @@ public class QuantumEntanglementRegistryTests
         Action act = () => reg.Entangle(null!);
         // Assert
         act.Should().Throw<ArgumentNullException>("entangling null should be forbidden, even in quantum C#");
+    }
+
+    [Fact]
+    public void ObserveAsync_ThrowsIfPromiseNotEntangled()
+    {
+        // Arrange
+        var reg = new QuantumEntanglementRegistry<int>();
+        var promise = MakePromise(7);
+        // Act
+        Func<Task> act = async () => await reg.ObserveAsync(promise);
+        // Assert
+        act.Should().ThrowAsync<InvalidOperationException>("observing a non-entangled promise should be forbidden by quantum law");
     }
 
     // Helper for creating promises

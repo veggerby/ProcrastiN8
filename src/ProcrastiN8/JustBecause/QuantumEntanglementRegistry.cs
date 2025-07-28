@@ -22,7 +22,7 @@ namespace ProcrastiN8.JustBecause;
 /// All operations are traced for metrics and activity, in case auditors wish to observe the collapse of productivity in real time.
 /// </para>
 /// </remarks>
-public sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behavior = null)
+internal sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behavior = null) : IQuantumEntanglementRegistry<T>
 {
     // Holds all entangled quantum promises
     private readonly ConcurrentBag<QuantumPromise<T>> _entangled = [];
@@ -41,13 +41,30 @@ public sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behavio
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="quantum"/> is null.</exception>
     public void Entangle(QuantumPromise<T> quantum)
     {
-        if (quantum == null)
-        {
-            throw new ArgumentNullException(nameof(quantum));
-        }
+        ArgumentNullException.ThrowIfNull(quantum);
 
+        quantum.SetEntanglementRegistry(this);
         _entangled.Add(quantum);
         QuantumEntanglementMetrics.Entanglements.Add(1);
+    }
+
+    /// <summary>
+    /// Observes the specified quantum promise, coordinating the collapse of all entangled promises according to the registry's behavior.
+    /// </summary>
+    /// <param name="promise">The quantum promise to observe. Must be entangled in this registry.</param>
+    /// <param name="cancellationToken">A token to cancel the observation.</param>
+    /// <returns>The observed value, or throws if collapse fails.</returns>
+    public async Task<T> ObserveAsync(QuantumPromise<T> promise, CancellationToken cancellationToken = default)
+    {
+        if (!_entangled.Contains(promise))
+        {
+            throw new InvalidOperationException("Promise is not entangled in this registry.");
+        }
+
+        // Collapse all entangled promises via the configured behavior
+        var result = await _collapseBehavior.CollapseAsync(_entangled.Cast<IQuantumPromise<T>>(), cancellationToken);
+        // Return the value for the requested promise (may be null if collapse failed)
+        return result is not null ? result : throw new InvalidOperationException("Collapse yielded no value.");
     }
 
     /// <summary>
