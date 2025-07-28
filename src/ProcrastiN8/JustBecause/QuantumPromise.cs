@@ -8,7 +8,7 @@ namespace ProcrastiN8.JustBecause;
 /// A promise that exists in a state of superposition until observed. Observation may collapse the value,
 /// throw an exception, or result in existential expiration. Do not use in production. Ever.
 /// </summary>
-public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan schrodingerWindow) : IQuantumPromise<T>
+public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan schrodingerWindow) : IQuantumPromise<T>, ICopenhagenCollapsible<T>
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumPromise");
 
@@ -30,11 +30,33 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     private const int MaxObservationDelayMs = 1000;
     // Probability that the promise collapses to void (evaporates)
     private const double VoidCollapseProbability = 0.1;
+    // Minimum milliseconds to simulate collapse latency for consensus
+    private const int CollapseConsensusMinDelayMs = 50;
+    // Maximum milliseconds to simulate collapse latency for consensus
+    private const int CollapseConsensusMaxDelayMs = 150;
+
+    private IQuantumEntanglementRegistry<T>? _entanglementRegistry;
 
     /// <summary>
-    /// Observes the value, triggering collapse. May throw if observed too soon, too late, or from the wrong dimension.
+    /// Requests observation of this quantum promise. If this promise is entangled in a registry, the registry will coordinate the collapse of all entangled promises according to its behavior.
+    /// If not entangled, this promise will collapse independently.
     /// </summary>
-    public Task<T> ObserveAsync(CancellationToken cancellationToken = default)
+    /// <param name="cancellationToken">A token to cancel the observation.</param>
+    /// <returns>The observed value, or throws if collapse fails.</returns>
+    public async Task<T> ObserveAsync(CancellationToken cancellationToken = default)
+    {
+        // If this promise is entangled in a registry, delegate observation to the registry
+        if (_entanglementRegistry is not null)
+        {
+            // The registry will coordinate the collapse and return the value for this promise
+            return await _entanglementRegistry.ObserveAsync(this, cancellationToken);
+        }
+        // Otherwise, collapse independently (legacy, discouraged)
+        return await ObserveInternalAsync(cancellationToken);
+    }
+
+    // Internal observation logic, only used if not entangled
+    internal Task<T> ObserveInternalAsync(CancellationToken cancellationToken)
     {
         QuantumPromiseMetrics.Observations.Add(1);
 
@@ -109,6 +131,44 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
 
         _value = result;
         return result;
+    }
+
+    // Explicit interface implementation: only accessible via ICopenhagenCollapsible<T>
+    Task ICopenhagenCollapsible<T>.CollapseToValueAsync(T value, CancellationToken cancellationToken)
+        => CollapseToValueCoreAsync(value, cancellationToken);
+
+    /// <summary>
+    /// Forcibly collapses this quantum promise to a specific value. Only accessible via ICopenhagenCollapsible.
+    /// </summary>
+    /// <param name="value">The value to collapse to.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <remarks>
+    /// This method is intentionally not public. Only the registry, via a collapse behavior, may invoke it.
+    /// </remarks>
+    private async Task CollapseToValueCoreAsync(T value, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            if (_isObserved)
+            {
+                return; // Already collapsed, do nothing
+            }
+
+            _isObserved = true;
+            _value = value;
+            _collapseFailure = null;
+            _evaluationTask = Task.FromResult(value);
+        }
+
+        // Simulate collapse latency for optics
+        await Task.Delay(_rng.Next(CollapseConsensusMinDelayMs, CollapseConsensusMaxDelayMs), cancellationToken);
+        QuantumPromiseMetrics.Collapses.Add(1);
+    }
+
+    // Called by the registry to set the entanglement context
+    internal void SetEntanglementRegistry(IQuantumEntanglementRegistry<T> registry)
+    {
+        _entanglementRegistry = registry;
     }
 
     public override string ToString()

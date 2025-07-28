@@ -13,5 +13,6 @@ public class PredictableQuantumPromise<T>(T value) : IQuantumPromise<T>
     {
         return Task.FromResult(_value);
     }
+
     public override string ToString() => $"[PredictableQuantumPromise: {_value}]";
 }
