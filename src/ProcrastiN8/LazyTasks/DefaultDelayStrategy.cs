@@ -15,24 +15,16 @@ namespace ProcrastiN8.LazyTasks;
 /// <param name="delayProvider">The delay provider to use for actual delays.</param>
 using ProcrastiN8.JustBecause;
 
-public class DefaultDelayStrategy : IDelayStrategy
+public class DefaultDelayStrategy(
+    TimeSpan? minDelay = null,
+    TimeSpan? maxDelay = null,
+    IRandomProvider? randomProvider = null,
+    IDelayProvider? delayProvider = null) : IDelayStrategy
 {
-    private readonly TimeSpan _minDelay;
-    private readonly TimeSpan _maxDelay;
-    private readonly IRandomProvider _randomProvider;
-    private readonly IDelayProvider _delayProvider;
-
-    public DefaultDelayStrategy(
-        TimeSpan? minDelay = null,
-        TimeSpan? maxDelay = null,
-        IRandomProvider? randomProvider = null,
-        IDelayProvider? delayProvider = null)
-    {
-        _minDelay = minDelay ?? TimeSpan.FromSeconds(1);
-        _maxDelay = maxDelay ?? TimeSpan.FromSeconds(3);
-        _randomProvider = randomProvider ?? new RandomProvider();
-        _delayProvider = delayProvider ?? new TaskDelayProvider();
-    }
+    private readonly TimeSpan _minDelay = minDelay ?? TimeSpan.FromSeconds(1);
+    private readonly TimeSpan _maxDelay = maxDelay ?? TimeSpan.FromSeconds(3);
+    private readonly IRandomProvider _randomProvider = randomProvider ?? new RandomProvider();
+    private readonly IDelayProvider _delayProvider = delayProvider ?? new TaskDelayProvider();
 
     /// <inheritdoc />
     public async Task DelayAsync(CancellationToken cancellationToken = default)

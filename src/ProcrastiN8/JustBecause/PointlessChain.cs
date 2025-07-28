@@ -35,6 +35,12 @@ public class PointlessChain(IDelayStrategy? delayStrategy = null, IProcrastiLogg
                 await _delayStrategy.DelayAsync(cancellationToken);
             }
 
+            if (cancellationToken.IsCancellationRequested)
+            {
+                _logger?.Info("Cancellation requested. Exiting loop.");
+                break;
+            }
+
             current = (current + 1) % steps;
         }
     }

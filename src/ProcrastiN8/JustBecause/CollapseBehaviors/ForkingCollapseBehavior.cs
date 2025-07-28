@@ -7,16 +7,11 @@ namespace ProcrastiN8.JustBecause.CollapseBehaviors;
 /// and then forks multiple parallel universes (i.e. background tasks) that each recurse independently.
 /// Great for burning CPU and confusing stakeholders.
 /// </summary>
-public sealed class ForkingCollapseBehavior<T> : ICollapseBehavior<T>
+public sealed class ForkingCollapseBehavior<T>(IRandomProvider? randomProvider = null) : ICollapseBehavior<T>
 {
-    private readonly IRandomProvider _randomProvider;
+    private readonly IRandomProvider _randomProvider = randomProvider ?? new RandomProvider();
     private const int MaxForks = 3;
     private const int MaxForkDepth = 2;
-
-    public ForkingCollapseBehavior(IRandomProvider? randomProvider = null)
-    {
-        _randomProvider = randomProvider ?? new RandomProvider();
-    }
 
     public async Task<T?> CollapseAsync(IEnumerable<IQuantumPromise<T>> entangled, CancellationToken cancellationToken)
     {

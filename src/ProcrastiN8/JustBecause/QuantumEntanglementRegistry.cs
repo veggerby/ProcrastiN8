@@ -22,18 +22,12 @@ namespace ProcrastiN8.JustBecause;
 /// All operations are traced for metrics and activity, in case auditors wish to observe the collapse of productivity in real time.
 /// </para>
 /// </remarks>
-internal sealed class QuantumEntanglementRegistry<T> : IQuantumEntanglementRegistry<T>
+internal sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behavior = null, IRandomProvider? randomProvider = null) : IQuantumEntanglementRegistry<T>
 {
     private readonly ConcurrentBag<QuantumPromise<T>> _entangled = [];
-    private readonly ICollapseBehavior<T> _collapseBehavior;
-    private readonly IRandomProvider _randomProvider;
+    private readonly ICollapseBehavior<T> _collapseBehavior = behavior ?? CollapseBehaviorFactory.Create<T>(QuantumComplianceLevel.Entanglish);
+    private readonly IRandomProvider _randomProvider = randomProvider ?? new RandomProvider();
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumEntanglement");
-
-    public QuantumEntanglementRegistry(ICollapseBehavior<T>? behavior = null, IRandomProvider? randomProvider = null)
-    {
-        _collapseBehavior = behavior ?? CollapseBehaviorFactory.Create<T>(QuantumComplianceLevel.Entanglish);
-        _randomProvider = randomProvider ?? new RandomProvider();
-    }
 
     /// <summary>
     /// Adds a <see cref="QuantumPromise{T}"/> to the entangled set.
