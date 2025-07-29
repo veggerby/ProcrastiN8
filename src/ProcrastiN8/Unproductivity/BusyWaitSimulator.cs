@@ -35,7 +35,7 @@ public static class BusyWaitSimulator
     {
         logger ??= new DefaultLogger();
 
-        using var activity = ActivitySource.StartActivity("BusyWaitSimulator.BurnCpuCycles", ActivityKind.Internal);
+        using var activity = ActivitySource.StartActivity("ProcrastiN8.BusyWaitSimulator.BurnCpuCycles", ActivityKind.Internal);
         activity?.SetTag("busywait.duration.ms", duration.TotalMilliseconds);
 
         logger.Info("[BusyWaitSimulator] Engaging in intense CPU-based non-productivity for {Seconds:0.0}s...", duration.TotalSeconds);
