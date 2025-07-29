@@ -1,3 +1,5 @@
+using ProcrastiN8.JustBecause;
+
 namespace ProcrastiN8.Common;
 
 /// <summary>
@@ -10,13 +12,14 @@ namespace ProcrastiN8.Common;
 /// Initializes a new instance of the <see cref="ExcuseProvider"/> class.
 /// </remarks>
 /// <param name="customExcuseFunc">An optional custom excuse generator function.</param>
-public class ExcuseProvider(Func<string>? customExcuseFunc = null) : IExcuseProvider
+public class ExcuseProvider(Func<string>? customExcuseFunc = null, IRandomProvider? randomProvider = null) : IExcuseProvider
 {
     private readonly Func<string>? _customExcuseFunc = customExcuseFunc;
+    private readonly IRandomProvider? _randomProvider = randomProvider;
 
     /// <inheritdoc />
     public Task<string> GetExcuseAsync()
     {
-        return Task.FromResult(_customExcuseFunc?.Invoke() ?? ExcuseGenerator.GetRandomExcuse());
+        return Task.FromResult(_customExcuseFunc?.Invoke() ?? ExcuseGenerator.GetRandomExcuse(_randomProvider));
     }
 }

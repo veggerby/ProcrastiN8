@@ -6,6 +6,17 @@ namespace ProcrastiN8.Tests.LazyTasks;
 public class DefaultDelayStrategyTests
 {
     [Fact]
+    public void Substitute_Works_Correctly()
+    {
+        var randomProvider = Substitute.For<IRandomProvider>();
+        randomProvider.GetDouble().Returns(0D);
+
+        var value = randomProvider.GetDouble();
+
+        Assert.Equal(0D, value);
+    }
+
+    [Fact]
     public async Task DelayAsync_Uses_Custom_RandomProvider()
     {
         // arrange
