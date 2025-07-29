@@ -40,7 +40,7 @@ public static class RetryUntilCancelled
         logger ??= new DefaultLogger();
         initialDelay ??= TimeSpan.FromMilliseconds(DefaultInitialDelayMs);
         int attempt = 0;
-        using var activity = ActivitySource.StartActivity("RetryUntilCancelled.RunForever", ActivityKind.Internal);
+        using var activity = ActivitySource.StartActivity("ProcrastiN8.RetryUntilCancelled.RunForever", ActivityKind.Internal);
 
         activity?.SetTag("retry.initialDelay.ms", initialDelay.Value.TotalMilliseconds);
         activity?.SetTag("retry.maxRetries", maxRetries ?? -1);

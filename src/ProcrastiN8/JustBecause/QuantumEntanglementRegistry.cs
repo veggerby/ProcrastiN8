@@ -77,7 +77,7 @@ internal sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behav
             throw new InvalidOperationException("No entangled promises available for collapse.");
         }
 
-        using var activity = ActivitySource.StartActivity("QuantumEntanglementRegistry.CollapseOne", ActivityKind.Internal);
+        using var activity = ActivitySource.StartActivity("ProcrastiN8.QuantumEntanglementRegistry.CollapseOne", ActivityKind.Internal);
         var sw = Stopwatch.StartNew();
 
         var array = _entangled.ToArray();

@@ -37,7 +37,7 @@ public static class DelayedExecution
         logger ??= new DefaultLogger();
         var excuse = ExcuseService.GenerateExcuse();
 
-        using var activity = ActivitySource.StartActivity("DelayedExecution.Sync", ActivityKind.Internal);
+        using var activity = ActivitySource.StartActivity("ProcrastiN8.DelayedExecution.Sync", ActivityKind.Internal);
         activity?.SetTag("procrastination.delay.ms", delay.TotalMilliseconds);
         activity?.SetTag("procrastination.snooze.ms", snooze?.TotalMilliseconds);
         activity?.SetTag("procrastination.excuse", excuse);
@@ -89,7 +89,7 @@ public static class DelayedExecution
         logger ??= new DefaultLogger();
         var excuse = ExcuseService.GenerateExcuse();
 
-        using var activity = ActivitySource.StartActivity("DelayedExecution.Async", ActivityKind.Internal);
+        using var activity = ActivitySource.StartActivity("ProcrastiN8.DelayedExecution.Async", ActivityKind.Internal);
         activity?.SetTag("procrastination.delay.ms", delay.TotalMilliseconds);
         activity?.SetTag("procrastination.snooze.ms", snooze?.TotalMilliseconds);
         activity?.SetTag("procrastination.excuse", excuse);

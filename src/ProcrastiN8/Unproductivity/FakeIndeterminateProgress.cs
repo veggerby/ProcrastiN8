@@ -41,7 +41,7 @@ public static class FakeIndeterminateProgress
         updateInterval ??= TimeSpan.FromMilliseconds(DefaultUpdateIntervalMs);
         minTimeBeforeCompletion ??= TimeSpan.FromMinutes(Rng.Next(MinCompletionMinutes, MaxCompletionMinutes + 1)); // 4–15 minutes
 
-        using var activity = ActivitySource.StartActivity("FakeIndeterminateProgress.Show", ActivityKind.Internal);
+        using var activity = ActivitySource.StartActivity("ProcrastiN8.FakeIndeterminateProgress.Show", ActivityKind.Internal);
         activity?.SetTag("progress.style", "infinite-windows-style");
         activity?.SetTag("progress.updateInterval.ms", updateInterval.Value.TotalMilliseconds);
         activity?.SetTag("progress.minCompletionTime.ms", minTimeBeforeCompletion.Value.TotalMilliseconds);

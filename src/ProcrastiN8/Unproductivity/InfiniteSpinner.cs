@@ -37,7 +37,7 @@ public static class InfiniteSpinner
         logger ??= new DefaultLogger();
         tickRate ??= TimeSpan.FromMilliseconds(DefaultTickRateMs);
 
-        using var activity = ActivitySource.StartActivity("InfiniteSpinner.Spin", ActivityKind.Internal);
+        using var activity = ActivitySource.StartActivity("ProcrastiN8.InfiniteSpinner.Spin", ActivityKind.Internal);
         activity?.SetTag("spinner.tickRate.ms", tickRate.Value.TotalMilliseconds);
 
         logger.Info("[InfiniteSpinner] Beginning infinite spin cycle...");

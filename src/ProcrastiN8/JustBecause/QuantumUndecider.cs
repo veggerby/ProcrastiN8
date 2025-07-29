@@ -43,7 +43,7 @@ public static class QuantumUndecider
 
         QuantumUndeciderMetrics.Observations.Add(1);
 
-        using var activity = ActivitySource.StartActivity("QuantumUndecider.ObserveDecision", ActivityKind.Internal);
+        using var activity = ActivitySource.StartActivity("ProcrastiN8.QuantumUndecider.ObserveDecision", ActivityKind.Internal);
         var sw = Stopwatch.StartNew();
 
         logger?.Info("[QuantumUndecider] Initiating uncertain observation protocol...");
