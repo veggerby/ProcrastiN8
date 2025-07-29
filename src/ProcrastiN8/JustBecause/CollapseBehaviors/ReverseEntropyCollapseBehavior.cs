@@ -1,12 +1,12 @@
-using ProcrastiN8.LazyTasks;
 using ProcrastiN8.JustBecause;
+using ProcrastiN8.LazyTasks;
 
 namespace ProcrastiN8.JustBecause.CollapseBehaviors;
 
 public sealed class ReverseEntropyCollapseBehavior<T>(ITimeProvider? timeProvider = null, IRandomProvider? randomProvider = null) : ICollapseBehavior<T>
 {
     private readonly ITimeProvider _timeProvider = timeProvider ?? new SystemTimeProvider();
-    private readonly IRandomProvider _randomProvider = randomProvider ?? new RandomProvider();
+    private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
 
     public async Task<T?> CollapseAsync(IEnumerable<IQuantumPromise<T>> entangled, CancellationToken cancellationToken)
     {
@@ -20,7 +20,7 @@ public sealed class ReverseEntropyCollapseBehavior<T>(ITimeProvider? timeProvide
 
             await Task.Yield(); // Ensure asynchronous behavior
 
-            if (_randomProvider.NextDouble() > successProbability)
+            if (_randomProvider.GetDouble() > successProbability)
             {
                 throw new CollapseExpiredException("The promise has decayed into irrelevance.");
             }

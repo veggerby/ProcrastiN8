@@ -2,6 +2,12 @@ using ProcrastiN8.JustBecause.CollapseBehaviors;
 
 namespace ProcrastiN8.JustBecause;
 
+/// <summary>
+/// Provides extension methods for entangling quantum promises with others.
+/// </summary>
+/// <remarks>
+/// These methods allow for customizable entanglement behaviors, ensuring maximum procrastination potential.
+/// </remarks>
 public static class QuantumExtensions
 {
     /// <summary>

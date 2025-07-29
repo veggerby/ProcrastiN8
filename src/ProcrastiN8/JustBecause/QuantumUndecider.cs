@@ -6,9 +6,11 @@ using ProcrastiN8.Metrics;
 namespace ProcrastiN8.JustBecause;
 
 /// <summary>
-/// A class that embodies quantum procrastination by entangling outcomes and randomly collapsing decision waveforms,
-/// occasionally throwing exceptions when too much certainty is attempted.
+/// Simulates quantum indecision by providing ambiguous or delayed responses to queries.
 /// </summary>
+/// <remarks>
+/// The QuantumUndecider is a cornerstone of ProcrastiN8's philosophy, embodying the art of productive stalling.
+/// </remarks>
 public static class QuantumUndecider
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumUndecider");

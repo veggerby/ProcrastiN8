@@ -1,35 +1,41 @@
-# QuantumEntanglementRegistry
+# QuantumPromise Entanglement
 
-> Manages a non-local, non-consensual registry of entangled quantum promises. Collapsing one may trigger collapse or decay in others, with no regard for fairness or quantum ethics.
+> Simulates quantum entanglement by allowing `QuantumPromise` instances to be linked, such that collapsing one may influence others.
 
 ## Overview
 
-`QuantumEntanglementRegistry<T>` coordinates the entanglement and collapse of multiple `QuantumPromise<T>` instances. It delegates collapse logic to a pluggable behavior, simulating quantum metaphors with enterprise-level seriousness.
+`QuantumPromise<T>` supports the concept of entanglement, where multiple promises can be linked together. When one promise is observed or collapsed, the behavior of the others is influenced according to the configured collapse behavior. This feature is designed to simulate quantum metaphors with enterprise-level seriousness.
 
 ## Usage
 
 ```csharp
 using ProcrastiN8.JustBecause;
+using ProcrastiN8.JustBecause.CollapseBehaviors;
 
-var registry = new QuantumEntanglementRegistry<int>();
 var promise1 = new QuantumPromise<int>(() => Task.FromResult(42), TimeSpan.FromSeconds(2));
 var promise2 = new QuantumPromise<int>(() => Task.FromResult(99), TimeSpan.FromSeconds(2));
-registry.Entangle(promise1);
-registry.Entangle(promise2);
 
-// Collapse one (and ripple to others, depending on behavior)
-var result = await registry.CollapseOneAsync();
-Console.WriteLine($"Collapsed value: {result}");
+// Entangle promises with a specific behavior
+promise1.Entangle(new RandomUnfairCollapseBehavior<int>(), promise2);
+
+// Observe one promise
+var result1 = await promise1.ObserveAsync();
+Console.WriteLine($"Observed value of promise1: {result1}");
+
+// Verify the other promise is also influenced
+var result2 = await promise2.ObserveAsync();
+Console.WriteLine($"Observed value of promise2: {result2}");
 ```
 
 ### Expected Output
 
 ```txt
-[QuantumEntanglement] Entangled promise registered.
-[QuantumEntanglement] Entangled promise registered.
-[QuantumEntanglement] Collapsing one entangled promise...
-[QuantumEntanglement] Collapse behavior: Copenhagen (or other)
-[QuantumEntanglement] Collapsed value: 42
+[QuantumPromise] Entangled with another promise.
+[QuantumPromise] Observing promise...
+[QuantumPromise] Collapse behavior: RandomUnfairCollapse
+[QuantumPromise] Observed value: 42
+[QuantumPromise] Observing promise...
+[QuantumPromise] Observed value: 42
 ```
 
 ## API
@@ -37,22 +43,23 @@ Console.WriteLine($"Collapsed value: {result}");
 ### `Entangle`
 
 ```csharp
-public void Entangle(QuantumPromise<T> quantum)
+public void Entangle(ICollapseBehavior<T> behavior, params QuantumPromise<T>[] others)
 ```
 
-- **quantum**: The quantum promise to entangle.
+- **behavior**: The collapse behavior to use for the entanglement.
+- **others**: The other promises to entangle with this promise.
 
-### `CollapseOneAsync`
+### `ObserveAsync`
 
 ```csharp
-public Task<T?> CollapseOneAsync(CancellationToken cancellationToken = default)
+public Task<T> ObserveAsync(CancellationToken cancellationToken = default)
 ```
 
-- Collapses one entangled promise and ripples to others according to the configured behavior.
+- Observes the promise, collapsing it to a value or triggering a failure based on the configured behavior.
 
 ## Available Behaviors
 
-The `QuantumEntanglementRegistry<T>` supports multiple collapse behaviors, each simulating a different interpretation of quantum mechanics. These behaviors can be selected based on the `QuantumComplianceLevel` provided to the `CollapseBehaviorFactory`.
+The `QuantumPromise<T>` supports multiple collapse behaviors, each simulating a different interpretation of quantum mechanics. These behaviors can be selected based on the `CollapseBehaviorFactory` or created manually.
 
 ### Behavior List
 
@@ -82,19 +89,17 @@ The `QuantumEntanglementRegistry<T>` supports multiple collapse behaviors, each 
 
 ### How to Use Behaviors
 
-To use a specific behavior, create it using the `CollapseBehaviorFactory` and pass it to the `QuantumEntanglementRegistry<T>`.
+To use a specific behavior, create it using the `CollapseBehaviorFactory` and pass it to the `Entangle` method of a `QuantumPromise`.
 
 ```csharp
 using ProcrastiN8.JustBecause;
 using ProcrastiN8.JustBecause.CollapseBehaviors;
 
 var behavior = CollapseBehaviorFactory.Create<int>(QuantumComplianceLevel.Copenhagen);
-var registry = new QuantumEntanglementRegistry<int>(behavior);
 
 var promise1 = new QuantumPromise<int>(() => Task.FromResult(42), TimeSpan.FromSeconds(2));
 var promise2 = new QuantumPromise<int>(() => Task.FromResult(99), TimeSpan.FromSeconds(2));
-registry.Entangle(promise1);
-registry.Entangle(promise2);
+promise1.Entangle(behavior, promise2);
 
 // Observe promise1 directly
 var result1 = await promise1.ObserveAsync();
@@ -108,5 +113,5 @@ Console.WriteLine($"Observed value of promise2: {result2}");
 ## Remarks
 
 - Collapse behaviors are pluggable and dictate the quantum metaphor (Copenhagen, ManyWorlds, etc).
-- The registry is the only authority for coordinated collapse.
+- Entanglement is managed directly by the `QuantumPromise` instances.
 - Designed for maximum auditability and minimum determinism.

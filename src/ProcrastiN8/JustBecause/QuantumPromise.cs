@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using ProcrastiN8.LazyTasks;
 
 using ProcrastiN8.JustBecause.CollapseBehaviors;
 using ProcrastiN8.LazyTasks;
@@ -11,6 +10,12 @@ namespace ProcrastiN8.JustBecause;
 /// A promise that exists in a state of superposition until observed. Observation may collapse the value,
 /// throw an exception, or result in existential expiration. Do not use in production. Ever.
 /// </summary>
+/// <typeparam name="T">The type of the value encapsulated by the promise.</typeparam>
+/// <param name="lazyInitializer">A function to lazily initialize the promise's value.</param>
+/// <param name="schrodingerWindow">The time window during which the promise remains in superposition.</param>
+/// <param name="delayStrategy">An optional strategy for introducing delays during observation.</param>
+/// <param name="timeProvider">An optional provider for time-related operations.</param>
+/// <param name="randomProvider">An optional provider for randomness.</param>
 public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan schrodingerWindow, IDelayStrategy? delayStrategy = null, ITimeProvider? timeProvider = null, IRandomProvider? randomProvider = null) : IQuantumPromise<T>, ICopenhagenCollapsible<T>
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumPromise");
@@ -18,6 +23,8 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     private readonly Func<Task<T>> _lazyInitializer = lazyInitializer ?? throw new ArgumentNullException(nameof(lazyInitializer));
     private readonly ITimeProvider _timeProvider = timeProvider ?? new SystemTimeProvider();
     private readonly DateTimeOffset _creationTime = (timeProvider ?? new SystemTimeProvider()).GetUtcNow();
+    private readonly IDelayStrategy _delayStrategy = delayStrategy ?? new DefaultDelayStrategy();
+    private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
 
     public DateTimeOffset CreationTime => _creationTime;
 
@@ -27,9 +34,6 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     private bool _isObserved = false;
     private Task<T>? _evaluationTask;
     private Exception? _collapseFailure;
-    private readonly IDelayStrategy _delayStrategy = delayStrategy ?? new DefaultDelayStrategy();
-    private readonly ITimeProvider _timeProvider = timeProvider ?? SystemTimeProvider.Default;
-    private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
 
     // Minimum milliseconds after creation before observation is allowed (quantum instability window)
     private static readonly TimeSpan MinObservationDelayMs = TimeSpan.FromMilliseconds(200);
@@ -50,6 +54,9 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     /// </summary>
     /// <param name="cancellationToken">A token to cancel the observation.</param>
     /// <returns>The observed value, or throws if collapse fails.</returns>
+    /// <exception cref="CollapseTooEarlyException">Thrown if the promise is observed too early.</exception>
+    /// <exception cref="CollapseTooLateException">Thrown if the promise is observed after the Schrödinger window expires.</exception>
+    /// <exception cref="CollapseToVoidException">Thrown if the promise collapses to void.</exception>
     public async Task<T> ObserveAsync(CancellationToken cancellationToken = default)
     {
         // If this promise is entangled in a registry, delegate observation to the registry
@@ -158,6 +165,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     /// <remarks>
     /// This method is intentionally not public. Only the registry, via a collapse behavior, may invoke it.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">Thrown if the promise has already been resolved.</exception>
     private async Task CollapseToValueCoreAsync(T value, CancellationToken cancellationToken)
     {
         lock (_lock)
