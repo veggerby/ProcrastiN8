@@ -42,7 +42,7 @@ public static class FakeProgress
         stepDuration ??= TimeSpan.FromMilliseconds(DefaultStepDurationMs);
         steps ??= FakeStages.Length;
 
-        using var activity = ActivitySource.StartActivity("FakeProgress.Show", ActivityKind.Internal);
+        using var activity = ActivitySource.StartActivity("ProcrastiN8.FakeProgress.Show", ActivityKind.Internal);
         activity?.SetTag("progress.steps", steps);
         activity?.SetTag("progress.stepDuration.ms", stepDuration.Value.TotalMilliseconds);
 
