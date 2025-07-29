@@ -53,7 +53,7 @@ public class TodoScheduler(IProcrastiLogger? logger = null, IExcuseProvider? exc
 
             if (_delayStrategy != null)
             {
-                await _delayStrategy.DelayAsync(cancellationToken);
+                await _delayStrategy.DelayAsync(cancellationToken: cancellationToken);
             }
         }
     }

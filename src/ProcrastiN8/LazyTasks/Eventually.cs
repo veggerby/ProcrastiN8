@@ -33,7 +33,7 @@ public static class Eventually
     /// </summary>
     private static readonly CommentaryService CommentaryService = new();
 
-    private static IRandomProvider _randomProvider = new RandomProvider();
+    private static IRandomProvider _randomProvider = RandomProvider.Default;
 
     public static void SetRandomProvider(IRandomProvider provider)
     {
@@ -102,7 +102,7 @@ public static class Eventually
     /// <returns>A random TimeSpan between 0 and max.</returns>
     private static TimeSpan GetDelay(TimeSpan max)
     {
-        var jitter = _randomProvider.NextDouble() * max.TotalMilliseconds;
+        var jitter = _randomProvider.GetDouble() * max.TotalMilliseconds;
         return TimeSpan.FromMilliseconds(jitter);
     }
 

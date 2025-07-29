@@ -4,7 +4,7 @@ namespace ProcrastiN8.JustBecause.CollapseBehaviors;
 
 public sealed class RandomUnfairCollapseBehavior<T>(IRandomProvider? randomProvider = null) : ICollapseBehavior<T>
 {
-    private readonly IRandomProvider _randomProvider = randomProvider ?? new RandomProvider();
+    private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
 
     private const int RippleCollapseMinDelayMs = 300;
     private const int RippleCollapseMaxDelayMs = 1300;
@@ -17,7 +17,7 @@ public sealed class RandomUnfairCollapseBehavior<T>(IRandomProvider? randomProvi
     public async Task<T?> CollapseAsync(IEnumerable<IQuantumPromise<T>> entangled, CancellationToken cancellationToken)
     {
         var array = entangled.ToArray();
-        var chosen = array.FirstOrDefault(p => p.GetType().Name.Contains("PredictableQuantumPromise")) ?? array[_randomProvider.Next(array.Length)];
+        var chosen = array.FirstOrDefault(p => p.GetType().Name.Contains("PredictableQuantumPromise")) ?? array[_randomProvider.GetRandom(array.Length)];
 
         QuantumEntanglementMetrics.Collapses.Add(1);
 
@@ -45,11 +45,11 @@ public sealed class RandomUnfairCollapseBehavior<T>(IRandomProvider? randomProvi
 
         Task.Run(async () =>
         {
-            await Task.Delay(RippleCollapseMinDelayMs + _randomProvider.Next(RippleCollapseMaxDelayMs - RippleCollapseMinDelayMs), cancellationToken);
+            await Task.Delay(RippleCollapseMinDelayMs + _randomProvider.GetRandom(RippleCollapseMaxDelayMs - RippleCollapseMinDelayMs), cancellationToken);
 
             try
             {
-                if (_randomProvider.NextDouble() < RippleCollapseProbability)
+                if (_randomProvider.GetDouble() < RippleCollapseProbability)
                 {
                     await other.ObserveAsync(cancellationToken);
                 }
@@ -67,11 +67,11 @@ public sealed class RandomUnfairCollapseBehavior<T>(IRandomProvider? randomProvi
         {
             Task.Run(async () =>
             {
-                await Task.Delay(RippleEntropyMinDelayMs + _randomProvider.Next(RippleEntropyMaxDelayMs - RippleEntropyMinDelayMs), cancellationToken);
+                await Task.Delay(RippleEntropyMinDelayMs + _randomProvider.GetRandom(RippleEntropyMaxDelayMs - RippleEntropyMinDelayMs), cancellationToken);
 
                 try
                 {
-                    if (_randomProvider.NextDouble() < RippleEntropyProbability)
+                    if (_randomProvider.GetDouble() < RippleEntropyProbability)
                     {
                         QuantumEntanglementMetrics.RippleAttempts.Add(1);
                         await promise.ObserveAsync(cancellationToken);

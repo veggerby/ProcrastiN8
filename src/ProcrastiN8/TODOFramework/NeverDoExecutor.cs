@@ -9,11 +9,10 @@ namespace ProcrastiN8.TODOFramework;
 /// <remarks>
 /// The <see cref="NeverDoExecutor"/> provides a safe, enterprise-grade mechanism for ensuring that certain actions are never performed, regardless of demand or urgency.
 /// </remarks>
-public class NeverDoExecutor(IProcrastiLogger? logger = null, IExcuseProvider? excuseProvider = null, IDelayStrategy? delayStrategy = null) : INeverDoExecutor
+public class NeverDoExecutor(IProcrastiLogger? logger = null, IExcuseProvider? excuseProvider = null) : INeverDoExecutor
 {
     private readonly IProcrastiLogger? _logger = logger;
     private readonly IExcuseProvider? _excuseProvider = excuseProvider;
-    private readonly IDelayStrategy? _delayStrategy = delayStrategy;
 
     /// <summary>
     /// Attempts to execute the provided action, but never actually does so.

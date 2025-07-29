@@ -13,10 +13,5 @@ public interface ITimeProvider
     /// </summary>
     /// <param name="delay">The duration to wait.</param>
     /// <param name="cancellationToken">A token to cancel the wait.</param>
-    Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the current UTC time.
-    /// </summary>
     DateTimeOffset GetUtcNow();
 }

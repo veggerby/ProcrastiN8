@@ -8,19 +8,19 @@ public class InfiniteSpinnerTests
     [Fact]
     public async Task SpinForeverAsync_LogsAndCancelsGracefully()
     {
-        // Arrange
+        // arrange
         var loggerSub = Substitute.For<IProcrastiLogger>();
         var cts = new CancellationTokenSource();
         var tickRate = TimeSpan.FromMilliseconds(10);
         InfiniteSpinner.SetCommentaryService(new CommentaryService());
 
-        // Act
+        // act
         var spinTask = InfiniteSpinner.SpinForeverAsync(loggerSub, tickRate, cts.Token);
         await Task.Delay(30); // Let it spin a few times
         cts.Cancel();
         await spinTask;
 
-        // Assert
+        // assert
         loggerSub.Received().Info(Arg.Is<string>(s => s.Contains("Beginning infinite spin cycle")), Arg.Any<object[]>());
         loggerSub.Received().Info(Arg.Is<string>(s => s.Contains("Spin cycle cancelled")), Arg.Any<object[]>());
         loggerSub.Received().Info(Arg.Is<string>(s => s.Contains("Total time wasted")), Arg.Any<object[]>());

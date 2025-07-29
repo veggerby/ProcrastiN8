@@ -1,6 +1,7 @@
 using System.Diagnostics;
-using ProcrastiN8.LazyTasks;
 
+using ProcrastiN8.JustBecause.CollapseBehaviors;
+using ProcrastiN8.LazyTasks;
 using ProcrastiN8.Metrics;
 
 namespace ProcrastiN8.JustBecause;
@@ -9,13 +10,21 @@ namespace ProcrastiN8.JustBecause;
 /// A promise that exists in a state of superposition until observed. Observation may collapse the value,
 /// throw an exception, or result in existential expiration. Do not use in production. Ever.
 /// </summary>
-public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan schrodingerWindow, IRandomProvider? randomProvider = null, ITimeProvider? timeProvider = null) : IQuantumPromise<T>, ICopenhagenCollapsible<T>
+/// <typeparam name="T">The type of the value encapsulated by the promise.</typeparam>
+/// <param name="lazyInitializer">A function to lazily initialize the promise's value.</param>
+/// <param name="schrodingerWindow">The time window during which the promise remains in superposition.</param>
+/// <param name="delayStrategy">An optional strategy for introducing delays during observation.</param>
+/// <param name="timeProvider">An optional provider for time-related operations.</param>
+/// <param name="randomProvider">An optional provider for randomness.</param>
+public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan schrodingerWindow, IDelayStrategy? delayStrategy = null, ITimeProvider? timeProvider = null, IRandomProvider? randomProvider = null) : IQuantumPromise<T>, ICopenhagenCollapsible<T>
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumPromise");
 
     private readonly Func<Task<T>> _lazyInitializer = lazyInitializer ?? throw new ArgumentNullException(nameof(lazyInitializer));
     private readonly ITimeProvider _timeProvider = timeProvider ?? new SystemTimeProvider();
     private readonly DateTimeOffset _creationTime = (timeProvider ?? new SystemTimeProvider()).GetUtcNow();
+    private readonly IDelayStrategy _delayStrategy = delayStrategy ?? new DefaultDelayStrategy();
+    private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
 
     public DateTimeOffset CreationTime => _creationTime;
 
@@ -25,12 +34,11 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     private bool _isObserved = false;
     private Task<T>? _evaluationTask;
     private Exception? _collapseFailure;
-    private readonly IRandomProvider _randomProvider = randomProvider ?? new RandomProvider();
 
     // Minimum milliseconds after creation before observation is allowed (quantum instability window)
-    private const int MinObservationDelayMs = 200;
+    private static readonly TimeSpan MinObservationDelayMs = TimeSpan.FromMilliseconds(200);
     // Maximum milliseconds after creation before observation is allowed (quantum instability window)
-    private const int MaxObservationDelayMs = 1000;
+    private static readonly TimeSpan MaxObservationDelayMs = TimeSpan.FromMilliseconds(1000);
     // Probability that the promise collapses to void (evaporates)
     private const double VoidCollapseProbability = 0.1;
     // Minimum milliseconds to simulate collapse latency for consensus
@@ -46,6 +54,9 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     /// </summary>
     /// <param name="cancellationToken">A token to cancel the observation.</param>
     /// <returns>The observed value, or throws if collapse fails.</returns>
+    /// <exception cref="CollapseTooEarlyException">Thrown if the promise is observed too early.</exception>
+    /// <exception cref="CollapseTooLateException">Thrown if the promise is observed after the Schrödinger window expires.</exception>
+    /// <exception cref="CollapseToVoidException">Thrown if the promise collapses to void.</exception>
     public async Task<T> ObserveAsync(CancellationToken cancellationToken = default)
     {
         // If this promise is entangled in a registry, delegate observation to the registry
@@ -84,45 +95,51 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
 
             _isObserved = true;
 
-            var timeSinceCreation = _timeProvider.GetUtcNow() - _creationTime;
-
-            if (timeSinceCreation < TimeSpan.FromMilliseconds(_randomProvider.Next(MinObservationDelayMs, MaxObservationDelayMs)))
-            {
-                _collapseFailure = new CollapseTooEarlyException("You peeked too soon. Quantum instability triggered.");
-                QuantumPromiseMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "TooEarly"));
-                activity?.SetTag("collapse.status", "failure");
-                activity?.SetTag("collapse.reason", "TooEarly");
-                throw _collapseFailure;
-            }
-
-            if (timeSinceCreation > _schrodingerWindow)
-            {
-                _collapseFailure = new CollapseTooLateException("Observation window expired. The promise has decayed.");
-                QuantumPromiseMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "TooLate"));
-                activity?.SetTag("collapse.status", "failure");
-                activity?.SetTag("collapse.reason", "TooLate");
-                throw _collapseFailure;
-            }
-
-            if (_randomProvider.NextDouble() < VoidCollapseProbability)
-            {
-                _collapseFailure = new CollapseToVoidException("The promise evaporated into existential nothingness.");
-                QuantumPromiseMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "VoidCollapse"));
-                activity?.SetTag("collapse.status", "failure");
-                activity?.SetTag("collapse.reason", "VoidCollapse");
-                throw _collapseFailure;
-            }
-
             _evaluationTask = CollapseAndStoreAsync(activity, cancellationToken);
             return _evaluationTask;
         }
+    }
+
+    private bool CheckCollapseTiming(double delay, Activity? activity)
+    {
+        var timeSinceCreation = _timeProvider.GetUtcNow() - _creationTime;
+
+        if (timeSinceCreation < TimeSpan.FromMilliseconds(delay))
+        {
+            _collapseFailure = new CollapseTooEarlyException("You peeked too soon. Quantum instability triggered.");
+            QuantumPromiseMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "TooEarly"));
+            activity?.SetTag("collapse.status", "failure");
+            activity?.SetTag("collapse.reason", "TooEarly");
+            throw _collapseFailure;
+        }
+
+        if (timeSinceCreation > _schrodingerWindow)
+        {
+            _collapseFailure = new CollapseTooLateException("Observation window expired. The promise has decayed.");
+            QuantumPromiseMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "TooLate"));
+            activity?.SetTag("collapse.status", "failure");
+            activity?.SetTag("collapse.reason", "TooLate");
+            throw _collapseFailure;
+        }
+
+        return true;
     }
 
     private async Task<T> CollapseAndStoreAsync(Activity? activity, CancellationToken cancellationToken)
     {
         var sw = Stopwatch.StartNew();
 
-        await Task.Delay(_randomProvider.Next(100, 1000), cancellationToken); // simulate quantum weirdness
+        await _delayStrategy.DelayAsync(MinObservationDelayMs, MaxObservationDelayMs, delay => CheckCollapseTiming(delay, activity), cancellationToken); // simulate quantum weirdness
+
+        // Check for void collapse
+        if (_randomProvider.GetDouble() < VoidCollapseProbability)
+        {
+            _collapseFailure = new CollapseToVoidException("The promise collapsed to void.");
+            QuantumPromiseMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "VoidCollapse"));
+            activity?.SetTag("collapse.status", "failure");
+            activity?.SetTag("collapse.reason", "VoidCollapse");
+            throw _collapseFailure;
+        }
 
         var result = await _lazyInitializer.Invoke();
 
@@ -148,6 +165,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     /// <remarks>
     /// This method is intentionally not public. Only the registry, via a collapse behavior, may invoke it.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">Thrown if the promise has already been resolved.</exception>
     private async Task CollapseToValueCoreAsync(T value, CancellationToken cancellationToken)
     {
         lock (_lock)
@@ -162,9 +180,27 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
             _evaluationTask = Task.FromResult(value);
         }
 
-        // Simulate collapse latency for optics
-        await Task.Delay(_randomProvider.Next(CollapseConsensusMinDelayMs, CollapseConsensusMaxDelayMs), cancellationToken);
+        await _delayStrategy.DelayAsync(minDelay: TimeSpan.FromMilliseconds(CollapseConsensusMinDelayMs), maxDelay: TimeSpan.FromMilliseconds(CollapseConsensusMaxDelayMs), cancellationToken: cancellationToken);
         QuantumPromiseMetrics.Collapses.Add(1);
+    }
+
+    /// <summary>
+    /// Entangles this promise with other promises, using specified collapse behavior and random provider.
+    /// </summary>
+    /// <param name="behavior">The collapse behavior to use for the entanglement.</param>
+    /// <param name="randomProvider">The random provider to use for the entanglement.</param>
+    /// <param name="others">The promises to entangle with this promise.</param>
+    /// <remarks>
+    /// This method allows full customization of the entanglement registry, including collapse behavior and randomness.
+    /// </remarks>
+    public void Entangle(ICollapseBehavior<T>? behavior, IRandomProvider? randomProvider, params QuantumPromise<T>[] others)
+    {
+        var registry = QuantumEntanglementRegistry<T>.Create(behavior, randomProvider);
+        registry.Entangle(this);
+        foreach (var other in others)
+        {
+            registry.Entangle(other);
+        }
     }
 
     // Called by the registry to set the entanglement context
