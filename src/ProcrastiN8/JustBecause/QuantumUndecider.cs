@@ -159,18 +159,4 @@ public static class QuantumUndecider
 
         logger?.Debug($"[QuantumUndecider] {musings[randomProvider.GetRandom(musings.Length)]}");
     }
-
-    private static void LogExcuse(IRandomProvider randomProvider, IProcrastiLogger? logger)
-    {
-        var excuses = new[]
-        {
-            "Awaiting cosmic alignment.",
-            "Still synchronizing with quantum mirror self.",
-            "There's a lag in the entanglement buffer.",
-            "My uncertainty matrix isn't calibrated yet.",
-            "Lost connection to the multiverse API."
-        };
-
-        logger?.Info($"[QuantumUndecider] {excuses[randomProvider.GetRandom(excuses.Length)]}");
-    }
 }

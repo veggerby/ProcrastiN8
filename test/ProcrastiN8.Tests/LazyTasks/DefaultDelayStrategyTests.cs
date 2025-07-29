@@ -37,9 +37,15 @@ public class DefaultDelayStrategyTests
     [Fact]
     public async Task DelayAsync_Respects_Cancellation()
     {
-        var strategy = new DefaultDelayStrategy(TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100));
+        // Arrange
+        var strategy = new DefaultDelayStrategy(
+            TimeSpan.FromMilliseconds(100),
+            TimeSpan.FromMilliseconds(100));
         var cts = new CancellationTokenSource();
         cts.Cancel();
-        await Assert.ThrowsAsync<TaskCanceledException>(() => strategy.DelayAsync(Arg.Any<TimeSpan?>(), Arg.Any<TimeSpan?>(), Arg.Any<Func<double, bool>?>(), cts.Token));
+
+        // Act & Assert
+        await Assert.ThrowsAsync<TaskCanceledException>(
+            () => strategy.DelayAsync(null, null, null, cts.Token));
     }
 }
