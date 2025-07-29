@@ -1,3 +1,4 @@
+using ProcrastiN8.JustBecause;
 using ProcrastiN8.LazyTasks;
 
 namespace ProcrastiN8.Tests.LazyTasks;
@@ -8,8 +9,8 @@ public class DefaultDelayStrategyTests
     public async Task DelayAsync_Uses_Custom_RandomProvider()
     {
         // arrange
-        var randomProvider = Substitute.For<ProcrastiN8.JustBecause.IRandomProvider>();
-        randomProvider.GetDouble().Returns(0);
+        var randomProvider = Substitute.For<IRandomProvider>();
+        randomProvider.GetDouble().Returns(0D);
         var strategy = new DefaultDelayStrategy(
             TimeSpan.FromMilliseconds(100),
             TimeSpan.FromMilliseconds(200),

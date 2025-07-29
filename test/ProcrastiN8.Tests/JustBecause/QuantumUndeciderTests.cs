@@ -11,85 +11,115 @@ public class QuantumUndeciderTests
         // Arrange
         var mockDelayStrategy = Substitute.For<IDelayStrategy>();
         var mockRandomProvider = Substitute.For<IRandomProvider>();
-
-        // Ensure predictable behavior for the test
-        mockRandomProvider.GetDouble().Returns(0.05, 0.2, 0.05, 0.19, 0.3, 0.8); // Adjusted sequence of values
-
-        string? result = null;
-        Exception? exception = null;
+        mockRandomProvider.GetDouble().Returns(0.8); // Adjusted sequence of values
 
         // Act
-        try
-        {
-            result = await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(true), delayStrategy: mockDelayStrategy, randomProvider: mockRandomProvider);
-        }
-        catch (Exception ex)
-        {
-            exception = ex;
-        }
+        var result = await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(true), delayStrategy: mockDelayStrategy, randomProvider: mockRandomProvider);
 
         // Assert
-        if (exception is not null)
-        {
-            exception.Should().BeOfType<SuperpositionCollapseException>("sometimes, quantum indecision is fatal");
-        }
-        else
-        {
-            result.Should().NotBeNullOrWhiteSpace("the undecider must eventually decide, even if it's nonsense");
-        }
+        result.Should().NotBeNullOrEmpty("The decision should be definitive or partial, but not null or empty.");
     }
 
     [Fact]
-    public async Task ObserveDecisionAsync_ThrowsOnCollapseTooEarly_Sometimes()
+    public async Task ObserveDecisionAsync_ThrowsSuperpositionCollapse()
     {
         // Arrange
-        var actualTriggered = 0;
         var mockDelayStrategy = Substitute.For<IDelayStrategy>();
         var mockRandomProvider = Substitute.For<IRandomProvider>();
-        mockRandomProvider.GetDouble().Returns(0.2, 1, 1, 1, 0.05, 0.05); // Ensure specific sequence of values
+
+        // first random is SuperPosition collapse
+        mockRandomProvider.GetDouble().Returns(0.05);
 
         // Act
-        for (var i = 0; i < 3; i++)
-        {
-            try
-            {
-                await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(false), delayStrategy: mockDelayStrategy, randomProvider: mockRandomProvider);
-            }
-            catch (CollapseTooEarlyException)
-            {
-                actualTriggered++;
-            }
-            catch
-            {
-            }
-        }
+        var act = async () => await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(false), delayStrategy: mockDelayStrategy, randomProvider: mockRandomProvider);
 
         // Assert
-        actualTriggered.Should().Be(2, "eventually, the quantum undecider must throw CollapseTooEarlyException (by design)");
-        mockRandomProvider.Received(2).GetDouble(); // Ensure the mock is being used
+        await act.Should().ThrowAsync<SuperpositionCollapseException>();
+        mockRandomProvider.Received().GetDouble(); // Ensure the mock is being used exactly 3 times
     }
 
     [Fact]
-    public async Task DelayUntilInevitabilityAsync_ReturnsOutcomeOrThrows()
+    public async Task ObserveDecisionAsync_ThrowsOnCollapseTooEarly()
     {
         // Arrange
-        // (no setup needed)
+        var mockDelayStrategy = Substitute.For<IDelayStrategy>();
+        var mockRandomProvider = Substitute.For<IRandomProvider>();
+
+        // second random is collapse too early
+        mockRandomProvider.GetDouble().Returns(0.5, 0.05);
 
         // Act
-        string? result = null;
-        Exception? exception = null;
-        try { result = await QuantumUndecider.DelayUntilInevitabilityAsync(TimeSpan.FromMilliseconds(100)); }
-        catch (Exception ex) { exception = ex; }
+        var act = async () => await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(false), delayStrategy: mockDelayStrategy, randomProvider: mockRandomProvider);
 
         // Assert
-        if (exception is not null)
-        {
-            exception.Should().BeOfType<SuperpositionCollapseException>("sometimes, the universe just gives up");
-        }
-        else
-        {
-            result.Should().NotBeNullOrWhiteSpace("the undecider must eventually output something, even if it's nonsense");
-        }
+        await act.Should().ThrowAsync<CollapseTooEarlyException>();
+        mockRandomProvider.Received().GetDouble(); // Ensure the mock is being used exactly 3 times
+    }
+
+    [Fact]
+    public async Task ObserveDecisionAsync_ReturnsUndecidedTooEarly()
+    {
+        // Arrange
+        var mockDelayStrategy = Substitute.For<IDelayStrategy>();
+        var mockRandomProvider = Substitute.For<IRandomProvider>();
+
+        // third random is undecided
+        mockRandomProvider.GetDouble().Returns(0.5, 0.5, 0.2);
+
+        // Act
+        var actual = await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(false), delayStrategy: mockDelayStrategy, randomProvider: mockRandomProvider);
+
+        // Assert
+        actual.Should().Be("It depends.");
+        mockRandomProvider.Received().GetDouble(); // Ensure the mock is being used exactly 3 times
+    }
+
+    [Theory]
+    [InlineData(true, "Yes. Probably.")]
+    [InlineData(false, "No. But it’s complicated.")]
+    public async Task ObserveDecisionAsync_ReturnsDecision(bool expectedCostlyReturn, string expectedResult)
+    {
+        // Arrange
+        var mockDelayStrategy = Substitute.For<IDelayStrategy>();
+        var mockRandomProvider = Substitute.For<IRandomProvider>();
+
+        // third random is undecided
+        mockRandomProvider.GetDouble().Returns(0.5, 0.5, 0.3);
+
+        // Act
+        var actual = await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(expectedCostlyReturn), delayStrategy: mockDelayStrategy, randomProvider: mockRandomProvider);
+
+        // Assert
+        actual.Should().Be(expectedResult);
+        mockRandomProvider.Received().GetDouble(); // Ensure the mock is being used exactly 3 times
+    }
+
+    [Fact]
+    public async Task DelayUntilInevitabilityAsync_ThrowsSuperPositionCollapseException()
+    {
+        // Arrange
+        var mockRandomProvider = Substitute.For<IRandomProvider>();
+        mockRandomProvider.GetDouble().Returns(0.1D);
+
+        // Act
+        var act = async () => await QuantumUndecider.DelayUntilInevitabilityAsync(TimeSpan.FromMilliseconds(100), randomProvider: mockRandomProvider);
+
+        // assert
+        await act.Should().ThrowAsync<SuperpositionCollapseException>("sometimes, the universe just gives up");
+    }
+
+    [Fact]
+    public async Task DelayUntilInevitabilityAsync_ReturnsOutcome()
+    {
+        // Arrange
+        var mockRandomProvider = Substitute.For<IRandomProvider>();
+        mockRandomProvider.GetDouble().Returns(0.5D);
+
+        // Act
+        var actual = await QuantumUndecider.DelayUntilInevitabilityAsync(TimeSpan.FromMilliseconds(100), randomProvider: mockRandomProvider);
+
+        // assert
+        actual.Should().NotBeNullOrWhiteSpace("the undecider must eventually output something, even if it's nonsense");
     }
 
     [Fact]

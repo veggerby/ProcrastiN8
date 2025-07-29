@@ -64,12 +64,6 @@ public static class QuantumUndecider
 
         if (randomProvider.GetDouble() < 0.1)
         {
-            logger?.Error("[QuantumUndecider] Decision observed too early. Quantum instability triggered.");
-            throw new CollapseTooEarlyException("Decision observed too early. Quantum instability triggered.");
-        }
-
-        if (randomProvider.GetDouble() < 0.1)
-        {
             logger?.Error("[QuantumUndecider] Observation was too aggressive. Quantum instability triggered.");
             throw new CollapseTooEarlyException("Observation was too aggressive. Quantum instability triggered.");
         }

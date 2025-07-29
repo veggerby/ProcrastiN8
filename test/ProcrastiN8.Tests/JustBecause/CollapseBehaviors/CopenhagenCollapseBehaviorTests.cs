@@ -11,7 +11,7 @@ public class CopenhagenCollapseBehaviorTests
         // Arrange
         var observer = Substitute.For<IObserverContext>();
         observer.IsObserved(Arg.Any<string>()).Returns(false);
-        var randomProvider = Substitute.For<ProcrastiN8.JustBecause.IRandomProvider>();
+        var randomProvider = Substitute.For<IRandomProvider>();
         randomProvider.GetDouble().Returns(0); // Always pick the first
         var behavior = new CopenhagenCollapseBehavior<string>(observer, randomProvider);
         var entangled = new List<IQuantumPromise<string>>();

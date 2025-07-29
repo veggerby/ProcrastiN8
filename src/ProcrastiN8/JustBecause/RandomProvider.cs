@@ -14,7 +14,5 @@ public class RandomProvider : IRandomProvider
 
     private RandomProvider() { }
 
-    public int GetRandom(int minValue, int maxValue) => _random.Next(minValue, maxValue);
-
     public double GetDouble() => _random.NextDouble();
 }
