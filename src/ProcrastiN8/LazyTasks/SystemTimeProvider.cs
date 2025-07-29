@@ -8,4 +8,7 @@ public sealed class SystemTimeProvider : ITimeProvider
     /// <inheritdoc />
     public Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken = default)
         => Task.Delay(delay, cancellationToken);
+
+    /// <inheritdoc />
+    public DateTimeOffset GetUtcNow() => DateTimeOffset.UtcNow;
 }
