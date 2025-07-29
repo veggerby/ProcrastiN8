@@ -8,4 +8,7 @@ public enum QuantumComplianceLevel
     ManyWorlds,         // Every collapse spawns more bugs.
     BellInequalityPlus, // Violates causality. And expectations.
     EnterpriseQuantum,  // Adds decorators, metrics, and a factory that returns null.
+    ReverseEntropy,     // Promises decay over time, tending toward failure.
+    HeisenLogging,      // Observations log fake values before returning the real one.
+    StringTheoryCollapse, // Requires 11 concurrent observers to resolve.
 }

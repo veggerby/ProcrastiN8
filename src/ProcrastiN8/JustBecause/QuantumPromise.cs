@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using ProcrastiN8.LazyTasks;
 
 using ProcrastiN8.JustBecause.CollapseBehaviors;
 using ProcrastiN8.LazyTasks;
@@ -15,7 +16,11 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumPromise");
 
     private readonly Func<Task<T>> _lazyInitializer = lazyInitializer ?? throw new ArgumentNullException(nameof(lazyInitializer));
-    private readonly DateTimeOffset _creationTime = DateTimeOffset.UtcNow;
+    private readonly ITimeProvider _timeProvider = timeProvider ?? new SystemTimeProvider();
+    private readonly DateTimeOffset _creationTime = (timeProvider ?? new SystemTimeProvider()).GetUtcNow();
+
+    public DateTimeOffset CreationTime => _creationTime;
+
     private readonly TimeSpan _schrodingerWindow = schrodingerWindow;
     private readonly object _lock = new();
 
@@ -194,6 +199,19 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     internal void SetEntanglementRegistry(IQuantumEntanglementRegistry<T> registry)
     {
         _entanglementRegistry = registry;
+    }
+
+    public T Value
+    {
+        get
+        {
+            if (_evaluationTask == null || !_evaluationTask.IsCompletedSuccessfully)
+            {
+                throw new InvalidOperationException("The promise has not been resolved yet.");
+            }
+
+            return _evaluationTask.Result;
+        }
     }
 
     public override string ToString()
