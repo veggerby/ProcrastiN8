@@ -1,23 +1,19 @@
 using System.Diagnostics;
 
+using ProcrastiN8.LazyTasks;
 using ProcrastiN8.Metrics;
 
 namespace ProcrastiN8.JustBecause;
 
 /// <summary>
-/// A class that embodies quantum procrastination by entangling outcomes and randomly collapsing decision waveforms,
-/// occasionally throwing exceptions when too much certainty is attempted.
+/// Simulates quantum indecision by providing ambiguous or delayed responses to queries.
 /// </summary>
+/// <remarks>
+/// The QuantumUndecider is a cornerstone of ProcrastiN8's philosophy, embodying the art of productive stalling.
+/// </remarks>
 public static class QuantumUndecider
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumUndecider");
-
-    private static IRandomProvider _randomProvider = new RandomProvider();
-
-    public static void SetRandomProvider(IRandomProvider provider)
-    {
-        _randomProvider = provider;
-    }
 
     private static readonly string[] DecisionStates =
     {
@@ -38,19 +34,24 @@ public static class QuantumUndecider
     public static async Task<string> ObserveDecisionAsync(
         Func<Task<bool>> costlyComputation,
         IProcrastiLogger? logger = null,
+        IDelayStrategy? delayStrategy = null,
+        IRandomProvider? randomProvider = null,
         CancellationToken cancellationToken = default)
     {
+        randomProvider ??= RandomProvider.Default;
+        delayStrategy ??= new DefaultDelayStrategy(randomProvider: randomProvider);
+
         QuantumUndeciderMetrics.Observations.Add(1);
 
         using var activity = ActivitySource.StartActivity("QuantumUndecider.ObserveDecision", ActivityKind.Internal);
         var sw = Stopwatch.StartNew();
 
         logger?.Info("[QuantumUndecider] Initiating uncertain observation protocol...");
-        LogPhilosophicalUncertainty(logger);
+        LogPhilosophicalUncertainty(randomProvider, logger);
 
-        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.Next(800, 4200)), cancellationToken);
+        await delayStrategy.DelayAsync(minDelay: TimeSpan.FromMilliseconds(800), maxDelay: TimeSpan.FromMilliseconds(4200), cancellationToken: cancellationToken);
 
-        if (_randomProvider.NextDouble() < 0.15)
+        if (randomProvider.GetDouble() < 0.15)
         {
             QuantumUndeciderMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "CollapseTooEarly"));
             activity?.SetTag("collapse.status", "failure");
@@ -61,19 +62,13 @@ public static class QuantumUndecider
             throw new SuperpositionCollapseException("The waveform collapsed under scrutiny. Try being less assertive.");
         }
 
-        if (_randomProvider.NextDouble() < 0.1)
-        {
-            logger?.Error("[QuantumUndecider] Decision observed too early. Quantum instability triggered.");
-            throw new CollapseTooEarlyException("Decision observed too early. Quantum instability triggered.");
-        }
-
-        if (_randomProvider.NextDouble() < 0.1)
+        if (randomProvider.GetDouble() < 0.1)
         {
             logger?.Error("[QuantumUndecider] Observation was too aggressive. Quantum instability triggered.");
             throw new CollapseTooEarlyException("Observation was too aggressive. Quantum instability triggered.");
         }
 
-        if (_randomProvider.NextDouble() < 0.25)
+        if (randomProvider.GetDouble() < 0.25)
         {
             var undecided = "It depends."; // Ensure consistent callback for test expectations
 
@@ -113,22 +108,24 @@ public static class QuantumUndecider
     /// <returns>A task that completes with a decision or throws an exception.</returns>
     public static async Task<string> DelayUntilInevitabilityAsync(
         TimeSpan maxDelay,
+        IRandomProvider? randomProvider = null,
         IProcrastiLogger? logger = null,
         CancellationToken cancellationToken = default)
     {
+        randomProvider ??= RandomProvider.Default;
         logger?.Info("[QuantumUndecider] Delaying until inevitability...");
 
-        var delay = _randomProvider.Next(0, (int)maxDelay.TotalMilliseconds);
+        var delay = randomProvider.GetRandom(0, (int)maxDelay.TotalMilliseconds);
         await Task.Delay(delay, cancellationToken);
 
-        if (_randomProvider.NextDouble() < 0.2)
+        if (randomProvider.GetDouble() < 0.2)
         {
             logger?.Error("[QuantumUndecider] Entropy won. Decision collapsed.");
             QuantumUndeciderMetrics.Failures.Add(1, new KeyValuePair<string, object?>("reason", "EntropyCollapse"));
             throw new SuperpositionCollapseException("Entropy caused the decision to collapse.");
         }
 
-        var outcome = DecisionStates[_randomProvider.Next(DecisionStates.Length)];
+        var outcome = DecisionStates[randomProvider.GetRandom(DecisionStates.Length)];
         logger?.Info($"[QuantumUndecider] Inevitability reached: {outcome}");
         return outcome;
     }
@@ -149,7 +146,7 @@ public static class QuantumUndecider
         }
     }
 
-    private static void LogPhilosophicalUncertainty(IProcrastiLogger? logger)
+    private static void LogPhilosophicalUncertainty(IRandomProvider randomProvider, IProcrastiLogger? logger)
     {
         var musings = new[]
         {
@@ -160,20 +157,6 @@ public static class QuantumUndecider
             "If all outcomes exist, is choosing just cruel?"
         };
 
-        logger?.Debug($"[QuantumUndecider] {musings[_randomProvider.Next(musings.Length)]}");
-    }
-
-    private static void LogExcuse(IProcrastiLogger? logger)
-    {
-        var excuses = new[]
-        {
-            "Awaiting cosmic alignment.",
-            "Still synchronizing with quantum mirror self.",
-            "There's a lag in the entanglement buffer.",
-            "My uncertainty matrix isn't calibrated yet.",
-            "Lost connection to the multiverse API."
-        };
-
-        logger?.Info($"[QuantumUndecider] {excuses[_randomProvider.Next(excuses.Length)]}");
+        logger?.Debug($"[QuantumUndecider] {musings[randomProvider.GetRandom(musings.Length)]}");
     }
 }

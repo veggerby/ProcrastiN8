@@ -14,7 +14,7 @@ public class TodoSchedulerTests
         var excuseProvider = Substitute.For<IExcuseProvider>();
         var delayStrategy = Substitute.For<IDelayStrategy>();
         excuseProvider.GetExcuseAsync().Returns("Because reasons");
-        delayStrategy.DelayAsync(Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        delayStrategy.DelayAsync(Arg.Any<TimeSpan?>(), Arg.Any<TimeSpan?>(), Arg.Any<Func<double, bool>?>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
         var scheduler = new TodoScheduler(logger, excuseProvider, delayStrategy);
         var cts = new CancellationTokenSource();
 

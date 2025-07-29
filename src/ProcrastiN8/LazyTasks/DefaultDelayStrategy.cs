@@ -23,14 +23,14 @@ public class DefaultDelayStrategy(
 {
     private readonly TimeSpan _minDelay = minDelay ?? TimeSpan.FromSeconds(1);
     private readonly TimeSpan _maxDelay = maxDelay ?? TimeSpan.FromSeconds(3);
-    private readonly IRandomProvider _randomProvider = randomProvider ?? new RandomProvider();
+    private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
     private readonly IDelayProvider _delayProvider = delayProvider ?? new TaskDelayProvider();
 
     /// <inheritdoc />
-    public async Task DelayAsync(CancellationToken cancellationToken = default)
+    public async Task DelayAsync(TimeSpan? minDelay = null, TimeSpan? maxDelay = null, Func<double, bool>? beforeCallback = null, CancellationToken cancellationToken = default)
     {
-        var minMs = (int)_minDelay.TotalMilliseconds;
-        var maxMs = (int)_maxDelay.TotalMilliseconds;
+        var minMs = (int?)minDelay?.TotalMilliseconds ?? (int)_minDelay.TotalMilliseconds;
+        var maxMs = (int?)maxDelay?.TotalMilliseconds ?? (int)_maxDelay.TotalMilliseconds;
         int delayMs;
 
         if (minMs == maxMs)
@@ -39,8 +39,13 @@ public class DefaultDelayStrategy(
         }
         else
         {
-            delayMs = minMs + _randomProvider.Next(maxMs - minMs + 1);
-            Console.WriteLine($"RandomProvider.Next called with max: {maxMs - minMs + 1}, returned delay: {delayMs}");
+            delayMs = _randomProvider.GetRandom(minMs, maxMs + 1);
+            Console.WriteLine($"RandomProvider.GetRandom called with min: {minMs}, max: {maxMs + 1}, returned delay: {delayMs}");
+        }
+
+        if (beforeCallback is not null && !beforeCallback(delayMs))
+        {
+            return;
         }
 
         await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(delayMs), cancellationToken);

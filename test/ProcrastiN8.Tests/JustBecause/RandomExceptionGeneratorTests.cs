@@ -8,11 +8,22 @@ namespace ProcrastiN8.Tests.JustBecause;
 public class RandomExceptionGeneratorTests
 {
     [Fact]
+    public void Substitute_Works_Correctly()
+    {
+        var randomProvider = Substitute.For<IRandomProvider>();
+        randomProvider.GetDouble().Returns(0D);
+
+        var value = randomProvider.GetDouble();
+
+        Assert.Equal(0D, value);
+    }
+
+    [Fact]
     public void GenerateException_Should_ReturnRandomException()
     {
         // arrange
         var randomProvider = Substitute.For<IRandomProvider>();
-        randomProvider.Next(Arg.Any<int>()).Returns(0);
+        randomProvider.GetDouble().Returns(0D);
         var generator = new RandomExceptionGenerator(randomProvider, new List<Func<Exception>>
         {
             () => new InvalidOperationException("Test exception")

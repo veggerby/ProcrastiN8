@@ -1,21 +1,18 @@
 using ProcrastiN8.Common;
+using ProcrastiN8.JustBecause;
 using ProcrastiN8.Metrics;
 
 namespace ProcrastiN8.Services;
 
-public class CommentaryService
+public class CommentaryService(IRandomProvider? randomProvider = null)
 {
     // Increment value for commentary metric
     private const int CommentaryIncrement = 1;
-
-    public static void SetRandomProvider(ProcrastiN8.JustBecause.IRandomProvider provider)
-    {
-        CommentaryGenerator.SetRandomProvider(provider);
-    }
+    private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
 
     public virtual void LogRandomRemark(IProcrastiLogger? logger = null)
     {
         ProcrastinationMetrics.CommentaryTotal.Add(CommentaryIncrement);
-        CommentaryGenerator.LogRandomCommentary(logger);
+        CommentaryGenerator.LogRandomCommentary(logger, randomProvider: _randomProvider);
     }
 }

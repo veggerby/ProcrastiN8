@@ -1,61 +1,19 @@
-# QuantumUndecider
+# Quantum Undecider
 
-> Embodies quantum procrastination by entangling outcomes and randomly collapsing decision waveforms, occasionally throwing exceptions when too much certainty is attempted.
+The **Quantum Undecider** is a core component of ProcrastiN8, designed to simulate quantum indecision. It provides ambiguous or delayed responses to queries, embodying the art of productive stalling.
 
-## Overview
+## Features
 
-`QuantumUndecider` is a static class for simulating indecision at a quantum level. It provides methods for observing decisions, delaying inevitability, and triggering entangled callbacks.
+- Emits quantum-like responses such as "Maybe" or "Awaiting entangled twin’s input..."
+- Integrates with randomness providers for unpredictable behavior
+- Emits events for entangled decisions
 
-## Usage
-
-```csharp
-using ProcrastiN8.JustBecause;
-
-try
-{
-    var result = await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(true));
-    Console.WriteLine($"Decision: {result}");
-}
-catch (SuperpositionCollapseException ex)
-{
-    Console.WriteLine($"Collapse failed: {ex.Message}");
-}
-```
-
-### Possible Outcomes
-
-- Returns a definitive or partial decision string.
-- Throws `SuperpositionCollapseException` if observed too aggressively.
-
-## API
-
-### `ObserveDecisionAsync`
+## Example Usage
 
 ```csharp
-public static Task<string> ObserveDecisionAsync(
-    Func<Task<bool>> costlyComputation,
-    IProcrastiLogger? logger = null,
-    CancellationToken cancellationToken = default)
+QuantumUndecider.OnEntangledDecision += decision => Console.WriteLine($"Decision: {decision}");
 ```
-
-- **costlyComputation**: The computation to observe.
-- **logger**: Logger for decision updates.
-- **cancellationToken**: Cancels the observation.
-
-### `DelayUntilInevitabilityAsync`
-
-```csharp
-public static Task<string> DelayUntilInevitabilityAsync(
-    TimeSpan maxDelay,
-    IProcrastiLogger? logger = null,
-    CancellationToken cancellationToken = default)
-```
-
-- **maxDelay**: Maximum delay before a decision is inevitable.
-- **logger**: Logger for updates.
-- **cancellationToken**: Cancels the delay.
 
 ## Remarks
 
-- Designed for maximum indecision and minimum determinism.
-- All randomness is injectable for testability.
+The Quantum Undecider is not intended for real-world decision-making but serves as a humorous take on procrastination tools.

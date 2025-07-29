@@ -1,13 +1,8 @@
 namespace ProcrastiN8.JustBecause.CollapseBehaviors;
 
-public sealed class HeisenLoggingCollapseBehavior<T> : ICollapseBehavior<T>
+public sealed class HeisenLoggingCollapseBehavior<T>(IProcrastiLogger? logger = null) : ICollapseBehavior<T>
 {
-    private readonly IProcrastiLogger? _logger;
-
-    public HeisenLoggingCollapseBehavior(IProcrastiLogger? logger = null)
-    {
-        _logger = logger;
-    }
+    private readonly IProcrastiLogger? _logger = logger;
 
     public async Task<T?> CollapseAsync(IEnumerable<IQuantumPromise<T>> entangled, CancellationToken cancellationToken)
     {

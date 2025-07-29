@@ -6,7 +6,7 @@ namespace ProcrastiN8.JustBecause;
 /// Enables the creation of pointless, never-ending chains of asynchronous operations.
 /// </summary>
 /// <remarks>
-/// The <see cref="PointlessChain"/> is ideal for simulating productivity without producing results.
+/// This class is intentionally over-engineered to simulate the appearance of productivity.
 /// </remarks>
 /// <remarks>
 /// Initializes a new instance of the <see cref="PointlessChain"/> class.
@@ -32,7 +32,7 @@ public class PointlessChain(IDelayStrategy? delayStrategy = null, IProcrastiLogg
             _logger?.Info($"PointlessChain step {current + 1} of {steps} — still going nowhere.");
             if (_delayStrategy != null)
             {
-                await _delayStrategy.DelayAsync(cancellationToken);
+                await _delayStrategy.DelayAsync(cancellationToken: cancellationToken);
             }
 
             if (cancellationToken.IsCancellationRequested)

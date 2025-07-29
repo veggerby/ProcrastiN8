@@ -1,6 +1,6 @@
-using ProcrastiN8.LazyTasks;
 using ProcrastiN8.JustBecause;
 using ProcrastiN8.JustBecause.CollapseBehaviors;
+using ProcrastiN8.LazyTasks;
 
 namespace ProcrastiN8.Tests.JustBecause.CollapseBehaviors;
 
@@ -15,7 +15,7 @@ public class ReverseEntropyCollapseBehaviorTests
         mockTimeProvider.GetUtcNow().Returns(creationTime.AddSeconds(10)); // Simulate 10 seconds elapsed
 
         var mockRandomProvider = Substitute.For<IRandomProvider>();
-        mockRandomProvider.NextDouble().Returns(0.9); // Ensure decay probability is high
+        mockRandomProvider.GetDouble().Returns(0.9); // Ensure decay probability is high
 
         var behavior = new ReverseEntropyCollapseBehavior<string>(mockTimeProvider, mockRandomProvider);
         var promise = Substitute.For<IQuantumPromise<string>>();

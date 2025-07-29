@@ -26,7 +26,7 @@ internal sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behav
 {
     private readonly ConcurrentBag<QuantumPromise<T>> _entangled = [];
     private readonly ICollapseBehavior<T> _collapseBehavior = behavior ?? CollapseBehaviorFactory.Create<T>(QuantumComplianceLevel.Entanglish);
-    private readonly IRandomProvider _randomProvider = randomProvider ?? new RandomProvider();
+    private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumEntanglement");
 
     /// <summary>
@@ -81,7 +81,7 @@ internal sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behav
         var sw = Stopwatch.StartNew();
 
         var array = _entangled.ToArray();
-        var chosen = array[_randomProvider.Next(array.Length)];
+        var chosen = array[_randomProvider.GetRandom(array.Length)];
 
         QuantumEntanglementMetrics.Collapses.Add(1);
         activity?.SetTag("entangled.count", array.Length);
@@ -110,4 +110,12 @@ internal sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behav
     /// </summary>
     /// <returns>A string describing the number of entangled promises.</returns>
     public override string ToString() => $"[Entangled Set: {_entangled.Count} promises]";
+
+    /// <summary>
+    /// Factory method to create a new QuantumEntanglementRegistry instance.
+    /// </summary>
+    public static QuantumEntanglementRegistry<T> Create(ICollapseBehavior<T>? behavior = null, IRandomProvider? randomProvider = null)
+    {
+        return new QuantumEntanglementRegistry<T>(behavior, randomProvider);
+    }
 }

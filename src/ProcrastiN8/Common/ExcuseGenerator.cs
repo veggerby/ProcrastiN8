@@ -1,4 +1,5 @@
 using ProcrastiN8.JustBecause;
+
 namespace ProcrastiN8.Common;
 
 public static class ExcuseGenerator
@@ -73,23 +74,18 @@ public static class ExcuseGenerator
         ""
     ];
 
-    private static IRandomProvider _randomProvider = new ProcrastiN8.JustBecause.RandomProvider();
-
-    public static void SetRandomProvider(ProcrastiN8.JustBecause.IRandomProvider provider)
+    public static string GetRandomExcuse(IRandomProvider? randomProvider = null)
     {
-        _randomProvider = provider;
-    }
+        randomProvider ??= RandomProvider.Default;
 
-    public static string GetRandomExcuse()
-    {
-        var prefix = GetRandom(Prefixes);
-        var opening = GetRandom(Openings);
-        var verb = GetRandom(Verbs);
-        var noun = GetRandom(Nouns);
-        var ending = GetRandom(Endings);
+        var prefix = GetRandom(Prefixes, randomProvider);
+        var opening = GetRandom(Openings, randomProvider);
+        var verb = GetRandom(Verbs, randomProvider);
+        var noun = GetRandom(Nouns, randomProvider);
+        var ending = GetRandom(Endings, randomProvider);
 
         return $"{prefix}{opening} {verb} {noun}{ending}";
     }
 
-    private static string GetRandom(string[] array) => array[_randomProvider.Next(array.Length)];
+    private static string GetRandom(string[] array, IRandomProvider randomProvider) => array[randomProvider.GetRandom(array.Length)];
 }

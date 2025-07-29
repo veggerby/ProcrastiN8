@@ -1,15 +1,18 @@
 namespace ProcrastiN8.JustBecause;
 
 /// <summary>
-/// Default implementation of IRandomProvider using System.Random.
+/// Default implementation of <see cref="IRandomProvider"/> using <see cref="System.Random"/>.
 /// </summary>
+/// <remarks>
+/// This provider ensures testability and consistency in randomness across ProcrastiN8 components.
+/// </remarks>
 public class RandomProvider : IRandomProvider
 {
     private readonly Random _random = new();
 
-    public int Next(int maxValue) => _random.Next(maxValue);
+    public static readonly IRandomProvider Default = new RandomProvider();
 
-    public int Next(int minValue, int maxValue) => _random.Next(minValue, maxValue);
+    private RandomProvider() { }
 
-    public double NextDouble() => _random.NextDouble();
+    public double GetDouble() => _random.NextDouble();
 }

@@ -12,5 +12,5 @@ public interface IDelayStrategy
     /// Delays execution according to the strategy's configuration.
     /// </summary>
     /// <param name="cancellationToken">A token to cancel the delay.</param>
-    Task DelayAsync(CancellationToken cancellationToken = default);
+    Task DelayAsync(TimeSpan? minDelay = null, TimeSpan? maxDelay = null, Func<double, bool>? beforeCallback = null, CancellationToken cancellationToken = default);
 }

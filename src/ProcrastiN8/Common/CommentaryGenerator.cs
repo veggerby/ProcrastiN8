@@ -1,4 +1,5 @@
 using ProcrastiN8.JustBecause;
+
 namespace ProcrastiN8.Common;
 
 public static class CommentaryGenerator
@@ -49,28 +50,22 @@ public static class CommentaryGenerator
         "📉", "🌀", "🔁", "💤", "😵‍💫", "🫠", "🙃", "🛸", "🤹‍♂️", ""
     ];
 
-    private static IRandomProvider _randomProvider = new ProcrastiN8.JustBecause.RandomProvider();
-
-    public static void SetRandomProvider(ProcrastiN8.JustBecause.IRandomProvider provider)
+    public static string GetRandomCommentary(IRandomProvider? randomProvider = null)
     {
-        _randomProvider = provider;
-    }
-
-    public static string GetRandomCommentary()
-    {
-        var intro = GetRandom(Intros);
-        var phrase = GetRandom(Phrases);
-        var suffix = GetRandom(Suffixes);
-        var emoji = GetRandom(Emojis);
+        randomProvider ??= RandomProvider.Default;
+        var intro = GetRandom(Intros, randomProvider);
+        var phrase = GetRandom(Phrases, randomProvider);
+        var suffix = GetRandom(Suffixes, randomProvider);
+        var emoji = GetRandom(Emojis, randomProvider);
 
         return $"{intro} {phrase}{suffix} {emoji}".Trim();
     }
 
-    public static void LogRandomCommentary(IProcrastiLogger? logger, string context = "ProcrastiN8")
+    public static void LogRandomCommentary(IProcrastiLogger? logger, string context = "ProcrastiN8", IRandomProvider? randomProvider = null)
     {
-        var message = GetRandomCommentary();
+        var message = GetRandomCommentary(randomProvider);
         logger?.Debug($"[{context}] {message}");
     }
 
-    private static string GetRandom(string[] array) => array[_randomProvider.Next(array.Length)];
+    private static string GetRandom(string[] array, IRandomProvider randomProvider) => array[randomProvider.GetRandom(array.Length)];
 }

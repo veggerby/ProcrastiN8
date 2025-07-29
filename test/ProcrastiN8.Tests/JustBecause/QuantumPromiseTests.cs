@@ -1,4 +1,5 @@
 using ProcrastiN8.JustBecause;
+using ProcrastiN8.LazyTasks;
 using ProcrastiN8.Tests.Common;
 
 namespace ProcrastiN8.Tests.JustBecause;
@@ -8,11 +9,13 @@ public class QuantumPromiseTests
     [Fact]
     public async Task ObserveAsync_ReturnsValue_WhenObservedInWindow()
     {
-        // Arrange
+        // arrange
         var promise = new PredictableQuantumPromise<int>(123);
-        // Act
+
+        // act
         var result = await promise.ObserveAsync();
-        // Assert
+
+        // assert
         result.Should().Be(123, "the quantum promise should resolve to the expected value");
         promise.ToString().Should().Contain("PredictableQuantumPromise");
     }
@@ -64,14 +67,12 @@ public class QuantumPromiseTests
         try
         {
             var mockRandomProvider = Substitute.For<IRandomProvider>();
-            QuantumUndecider.SetRandomProvider(mockRandomProvider);
 
             // Ensure callback is triggered by aligning with the "It depends." decision state
-            mockRandomProvider.NextDouble().Returns(0.2); // Ensure partial decision condition is met
-            mockRandomProvider.Next(Arg.Any<int>(), Arg.Any<int>()).Returns(2); // Index for "It depends."
+            mockRandomProvider.GetDouble().Returns(0.2); // Ensure partial decision condition is met
 
             // Act
-            await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(true));
+            await QuantumUndecider.ObserveDecisionAsync(() => Task.FromResult(true), randomProvider: mockRandomProvider);
 
             // Assert
             observed.Should().Be("It depends.", "the entangled callback should always be triggered with the correct state");
@@ -87,20 +88,16 @@ public class QuantumPromiseTests
     {
         // Arrange
         var triggered = false;
-        var mockRandomProvider = Substitute.For<IRandomProvider>();
-        mockRandomProvider.NextDouble().Returns(0.05); // Ensure CollapseToVoidException is triggered
+        var mockDelayStrategy = Substitute.For<IDelayStrategy>();
+        var randomProvider = Substitute.For<IRandomProvider>();
+        randomProvider.GetDouble().Returns(0.05); // less than VoidCollapseProbability
 
-        for (int i = 0; i < 3; i++) // Reduce iterations
+        // Act
+        var promise = new QuantumPromise<int>(() => Task.FromResult(1), TimeSpan.FromSeconds(2), delayStrategy: mockDelayStrategy, randomProvider: randomProvider);
+        try { await promise.ObserveAsync(); }
+        catch (CollapseToVoidException)
         {
-            var promise = new QuantumPromise<int>(() => Task.FromResult(1), TimeSpan.FromSeconds(2), randomProvider: mockRandomProvider);
-            await Task.Delay(500); // Reduce delay
-            try { await promise.ObserveAsync(); }
-            catch (CollapseToVoidException)
-            {
-                triggered = true;
-                break;
-            }
-            catch { /* ignore other exceptions for this test */ }
+            triggered = true;
         }
 
         // Assert
