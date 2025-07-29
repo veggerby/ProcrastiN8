@@ -9,6 +9,10 @@ public class AlwaysThrowsQuantumPromise<T>(Exception exception) : IQuantumPromis
 {
     private readonly Exception _exception = exception;
 
+    public DateTimeOffset CreationTime => throw new NotImplementedException();
+
+    public T Value => throw new NotImplementedException();
+
     public Task<T> ObserveAsync(CancellationToken cancellationToken = default)
     {
         return Task.FromException<T>(_exception);

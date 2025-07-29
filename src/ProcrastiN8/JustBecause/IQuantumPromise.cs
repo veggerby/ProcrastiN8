@@ -6,5 +6,15 @@ namespace ProcrastiN8.JustBecause;
 /// </summary>
 public interface IQuantumPromise<T>
 {
+    /// <summary>
+    /// Gets the time when the promise was created.
+    /// </summary>
+    DateTimeOffset CreationTime { get; }
+
+    /// <summary>
+    /// Gets the value of the promise, if resolved.
+    /// </summary>
+    T Value { get; }
+
     Task<T> ObserveAsync(CancellationToken cancellationToken = default);
 }

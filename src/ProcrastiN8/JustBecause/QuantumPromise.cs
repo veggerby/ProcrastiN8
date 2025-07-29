@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using ProcrastiN8.LazyTasks;
 
 using ProcrastiN8.Metrics;
 
@@ -8,12 +9,16 @@ namespace ProcrastiN8.JustBecause;
 /// A promise that exists in a state of superposition until observed. Observation may collapse the value,
 /// throw an exception, or result in existential expiration. Do not use in production. Ever.
 /// </summary>
-public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan schrodingerWindow, IRandomProvider? randomProvider = null) : IQuantumPromise<T>, ICopenhagenCollapsible<T>
+public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan schrodingerWindow, IRandomProvider? randomProvider = null, ITimeProvider? timeProvider = null) : IQuantumPromise<T>, ICopenhagenCollapsible<T>
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumPromise");
 
     private readonly Func<Task<T>> _lazyInitializer = lazyInitializer ?? throw new ArgumentNullException(nameof(lazyInitializer));
-    private readonly DateTimeOffset _creationTime = DateTimeOffset.UtcNow;
+    private readonly ITimeProvider _timeProvider = timeProvider ?? new SystemTimeProvider();
+    private readonly DateTimeOffset _creationTime = (timeProvider ?? new SystemTimeProvider()).GetUtcNow();
+
+    public DateTimeOffset CreationTime => _creationTime;
+
     private readonly TimeSpan _schrodingerWindow = schrodingerWindow;
     private readonly object _lock = new();
 
@@ -79,7 +84,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
 
             _isObserved = true;
 
-            var timeSinceCreation = DateTimeOffset.UtcNow - _creationTime;
+            var timeSinceCreation = _timeProvider.GetUtcNow() - _creationTime;
 
             if (timeSinceCreation < TimeSpan.FromMilliseconds(_randomProvider.Next(MinObservationDelayMs, MaxObservationDelayMs)))
             {
@@ -166,6 +171,19 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     internal void SetEntanglementRegistry(IQuantumEntanglementRegistry<T> registry)
     {
         _entanglementRegistry = registry;
+    }
+
+    public T Value
+    {
+        get
+        {
+            if (_evaluationTask == null || !_evaluationTask.IsCompletedSuccessfully)
+            {
+                throw new InvalidOperationException("The promise has not been resolved yet.");
+            }
+
+            return _evaluationTask.Result;
+        }
     }
 
     public override string ToString()
