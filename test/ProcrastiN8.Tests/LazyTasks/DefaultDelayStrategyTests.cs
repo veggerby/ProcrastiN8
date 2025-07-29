@@ -9,7 +9,7 @@ public class DefaultDelayStrategyTests
     {
         // arrange
         var randomProvider = Substitute.For<ProcrastiN8.JustBecause.IRandomProvider>();
-        randomProvider.Next(Arg.Any<int>()).Returns(0);
+        randomProvider.GetDouble().Returns(0);
         var strategy = new DefaultDelayStrategy(
             TimeSpan.FromMilliseconds(100),
             TimeSpan.FromMilliseconds(200),
@@ -19,7 +19,7 @@ public class DefaultDelayStrategyTests
         await strategy.DelayAsync();
 
         // assert
-        randomProvider.Received(1).Next(Arg.Is<int>(max => max == 101));
+        randomProvider.Received(1).GetDouble();
     }
 
     [Fact]
@@ -28,6 +28,6 @@ public class DefaultDelayStrategyTests
         var strategy = new DefaultDelayStrategy(TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100));
         var cts = new CancellationTokenSource();
         cts.Cancel();
-        await Assert.ThrowsAsync<TaskCanceledException>(() => strategy.DelayAsync(cts.Token));
+        await Assert.ThrowsAsync<TaskCanceledException>(() => strategy.DelayAsync(Arg.Any<TimeSpan?>(), Arg.Any<TimeSpan?>(), Arg.Any<Func<double, bool>?>(), cts.Token));
     }
 }

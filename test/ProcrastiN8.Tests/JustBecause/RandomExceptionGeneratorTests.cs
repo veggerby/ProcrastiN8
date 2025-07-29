@@ -12,7 +12,7 @@ public class RandomExceptionGeneratorTests
     {
         // arrange
         var randomProvider = Substitute.For<IRandomProvider>();
-        randomProvider.Next(Arg.Any<int>()).Returns(0);
+        randomProvider.GetDouble().Returns(0);
         var generator = new RandomExceptionGenerator(randomProvider, new List<Func<Exception>>
         {
             () => new InvalidOperationException("Test exception")

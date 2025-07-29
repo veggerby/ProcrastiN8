@@ -3,7 +3,7 @@ namespace ProcrastiN8.JustBecause;
 /// <summary>
 /// Defines a contract for a quantum entanglement registry that coordinates the observation and collapse of entangled quantum promises.
 /// </summary>
-public interface IQuantumEntanglementRegistry<T>
+internal interface IQuantumEntanglementRegistry<T>
 {
     /// <summary>
     /// Observes the specified quantum promise, coordinating the collapse of all entangled promises according to the registry's behavior.

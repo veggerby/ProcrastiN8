@@ -12,7 +12,7 @@ public class CopenhagenCollapseBehaviorTests
         var observer = Substitute.For<IObserverContext>();
         observer.IsObserved(Arg.Any<string>()).Returns(false);
         var randomProvider = Substitute.For<ProcrastiN8.JustBecause.IRandomProvider>();
-        randomProvider.Next(Arg.Any<int>()).Returns(0); // Always pick the first
+        randomProvider.GetDouble().Returns(0); // Always pick the first
         var behavior = new CopenhagenCollapseBehavior<string>(observer, randomProvider);
         var entangled = new List<IQuantumPromise<string>>();
 
@@ -34,7 +34,7 @@ public class CopenhagenCollapseBehaviorTests
         chosen.ObserveAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult("observed"));
         var entangled = new List<IQuantumPromise<string>> { chosen };
         var randomProvider = Substitute.For<ProcrastiN8.JustBecause.IRandomProvider>();
-        randomProvider.Next(Arg.Any<int>()).Returns(0); // Always pick the first
+        randomProvider.GetDouble().Returns(0); // Always pick the first
         var behavior = new CopenhagenCollapseBehavior<string>(observer, randomProvider);
 
         // Act
@@ -69,7 +69,7 @@ public class CopenhagenCollapseBehaviorTests
             nonCopenhagen
         };
         var randomProvider = Substitute.For<ProcrastiN8.JustBecause.IRandomProvider>();
-        randomProvider.Next(Arg.Any<int>()).Returns(0); // Always pick the first
+        randomProvider.GetDouble().Returns(0); // Always pick the first
         var behavior = new CopenhagenCollapseBehavior<string>(observer, randomProvider);
 
         // Act

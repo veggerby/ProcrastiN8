@@ -21,7 +21,7 @@ public class RandomExceptionGenerator(IRandomProvider randomProvider, IEnumerabl
     /// </summary>
     public void ThrowRandom()
     {
-        var index = _randomProvider.Next(_exceptionFactories.Count);
+        var index = _randomProvider.GetRandom(_exceptionFactories.Count);
         throw _exceptionFactories[index]();
     }
 
@@ -37,7 +37,7 @@ public class RandomExceptionGenerator(IRandomProvider randomProvider, IEnumerabl
             throw new InvalidOperationException("No exception factories available.");
         }
 
-        var index = _randomProvider.Next(_exceptionFactories.Count());
+        var index = _randomProvider.GetRandom(_exceptionFactories.Count());
         return _exceptionFactories.ElementAt(index).Invoke();
     }
 

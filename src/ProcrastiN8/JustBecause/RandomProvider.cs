@@ -7,9 +7,11 @@ public class RandomProvider : IRandomProvider
 {
     private readonly Random _random = new();
 
-    public int Next(int maxValue) => _random.Next(maxValue);
+    public static readonly IRandomProvider Default = new RandomProvider();
 
-    public int Next(int minValue, int maxValue) => _random.Next(minValue, maxValue);
+    private RandomProvider() { }
 
-    public double NextDouble() => _random.NextDouble();
+    public int GetRandom(int minValue, int maxValue) => _random.Next(minValue, maxValue);
+
+    public double GetDouble() => _random.NextDouble();
 }

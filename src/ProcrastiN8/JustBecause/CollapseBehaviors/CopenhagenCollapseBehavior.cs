@@ -9,7 +9,7 @@ namespace ProcrastiN8.JustBecause.CollapseBehaviors;
 public sealed class CopenhagenCollapseBehavior<T>(IObserverContext? context = null, IRandomProvider? randomProvider = null) : ICollapseBehavior<T>
 {
     private readonly IObserverContext _observerContext = context ?? new DefaultObserverContext();
-    private readonly IRandomProvider _randomProvider = randomProvider ?? new RandomProvider();
+    private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
 
     public async Task<T?> CollapseAsync(IEnumerable<IQuantumPromise<T>> entangled, CancellationToken cancellationToken)
     {
@@ -25,7 +25,7 @@ public sealed class CopenhagenCollapseBehavior<T>(IObserverContext? context = nu
             return default;
         }
 
-        var chosenIndex = _randomProvider.Next(array.Length);
+        var chosenIndex = _randomProvider.GetRandom(array.Length);
         var chosen = array[chosenIndex];
         QuantumEntanglementMetrics.Collapses.Add(1);
 

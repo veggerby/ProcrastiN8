@@ -32,7 +32,7 @@ public class PointlessChain(IDelayStrategy? delayStrategy = null, IProcrastiLogg
             _logger?.Info($"PointlessChain step {current + 1} of {steps} — still going nowhere.");
             if (_delayStrategy != null)
             {
-                await _delayStrategy.DelayAsync(cancellationToken);
+                await _delayStrategy.DelayAsync(cancellationToken: cancellationToken);
             }
 
             if (cancellationToken.IsCancellationRequested)

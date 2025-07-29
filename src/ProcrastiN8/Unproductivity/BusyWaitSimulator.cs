@@ -15,7 +15,7 @@ public static class BusyWaitSimulator
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.BusyWaitSimulator");
 
     private static CommentaryService CommentaryService = new();
-    private static IRandomProvider _randomProvider = new RandomProvider();
+    private static IRandomProvider _randomProvider = RandomProvider.Default;
 
     public static void SetRandomProvider(IRandomProvider provider)
     {
@@ -62,7 +62,7 @@ public static class BusyWaitSimulator
                 }
 
                 // Waste CPU – do nothing in a tight loop
-                Math.Sqrt(_randomProvider.NextDouble() * 9999); // token calculation to avoid optimizations
+                Math.Sqrt(_randomProvider.GetDouble() * 9999); // token calculation to avoid optimizations
             }
 
             stopwatch.Stop();
