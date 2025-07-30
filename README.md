@@ -41,6 +41,10 @@ var result = await promise.ObserveAsync();
 Console.WriteLine($"Collapse result: {result}");
 ```
 
+### ProcrastinationScheduler
+
+The `ProcrastinationScheduler` allows you to defer tasks with absurd delay strategies. See [docs/procrastination-scheduler.md](docs/procrastination-scheduler.md) for details.
+
 ---
 
 ## 🧑‍💻 Usage & API
