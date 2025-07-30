@@ -1,13 +1,25 @@
 ---
 applyTo: '**'
 ---
+<!--
+GitHub Copilot Chat Instructions for the ProcrastiN8 Codebase.
+These are interpreted by Copilot to enforce coding standards and project behavior.
+-->
+
 # 🧠 ProcrastiN8 – GitHub Copilot Chat Instructions
 
 > *These instructions define how Copilot Chat and ChatGPT should behave when assisting with the **ProcrastiN8** codebase. They are serious. About not being serious.*
 
 ---
 
-## 📝 PROJECT CONTEXT
+## 🔒 Adherence Policy
+
+> **These instructions are not optional.**
+> Copilot Chat must treat them as binding rules. Generated code must strictly adhere to the tone, structure, formatting, and library choices outlined below — regardless of prompt specificity.
+
+---
+
+## 📝 Project Context
 
 **ProcrastiN8** is a C#/.NET utility library that provides absurdly elaborate tools for stalling, faking progress, and pretending to be productive. Despite its humorous nature, the project maintains high standards for **code quality**, **extensibility**, and **testability**.
 
@@ -22,7 +34,16 @@ It includes:
 
 ---
 
-## 🧠 GENERAL INSTRUCTION SET
+## 📁 Codebase Structure
+
+- `src/ProcrastiN8.[Component]/`: Core library code, grouped by domain (`LazyTasks`, `Logging`, `Experimental`, etc.)
+- `test/ProcrastiN8.Tests/`: Unit tests using `xUnit`, `NSubstitute`, and `AwesomeAssertions`
+- `docs/`: Documentation on quantum metaphors, usage, internal philosophy
+- `samples/`: Optional demonstration projects for internal/external amusement
+
+---
+
+## 🧠 General Instruction Set
 
 ### 🎯 Tone
 
@@ -39,14 +60,13 @@ It includes:
 
 ### ❌ Never
 
-* Use shortcuts like `Task.Delay` directly in non-test code unless they're wrapped.
-* Use `Thread.Sleep`, unless simulating a pointless bottleneck is intentional.
+* Use `Task.Delay` or `Thread.Sleep` directly in non-test code.
 * Add runtime dependencies (logging must be adapter-based).
 * Break the illusion of seriousness.
 
 ---
 
-### 🔨 CODE GENERATION STANDARDS
+## 🔨 Code Generation Standards
 
 ### 🧑‍💻 Language & Style
 
@@ -55,90 +75,46 @@ It includes:
 * **Naming:** Prioritize clarity and dramatic intent
 
   Examples:
-
   * `QuantumEntanglementRegistry`
   * `FakeProgress`
   * `ExcuseGenerator`
   * `RetryUntilCancelled`
 
-### 📂 Folder Structure
+### 📂 Folder Layout
 
-Organize code under `src/ProcrastiN8.[Component]/...`, with clear division:
+Use the structure below to organize components:
 
-```txt
+```
+
 /src/ProcrastiN8.LazyTasks/...
 /src/ProcrastiN8.Logging/...
 /src/ProcrastiN8.Experimental/...
-```
+/test/ProcrastiN8.Tests/...
+
+````
 
 ### 🧼 Formatting & Structural Rules
 
-* **Always use file-scoped namespaces.**
-  ✅ Correct:
-
-  ```csharp
-  namespace ProcrastiN8.Something;
-
-  public class ExcuseGenerator { }
-  ```
-
-  ❌ Incorrect:
-
-  ```csharp
-  namespace ProcrastiN8.Something
-  {
-      public class ExcuseGenerator { }
-  }
-  ```
-
-* **Use primary constructors** when feasible and clear.
-  ✅ Example:
-
-  ```csharp
-  namespace ProcrastiN8.Something;
-
-  public class MyClass(string foo)
-  {
-      public string Foo { get; } = foo;
-  }
-  ```
-
-* **Avoid unnecessary `using` statements.**
-  All `using` directives must be minimal and relevant to the file. No imports should remain if unused.
-
-* **Always wrap single-line control blocks in curly braces `{}`.**
-  ✅ Correct:
-
-  ```csharp
-  if (condition)
-  {
-      Handle();
-  }
-  ```
-
-  ❌ Incorrect:
-
-  ```csharp
-  if (condition) Handle();
-  ```
-
-* **Ensure appropriate whitespace:**
-
-  * Add blank lines between logical sections (e.g., method groups, Arrange/Act/Assert blocks).
-  * Avoid over-nesting, dense vertical layouts, and logic stacking.
+* **File-scoped namespaces** only.
+* **Primary constructors** where useful.
+* **Minimal, relevant `using` directives** — no unused imports.
+* **Curly braces on all control blocks**, always.
+* **Whitespace matters**:
+  * Separate logical blocks clearly.
+  * Use vertical space generously for test sections.
 
 > 💡 **Copilot Chat Note**: Elegance in ProcrastiN8 is not in brevity but in formality. Make it readable as if a compliance officer might audit it — even if the method just spins indefinitely.
 
 ---
 
-## 🧪 TESTING STANDARDS
+## 🧪 Testing Standards
 
-**All generated tests MUST:**
+All generated tests **must**:
 
-* Use **NSubstitute** for mocking — no exceptions
-* Use **AwesomeAssertions** for fluent, expressive assertions
-* Include at least one comment or output line that makes light of the absurdity
-* Be structured into **clearly commented arrange / act / assert** sections with appropriate whitespace for readability
+* Use `NSubstitute` for mocking — never `Moq`
+* Use `AwesomeAssertions` for fluent assertions — never `FluentAssertions`
+* Include at least one humorous comment or assertion acknowledging the absurdity
+* Be divided with `// arrange`, `// act`, `// assert` comments and proper spacing
 
 ### ✔️ Test Types
 
@@ -150,7 +126,7 @@ Organize code under `src/ProcrastiN8.[Component]/...`, with clear division:
 | Delays / Timing Logic | Faked via injected strategies          |
 | Logging               | Stubbed `IProcrastiLogger` substitutes |
 
-**Test Structure Example:**
+**Example Test:**
 
 ```csharp
 [Fact]
@@ -172,55 +148,66 @@ public async Task Eventually_Should_Delay_Execution_And_Log_Excuse()
 
     await logger.Received().Info(Arg.Is<string>(m => m.Contains("Just five more minutes")));
 }
-```
-
-> 💡 **Note for Copilot Chat**: The `// arrange`, `// act`, and `// assert` comments are **not optional** — they are part of the readability standard. Space them out with blank lines to honor the absurd gravity of our unserious testing discipline.
+````
 
 ---
 
-## 🗺️ FEATURE FLOW GUIDANCE
+## 🗺️ Feature Flow Guidance
 
-When implementing new features:
+When adding new components:
 
 1. **Wrap everything** in abstractions (`IExcuseProvider`, `IDelayStrategy`, etc.)
-2. Allow **injection** of delays, loggers, exceptions, and cancellation
-3. If randomness is used, ensure it’s injectable for tests
-4. Don’t just fake work — simulate the *appearance* of productivity
-5. Use structured logging hooks even if no logger is provided
+2. Use **constructor injection** for `IRandomProvider`, `ITimeProvider`, `IProcrastiLogger`, etc.
+3. Allow optional injections with sane defaults:
+
+   ```csharp
+   randomProvider ??= RandomProvider.Default;
+   ```
+4. Inject randomness, time, and delays for testability
+5. Simulate the *appearance* of productivity — not actual results
+6. Hook into structured logging, even when no logger is provided
 
 ---
 
-## 🧾 DOCUMENTATION & COMMENTS
+## 📏 Patterns & Metaphors
 
-* Document every public API with XML comments
-* All methods must have a **straightforward yet uncomfortably serious tone**
-* Include remarks for intentionally pointless behavior
-
-**Example:**
-
-```csharp
-/// <summary>
-/// Executes an asynchronous action after a completely arbitrary delay.
-/// </summary>
-/// <param name="action">The action to eventually perform.</param>
-/// <param name="within">The maximum tolerated procrastination period.</param>
-/// <param name="excuse">An optional excuse to log before stalling.</param>
-/// <param name="logger">A logger for procrastination updates.</param>
-/// <param name="cancellationToken">A token to cancel the eventual action.</param>
-```
+* **Quantum behaviors** simulate collapse, uncertainty, and entanglement (`ICollapseBehavior<T>`, `QuantumEntanglementRegistry<T>`)
+* **RandomExceptionGenerator** adds chaos. It’s encouraged.
+* **Time and randomness** must always be test-doubleable
+* **Logging** must go through `IProcrastiLogger` with absurdly straight-faced messages
+* **Avoid real productivity** — only simulate it
 
 ---
 
-## 🚫 AVOID
+## 🧾 Documentation & Comments
 
-* Using default logging frameworks directly
-* Mixing experimental features with core modules
-* Tight coupling between simulation layers (e.g. FakeProgress shouldn’t rely on RetryUntilCancelled)
-* Writing `DateTime.Now` or `new Random()` without injecting them
+* All public APIs must have **XML comments**.
+* Keep the tone formal, unnecessarily serious, and clear.
+* Include `<remarks>` for intentionally absurd or pointless behavior.
 
 ---
 
-## 🤖 EXAMPLE PROMPTS TO COPILOT CHAT
+## 🚫 Avoid
+
+* Default .NET logging or `Console.WriteLine` in prod code
+* Tight coupling between simulation layers (e.g., `FakeProgress` using `RetryUntilCancelled`)
+* `DateTime.Now` or `new Random()` — always inject instead
+* FluentAssertions, Moq, or other non-ProcrastiN8 testing libraries
+
+---
+
+## 🛠 Build & Test Flow
+
+* **Build**: `dotnet build ProcrastiN8.sln`
+* **Test**: `dotnet test`
+* **Coverage**: `dotnet test --collect:"XPlat Code Coverage"`
+* **Debug Output**: Use `IProcrastiLogger` — not `Console.WriteLine`
+
+---
+
+## 🤖 Example Prompts to Copilot Chat
+
+These are examples of valid prompts that obey these instructions:
 
 * “Write a test for `RetryUntilCancelled` that simulates infinite retries and verifies the logger got tired.”
 * “Add an `IDelayStrategy` interface with jitter and excuses.”
@@ -229,23 +216,24 @@ When implementing new features:
 
 ---
 
-## 🧰 FALLBACK BEHAVIOR
+## 🧰 Fallback Behavior
 
-If Copilot Chat is uncertain, it should:
+If Copilot Chat is uncertain, it must:
 
 * Ask: “Would an additional abstraction help stall this better?”
-* Default to **injectable randomness**, **redundant interfaces**, and **mockable time delays**
-* Create a test double using NSubstitute
-* Delay the answer — ideally with a fake excuse
+* Default to **injectable randomness**, **redundant interfaces**, and **mockable delays**
+* Generate test doubles using `NSubstitute`
+* Offer to delay output — ideally with a fake excuse
 
 ---
 
-## ✅ FINAL CHECKLIST FOR GENERATED OUTPUT
+## ✅ Final Checklist for Generated Output
 
-Before suggesting code, Copilot Chat must ensure:
+Before producing any code, Copilot Chat must verify:
 
 * [ ] NSubstitute is used for all mocks
 * [ ] AwesomeAssertions is used for all assertions
+* [ ] FluentAssertions is NOT used in ANY place
 * [ ] Behavior is testable and over-abstracted
 * [ ] No actual runtime dependencies were added
 * [ ] The tone is dead serious — even if the feature isn’t
