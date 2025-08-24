@@ -43,7 +43,56 @@ Console.WriteLine($"Collapse result: {result}");
 
 ### ProcrastinationScheduler
 
-The `ProcrastinationScheduler` allows you to defer tasks with absurd delay strategies. See [docs/procrastination-scheduler.md](docs/procrastination-scheduler.md) for details.
+Defer execution ceremonially using configurable procrastination strategies.
+
+Basic fire-and-forget:
+
+```csharp
+await ProcrastiN8.Services.ProcrastinationScheduler.Schedule(
+    () => DoImportantWorkAsync(),
+    initialDelay: TimeSpan.FromSeconds(5),
+    mode: ProcrastinationMode.MovingTarget);
+```
+
+Capture metrics:
+
+```csharp
+var result = await ProcrastinationScheduler.ScheduleWithResult(
+    () => DoImportantWorkAsync(),
+    TimeSpan.FromMilliseconds(250),
+    ProcrastinationMode.WeekendFallback);
+
+Console.WriteLine($"Executed={result.Executed} Cycles={result.Cycles} Excuses={result.ExcuseCount} Triggered={result.Triggered} Abandoned={result.Abandoned}");
+```
+
+Interactive control (handle):
+
+```csharp
+var handle = ProcrastinationScheduler.ScheduleWithHandle(
+    () => DoImportantWorkAsync(),
+    TimeSpan.FromSeconds(30),
+    ProcrastinationMode.InfiniteEstimation);
+
+// later externally force progress
+handle.TriggerNow();
+var summary = await handle.Completion; // includes Triggered=true
+```
+
+Fluent builder (for DI friendliness) with observers:
+
+```csharp
+var scheduler = ProcrastinationSchedulerBuilder
+    .Create()
+    .AddObserver(new LoggingProcrastinationObserver(new DefaultLogger()))
+    .Build();
+
+var r = await scheduler.ScheduleWithResult(
+    () => DoImportantWorkAsync(),
+    TimeSpan.FromMilliseconds(100),
+    ProcrastinationMode.MovingTarget);
+```
+
+See full details in [docs/procrastination-scheduler.md](docs/procrastination-scheduler.md).
 
 ---
 

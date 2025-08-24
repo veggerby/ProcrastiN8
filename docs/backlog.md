@@ -29,25 +29,23 @@ public static Task WaitAsync(TimeSpan maxDelay, CancellationToken cancellationTo
 
 ---
 
-#### 📦 Class + API
+#### 📦 Class + API (Implemented)
 
 ```csharp
-public static class ProcrastinationScheduler
-{
-    public static Task Schedule(
-        Func<Task> task,
-        TimeSpan initialDelay,
-        ProcrastinationMode mode,
-        IExcuseProvider? excuseProvider = null,
-        CancellationToken cancellationToken = default);
-}
+// Static facade
+Task ProcrastinationScheduler.Schedule(...);
+Task<ProcrastinationResult> ProcrastinationScheduler.ScheduleWithResult(...);
+ProcrastinationHandle ProcrastinationScheduler.ScheduleWithHandle(...);
+
+// Instance / DI usage
+var scheduler = ProcrastinationSchedulerBuilder
+    .Create()
+    .WithRandomProvider(RandomProvider.Default)
+    .AddObserver(new LoggingProcrastinationObserver(new DefaultLogger()))
+    .Build();
 ```
 
-* **`task`**: The task you want to run.
-* **`initialDelay`**: First delay duration before starting.
-* **`mode`**: Strategy used to (re)schedule.
-* **`excuseProvider` (optional)**: Injects logging flavor or textual delays (e.g. "Still waiting on design approval").
-* **`cancellationToken`**: Cancels the scheduling process entirely.
+Result flags now include `Triggered` and `Abandoned` for forensic clarity post-execution (or non-execution). External intervention provided via handle methods `TriggerNow()` and `Abandon()`.
 
 ---
 
@@ -68,7 +66,7 @@ public enum ProcrastinationMode
 
 > “Every time you check when it will run, it moves further away.”
 
-##### Behavior
+##### Behavior (MovingTarget)
 
 * Delay increases by **10–25%** (randomized) after each postponement check.
 * The task is only executed after `N` stable observations or if max delay cap (e.g. 1 hour) is hit.
@@ -78,7 +76,7 @@ public enum ProcrastinationMode
 [Scheduler] New delay: 17.3s. Reason: 'Still waiting for product alignment.'
 ```
 
-##### Implementation Notes
+##### Implementation Notes (MovingTarget)
 
 * Use `IRandomProvider` to pick percentage increase.
 * Optionally allow `maxTotalDelay` and `maxAttempts` parameters.
@@ -90,13 +88,13 @@ public enum ProcrastinationMode
 
 > “Always just 5 minutes away.”
 
-##### Behavior
+##### Behavior (InfiniteEstimation)
 
 * Keeps logging: “Estimated time to start: 5 minutes.”
 * Actually never starts **unless** a `TriggerNow()` method is called, or the user gives up and cancels.
 * Can optionally set a flag `AllowSurpriseStart = true` to allow a random chance to start anyway.
 
-##### Implementation Notes
+##### Implementation Notes (InfiniteEstimation)
 
 * Loop using `Task.Delay(...)` with a 5-minute step or shorter for debugging.
 * Optionally provide a `ProcrastinationSchedulerHandle` object with `.TriggerNow()` or `.Abandon()` APIs.
