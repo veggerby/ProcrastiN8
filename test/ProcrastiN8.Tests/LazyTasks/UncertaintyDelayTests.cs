@@ -23,7 +23,7 @@ public class UncertaintyDelayTests
         var rounds = 3;
 
         // act
-        await UncertaintyDelay.WaitAsync(maxDelay, rounds: rounds, randomProvider: randomProvider, excuseProvider: excuseProvider, delayProvider: delayProvider, cancellationToken: CancellationToken.None);
+    await UncertaintyDelay.WaitAsync(maxDelay, rounds: rounds, randomProvider: randomProvider, excuseProvider: excuseProvider, delayProvider: delayProvider, enableCommentary: true, cancellationToken: CancellationToken.None);
 
         // assert
         capturedDelays.Count.Should().Be(rounds, "each round should invoke the delay provider exactly once");
@@ -45,7 +45,7 @@ public class UncertaintyDelayTests
         var delayProvider = new FakeDelayProvider(capturedDelays);
 
         // act
-        await UncertaintyDelay.WaitAsync(TimeSpan.FromMilliseconds(500), rounds: 0, randomProvider: randomProvider, excuseProvider: excuseProvider, delayProvider: delayProvider);
+    await UncertaintyDelay.WaitAsync(TimeSpan.FromMilliseconds(500), rounds: 0, randomProvider: randomProvider, excuseProvider: excuseProvider, delayProvider: delayProvider, enableCommentary: false);
 
         // assert
         capturedDelays.Count.Should().Be(4, "rounds=0 should trigger random selection which produced 4 rounds");
@@ -77,6 +77,40 @@ public class UncertaintyDelayTests
 
         // assert
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>().WithMessage("*Maximum delay must be greater than zero.*");
+    }
+
+    [Fact]
+    public async Task WaitAsync_Should_Fallback_To_Synchronous_Excuse_When_No_Provider()
+    {
+        // arrange
+        var randomProvider = new SequenceRandomProvider(0.25, 0.10, 0.20); // 2 rounds (floor((0.25*4))=1 +2 =3? Actually: (0.25*4)=1 => 1+2=3 rounds, but only provide 2 delay values -> fallback uses 0.5 for remaining)
+        var capturedDelays = new List<TimeSpan>();
+        var delayProvider = new FakeDelayProvider(capturedDelays);
+
+        // act
+        await UncertaintyDelay.WaitAsync(TimeSpan.FromMilliseconds(200), randomProvider: randomProvider, delayProvider: delayProvider);
+
+        // assert
+        capturedDelays.Count.Should().BeGreaterThanOrEqualTo(2);
+    }
+
+    [Fact]
+    public async Task WaitAsync_Should_Emit_Commentary_On_Every_Second_Round_When_Enabled()
+    {
+        // arrange
+        var rounds = 4;
+        var randomProvider = new SequenceRandomProvider(0.99, 0.10, 0.20, 0.30, 0.40); // explicit rounds param, first value ignored for rounds
+        var capturedDelays = new List<TimeSpan>();
+        var delayProvider = new FakeDelayProvider(capturedDelays);
+        var excuseProvider = Substitute.For<IExcuseProvider>();
+        excuseProvider.GetExcuseAsync().Returns(Task.FromResult("Structured uncertainty"));
+
+        // act
+        await UncertaintyDelay.WaitAsync(TimeSpan.FromMilliseconds(300), rounds: rounds, randomProvider: randomProvider, excuseProvider: excuseProvider, delayProvider: delayProvider, enableCommentary: true);
+
+        // assert
+        capturedDelays.Count.Should().Be(rounds);
+        await excuseProvider.Received(rounds).GetExcuseAsync();
     }
 
     private sealed class FakeDelayProvider(List<TimeSpan> captures) : IDelayProvider
