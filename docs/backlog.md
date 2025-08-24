@@ -46,6 +46,7 @@ var scheduler = ProcrastinationSchedulerBuilder
 ```
 
 Result flags now include `Triggered` and `Abandoned` for forensic clarity post-execution (or non-execution). External intervention provided via handle methods `TriggerNow()` and `Abandon()`. Additional enrichment: `CorrelationId`, `StartedUtc`, `CompletedUtc`, `CyclesPerSecond`.
+Implemented follow-on refinements: middleware pipeline, ambient safety override (`WithSafety`), automatic metrics emission (observer optional), builder convenience `.WithMetrics()`, and satirical `ProductivityIndex` metric.
 
 Implemented supporting abstractions:
 
