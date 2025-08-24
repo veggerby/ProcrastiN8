@@ -22,19 +22,20 @@ All overloads accept optional `IExcuseProvider`, `IDelayStrategy`, `IRandomProvi
 
 ### Result Object (`ProcrastinationResult`)
 
-| Property      | Meaning |
-|---------------|---------|
-| `Mode`        | Strategy requested. |
-| `Executed`    | Underlying task ran. |
-| `Triggered`   | Execution was forced early via `TriggerNow()`. |
-| `Abandoned`   | Execution skipped due to `Abandon()`. |
-| `StartedUtc`  | UTC timestamp when procrastination ritual began. |
-| `CompletedUtc`| UTC timestamp when ritual concluded. |
+| Property | Meaning |
+|----------|---------|
+| `Mode` | Strategy requested. |
+| `Executed` | Underlying task ran. |
+| `Triggered` | Execution was forced early via `TriggerNow()`. |
+| `Abandoned` | Execution skipped due to `Abandon()`. |
+| `StartedUtc` | UTC timestamp when procrastination ritual began. |
+| `CompletedUtc` | UTC timestamp when ritual concluded. |
 | `TotalDeferral` | Wall-clock procrastination span. |
-| `Cycles`      | Count of deferment iterations. |
+| `Cycles` | Count of deferment iterations. |
 | `ExcuseCount` | Number of excuses fetched. |
 | `CorrelationId` | Unique GUID for tracing across observers/middleware. |
-| `CyclesPerSecond` | Derived throughput of deferment cycles. |
+| `CyclesPerSecond` | Derived throughput of deferment cycles (if any wall-clock time elapsed). |
+| `ProductivityIndex` | Satirical metric: `Executed ? 1 / (1 + ExcuseCount + Cycles) : 0`. Lower values indicate more ceremonious deferral. |
 
 `Triggered` and `Abandoned` are mutually exclusive in well-behaved workflows; both can be false if a strategy finished organically.
 
@@ -73,6 +74,8 @@ To avoid static usage in DI-friendly contexts:
 var scheduler = ProcrastinationSchedulerBuilder
     .Create()
     .WithRandomProvider(RandomProvider.Default)
+    .WithSafety(new CustomSafety(maxCycles: 250)) // ambient safety override
+    .WithMetrics() // optional, auto-metrics already emit counters; this adds observer-based transformation
     .AddObserver(new LoggingProcrastinationObserver(new DefaultLogger()))
     .Build();
 
@@ -89,9 +92,9 @@ var r = await scheduler.ScheduleWithResult(
 
 Execution ordering: Added first = outermost wrapper (`before` runs first, `after` runs last). Middlewares receive a `ProcrastinationExecutionContext` containing the `Mode`, `CorrelationId`, and (post-core) the `Result`.
 
-Result availability: `context.Result` is populated after the core strategy finishes. If a strategy intentionally never executes the task
-(e.g., InfiniteEstimation without external trigger) the result may remain null or report `Executed=false`. Middleware should defensively
-handle a null `Result`.
+Result availability: `context.Result` is assigned immediately after the core strategy completes and BEFORE middleware "after" phases run.
+For strategies that end without executing the underlying task (e.g., InfiniteEstimation cancelled, ambient safety cap, early abandon) the
+`Result` is still non-null with `Executed=false` (and flags like `Abandoned` / `Triggered` as appropriate).
 
 Example timing decorator:
 
@@ -117,9 +120,15 @@ var scheduler = ProcrastinationSchedulerBuilder.Create()
     .Build();
 ```
 
-### Metrics Observer
+### Metrics & Auto‑Instrumentation
 
-`MetricsObserver` converts structured `ProcrastinationObserverEvent` callbacks into counter increments exposed by `ProcrastinationDiagnostics`.
+Automatic metrics emission occurs directly in `ProcrastinationStrategyBase` (events forwarded into `ProcrastinationDiagnostics`). Attaching a
+`MetricsObserver` is now optional and primarily useful for custom aggregation or side-channel logging. The builder convenience `.WithMetrics()`
+adds it explicitly.
+
+Ambient safety: Calling `.WithSafety(IExecutionSafetyOptions)` on the builder establishes a process-wide ambient safety configuration adopted by
+strategies that have not explicitly customized their safety options (e.g., global max cycle cap). Individual strategies constructed manually can
+still call `ConfigureSafety(...)` to override.
 
 ---
 

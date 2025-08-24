@@ -49,7 +49,7 @@ Diagnostics & Metrics:
 
 * ActivitySource: `ProcrastiN8.Procrastination` (spans per scheduling session if you start one)
 * Meter counters: `procrastination.cycles`, `procrastination.excuses`, `procrastination.executions`, `procrastination.triggered`, `procrastination.abandoned`
-* Structured events: `ProcrastinationObserverEvent` (types: cycle, excuse, triggered, abandoned, executed)
+* Structured events: `ProcrastinationObserverEvent` (types: cycle, excuse, triggered, abandoned, executed) automatically recorded by the strategy base
 * Correlation: every run has a `CorrelationId` (GUID) for trace stitching
 
 Result enrichment fields:
@@ -57,6 +57,7 @@ Result enrichment fields:
 * `StartedUtc`, `CompletedUtc`, `TotalDeferral`, `CyclesPerSecond`
 * Flags: `Executed`, `Triggered`, `Abandoned`
 * Counters: `Cycles`, `ExcuseCount`
+* `ProductivityIndex` (satirical: `Executed ? 1 / (1 + ExcuseCount + Cycles) : 0`)
 
 Basic fire-and-forget:
 
@@ -96,6 +97,8 @@ Fluent builder (for DI friendliness) with observers:
 ```csharp
 var scheduler = ProcrastinationSchedulerBuilder
     .Create()
+    .WithSafety(new CustomSafety(maxCycles: 200)) // ambient safety override (optional)
+    .WithMetrics() // optional: auto-metrics already emit counters; observer adds extensibility
     .AddObserver(new LoggingProcrastinationObserver(new DefaultLogger()))
     .Build();
 
@@ -134,11 +137,11 @@ var outcome = await scheduler.ScheduleWithResult(
 ```
 
 Middleware order is preserved: added first = runs outermost (its `before` executes first, its `after` executes last). Middleware should be side‑effect minimal and respect the supplied `CancellationToken`.
-`context.Result` is assigned after the core strategy completes; middleware must tolerate it being null (e.g., perpetual deferral strategies without trigger).
+`context.Result` is assigned immediately after core strategy completion and is never null post‑execution (it may indicate `Executed=false` for strategies that exit without running the task such as ambient safety cap or untriggered InfiniteEstimation).
 
 #### Metrics Observer
 
-`MetricsObserver` is a built‑in `IProcrastinationObserver` that translates structured lifecycle events into the exported counters. Add it through the builder or manually in observer collections.
+`MetricsObserver` is optional; counters already increment automatically. Attach it if you need to observe events for custom sinks.
 
 #### Extension Points (Excerpt)
 
