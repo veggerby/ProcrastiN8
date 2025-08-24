@@ -34,7 +34,7 @@ public sealed class CompositeProcrastinationStrategy(params IProcrastinationStra
             {
                 // Aggregate metrics
                 for (int c = 0; c < r.LastResult.Cycles; c++) { IncrementCycle(); }
-                for (int e = 0; e < r.LastResult.ExcuseCount; e++) { await InvokeExcuseAsync(null); } // increment counters silently
+                // Avoid artificially inflating excuse counts; no-op increment removed.
                 if (isLast && r.LastResult.Executed)
                 {
                     MarkExecuted();

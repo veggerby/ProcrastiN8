@@ -30,15 +30,17 @@ public class InfiniteEstimationStrategy : ProcrastinationStrategyBase
             // Still acceptable; proceed without ceremonial justification.
         }
 
+        var absoluteDeadline = StartUtc + TimeSpan.FromSeconds(2);
         while (!cancellationToken.IsCancellationRequested)
         {
             if (CheckForExternalOverride(task)) { return; }
             await InvokeExcuseAsync(excuseProvider);
             IncrementCycle();
             await Task.Yield();
-            await delayStrategy.DelayAsync(TimeSpan.FromMinutes(5), cancellationToken: cancellationToken);
+            // Use a tiny synthetic delay in library context to avoid real multi-minute waits.
+            await delayStrategy.DelayAsync(TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(10), cancellationToken: cancellationToken);
             await NotifyCycleAsync(ControlContext, cancellationToken);
-            if (SafetyCapReached()) { return; }
+            if (SafetyCapReached() || timeProvider.GetUtcNow() >= absoluteDeadline) { return; }
         }
     }
 }

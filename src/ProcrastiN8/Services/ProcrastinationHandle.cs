@@ -6,9 +6,9 @@ namespace ProcrastiN8.Services;
 public sealed class ProcrastinationHandle : IProcrastinationExecutionControl
 {
     private readonly TaskCompletionSource<ProcrastinationResult> _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private volatile bool _triggerNow;
-    private volatile bool _abandon;
-    private volatile ProcrastinationStatus _status = ProcrastinationStatus.Pending;
+    private int _triggerNow; // 0/1
+    private int _abandon;    // 0/1
+    private int _status = (int)ProcrastinationStatus.Pending;
 
     internal ProcrastinationHandle(ProcrastinationMode mode)
     {
@@ -19,7 +19,9 @@ public sealed class ProcrastinationHandle : IProcrastinationExecutionControl
     public ProcrastinationMode Mode { get; }
 
     /// <summary>Gets the current status.</summary>
-    public ProcrastinationStatus Status => _status;
+    public ProcrastinationStatus Status => (ProcrastinationStatus)_status;
+    /// <summary>Raised when status changes.</summary>
+    public event EventHandler<ProcrastinationStatusChangedEventArgs>? StatusChanged;
 
     /// <summary>Gets a task that completes when the workflow finishes.</summary>
     public Task<ProcrastinationResult> Completion => _tcs.Task;
@@ -30,15 +32,16 @@ public sealed class ProcrastinationHandle : IProcrastinationExecutionControl
     /// <summary>Requests immediate execution at the next safe checkpoint.</summary>
     public void TriggerNow()
     {
-        _triggerNow = true;
-        MarkStatus(ProcrastinationStatus.Triggered);
+    TryTriggerNow();
     }
 
     /// <summary>Requests abandoning the workflow without executing the underlying task.</summary>
     public void Abandon()
     {
-        _abandon = true;
-        MarkStatus(ProcrastinationStatus.Abandoned);
+        if (Interlocked.CompareExchange(ref _abandon, 1, 0) == 0)
+        {
+            MarkStatus(ProcrastinationStatus.Abandoned);
+        }
     }
 
     internal void Complete(ProcrastinationResult result)
@@ -57,8 +60,8 @@ public sealed class ProcrastinationHandle : IProcrastinationExecutionControl
         }
     }
 
-    bool IProcrastinationExecutionControl.TriggerNowRequested => _triggerNow;
-    bool IProcrastinationExecutionControl.AbandonRequested => _abandon;
+    bool IProcrastinationExecutionControl.TriggerNowRequested => _triggerNow == 1;
+    bool IProcrastinationExecutionControl.AbandonRequested => _abandon == 1;
 
     void IProcrastinationExecutionControl.MarkStatus(ProcrastinationStatus status)
     {
@@ -67,6 +70,34 @@ public sealed class ProcrastinationHandle : IProcrastinationExecutionControl
 
     private void MarkStatus(ProcrastinationStatus status)
     {
-        _status = status;
+        var previous = (ProcrastinationStatus)Interlocked.Exchange(ref _status, (int)status);
+        if (previous != status)
+        {
+            StatusChanged?.Invoke(this, new ProcrastinationStatusChangedEventArgs(previous, status));
+        }
     }
+
+    /// <summary>Attempts to trigger execution if neither executed nor abandoned yet.</summary>
+    public bool TryTriggerNow()
+    {
+        if (Status is ProcrastinationStatus.Executed or ProcrastinationStatus.Abandoned || _abandon == 1)
+        {
+            return false;
+        }
+        if (Interlocked.CompareExchange(ref _triggerNow, 1, 0) == 0)
+        {
+            MarkStatus(ProcrastinationStatus.Triggered);
+            return true;
+        }
+        return false;
+    }
+}
+
+/// <summary>Status change event args.</summary>
+public sealed class ProcrastinationStatusChangedEventArgs(ProcrastinationStatus previous, ProcrastinationStatus current) : EventArgs
+{
+    /// <summary>Previous status.</summary>
+    public ProcrastinationStatus Previous { get; } = previous;
+    /// <summary>Current status.</summary>
+    public ProcrastinationStatus Current { get; } = current;
 }
