@@ -79,8 +79,8 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
         {
             _control.Context.Excuses = _result.ExcuseCount;
         }
-    await excuseProvider.GetExcuseAsync();
-    await NotifyExcuseAsync(_control?.Context, CancellationToken.None);
+        await excuseProvider.GetExcuseAsync();
+        await NotifyExcuseAsync(_control?.Context, CancellationToken.None);
     }
 
     /// <summary>
@@ -133,7 +133,7 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
     /// </summary>
     protected bool SafetyCapReached()
     {
-    return _result.Cycles >= _safety.MaxCycles;
+        return _result.Cycles >= _safety.MaxCycles;
     }
 
     protected async Task NotifyCycleAsync(ProcrastinationContext? context, CancellationToken ct)

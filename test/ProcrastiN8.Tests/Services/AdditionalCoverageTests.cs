@@ -1,9 +1,10 @@
 using System.Diagnostics.Metrics;
-using ProcrastiN8.Services;
-using ProcrastiN8.Services.Diagnostics;
+
 using ProcrastiN8.Common;
 using ProcrastiN8.JustBecause;
 using ProcrastiN8.LazyTasks;
+using ProcrastiN8.Services;
+using ProcrastiN8.Services.Diagnostics;
 
 namespace ProcrastiN8.Tests.Services;
 
@@ -160,9 +161,9 @@ public class AdditionalCoverageTests
 
         // assert
         result.Executed.Should().BeTrue();
-    capture.Counts.Should().ContainKey("procrastination.cycles");
-    // Excuses may not increment if no excuse provider was supplied; cycles & executions are mandatory.
-    capture.Counts.Should().ContainKey("procrastination.executions");
+        capture.Counts.Should().ContainKey("procrastination.cycles");
+        // Excuses may not increment if no excuse provider was supplied; cycles & executions are mandatory.
+        capture.Counts.Should().ContainKey("procrastination.executions");
         capture.Counts["procrastination.executions"].Should().BeGreaterThanOrEqualTo(1);
     }
 

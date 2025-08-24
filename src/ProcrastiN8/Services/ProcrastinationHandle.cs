@@ -32,7 +32,7 @@ public sealed class ProcrastinationHandle : IProcrastinationExecutionControl
     /// <summary>Requests immediate execution at the next safe checkpoint.</summary>
     public void TriggerNow()
     {
-    TryTriggerNow();
+        TryTriggerNow();
     }
 
     /// <summary>Requests abandoning the workflow without executing the underlying task.</summary>

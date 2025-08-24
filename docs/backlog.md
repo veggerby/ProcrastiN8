@@ -58,7 +58,6 @@ Additional completed refinements (post initial spec):
 * Sequence diagram + FAQ added to scheduler docs
 * Documentation clarified for composite/conditional semantics & excuses
 
-
 Implemented supporting abstractions:
 
 * `IProcrastinationMiddleware` (execution pipeline)

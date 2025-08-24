@@ -48,8 +48,8 @@ public class MovingTargetStrategy : ProcrastinationStrategyBase
             throw new ArgumentNullException(nameof(randomProvider));
         }
 
-    var delay = initialDelay <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(5) : initialDelay;
-    var absoluteDeadline = StartUtc + TimeSpan.FromSeconds(2); // hard cap to keep tests short
+        var delay = initialDelay <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(5) : initialDelay;
+        var absoluteDeadline = StartUtc + TimeSpan.FromSeconds(2); // hard cap to keep tests short
 
         var cycles = 0;
         while (!cancellationToken.IsCancellationRequested)

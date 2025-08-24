@@ -40,7 +40,7 @@ public class ProcrastinationSchedulerTests
         Func<Task> task = () => Task.CompletedTask;
         var delayStrategy = Substitute.For<IDelayStrategy>();
         var randomProvider = Substitute.For<IRandomProvider>();
-    randomProvider.GetDouble().Returns(0.2);
+        randomProvider.GetDouble().Returns(0.2);
         delayStrategy.DelayAsync(Arg.Any<TimeSpan>(), Arg.Any<TimeSpan?>(), Arg.Any<Func<double, bool>>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
@@ -156,9 +156,9 @@ public class ProcrastinationSchedulerTests
 
         // assert
         executed.Should().BeTrue("TriggerNow should override infinite deferral");
-    result.Executed.Should().BeTrue();
-    result.Triggered.Should().BeTrue("Result should record that execution was externally triggered");
-    result.Abandoned.Should().BeFalse();
+        result.Executed.Should().BeTrue();
+        result.Triggered.Should().BeTrue("Result should record that execution was externally triggered");
+        result.Abandoned.Should().BeFalse();
     }
 
     [Fact]
@@ -208,7 +208,7 @@ public class ProcrastinationSchedulerTests
         executed.Should().BeTrue();
         result.Executed.Should().BeTrue();
         await observer.ReceivedWithAnyArgs().OnExecutedAsync(result, Arg.Any<CancellationToken>());
-    factory.Received(1).Create(ProcrastinationMode.MovingTarget);
+        factory.Received(1).Create(ProcrastinationMode.MovingTarget);
     }
 
     [Fact]
