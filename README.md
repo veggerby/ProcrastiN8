@@ -270,6 +270,30 @@ Expected output:
 [FakeProgress] Progress: 100% (allegedly)
 ```
 
+### 🫣 `UncertaintyDelay`
+
+> A delay that changes unpredictably each time you check it.
+
+#### Overview
+
+`UncertaintyDelay` is a utility for introducing unpredictable delays in asynchronous workflows. It leverages `IRandomProvider` for testable randomness and supports excuses for each delay round.
+
+#### Example Usage
+
+```csharp
+using ProcrastiN8.LazyTasks;
+
+await UncertaintyDelay.WaitAsync(
+    maxDelay: TimeSpan.FromSeconds(5),
+    cancellationToken: CancellationToken.None);
+```
+
+#### Features
+
+- Randomized delay durations.
+- Configurable number of delay rounds.
+- Optional excuse logging for each delay.
+
 ---
 
 ## 🤖 OpenAI Excuse Provider

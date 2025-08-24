@@ -23,6 +23,10 @@ public static Task WaitAsync(TimeSpan maxDelay, CancellationToken cancellationTo
 
 ---
 
+**Status:** ✅ Completed
+
+---
+
 ### 🎚️ `ProcrastinationScheduler` – Detailed Specification (Implemented)
 
 **Goal:** Provide an overengineered way to defer tasks based on ridiculous but technically sound delay strategies.
