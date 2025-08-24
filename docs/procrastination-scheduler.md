@@ -182,6 +182,62 @@ Observer structured events (`ProcrastinationObserverEvent`) deliver immutable pa
 
 All strategies report structured lifecycle events and update `ProcrastinationResult` with correlation metadata.
 
+## Sequence (Ceremonial Flow)
+
+```mermaid
+sequenceDiagram
+    participant Caller
+    participant Scheduler
+    participant Middleware1
+    participant Middleware2
+    participant Strategy
+    participant Observers
+    Caller->>Scheduler: ScheduleWithResult(task, mode, ...)
+    Scheduler->>Strategy: Create & attach control/observers
+    Scheduler->>Middleware1: Invoke(context)
+    Middleware1->>Middleware2: next()
+    Middleware2->>Strategy: ExecuteAsync()
+    loop deferment cycles
+        Strategy->>Observers: OnCycle
+        alt excuse provider present
+            Strategy->>Observers: OnExcuse
+        end
+    end
+    alt externally triggered
+        Strategy->>Observers: OnTriggered
+    else abandoned early
+        Strategy->>Observers: OnAbandoned
+    else natural culmination
+        Strategy->>Observers: OnExecuted
+    end
+    Strategy-->>Middleware2: result
+    Middleware2-->>Middleware1: result
+    Middleware1-->>Scheduler: result
+    Scheduler-->>Caller: ProcrastinationResult
+```
+
+## FAQ / Troubleshooting
+
+### Why are metrics counters incrementing even without WithMetrics()
+
+Automatic emission occurs inside `ProcrastinationStrategyBase`. `WithMetrics()` layers an observer for ceremonial redundancy. Tests assert minimums rather than exact values.
+
+### Can I reset the counters between runs
+
+Not currently. Use a scoped `MeterListener` to capture only measurements produced while active.
+
+### Result shows Executed = false with no Triggered/Abandoned
+
+Expected for strategies that naturally defer until safety or deadline (e.g., `InfiniteEstimation`). Use a handle and `TriggerNow()` to force execution.
+
+### Composite strategy cycles look inflated
+
+They aggregate across all phases by design; only the final phase runs the actual task unless none report execution (in which case execution is assumed).
+
+### How do I know which branch a Conditional strategy chose
+
+Inject distinct observers or log context beforehand; branch selection itself is predicate-driven and silent.
+
 
 ### MovingTarget
 

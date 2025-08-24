@@ -138,62 +138,72 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
 
     protected async Task NotifyCycleAsync(ProcrastinationContext? context, CancellationToken ct)
     {
-        if (context == null || _observers.Count == 0) { return; }
-        foreach (var o in _observers)
+        var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "cycle", _result.Cycles, _result.ExcuseCount, _result.Triggered, _result.Abandoned, DateTimeOffset.UtcNow);
+        if (context != null && _observers.Count > 0)
         {
-            await o.OnCycleAsync(context, ct);
-            var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "cycle", _result.Cycles, _result.ExcuseCount, _result.Triggered, _result.Abandoned, DateTimeOffset.UtcNow);
-            await o.OnEventAsync(evt, ct);
-            Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
+            foreach (var o in _observers)
+            {
+                await o.OnCycleAsync(context, ct);
+                await o.OnEventAsync(evt, ct);
+            }
         }
+        Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
     }
 
     private async Task NotifyExcuseAsync(ProcrastinationContext? context, CancellationToken ct)
     {
-        if (context == null || _observers.Count == 0) { return; }
-        foreach (var o in _observers)
+        var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "excuse", _result.Cycles, _result.ExcuseCount, _result.Triggered, _result.Abandoned, DateTimeOffset.UtcNow);
+        if (context != null && _observers.Count > 0)
         {
-            await o.OnExcuseAsync(context, ct);
-            var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "excuse", _result.Cycles, _result.ExcuseCount, _result.Triggered, _result.Abandoned, DateTimeOffset.UtcNow);
-            await o.OnEventAsync(evt, ct);
-            Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
+            foreach (var o in _observers)
+            {
+                await o.OnExcuseAsync(context, ct);
+                await o.OnEventAsync(evt, ct);
+            }
         }
+        Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
     }
 
     private async Task NotifyTriggeredAsync(ProcrastinationContext? context, CancellationToken ct)
     {
-        if (context == null || _observers.Count == 0) { return; }
-        foreach (var o in _observers)
+        var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "triggered", _result.Cycles, _result.ExcuseCount, true, _result.Abandoned, DateTimeOffset.UtcNow);
+        if (context != null && _observers.Count > 0)
         {
-            await o.OnTriggeredAsync(context, ct);
-            var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "triggered", _result.Cycles, _result.ExcuseCount, true, _result.Abandoned, DateTimeOffset.UtcNow);
-            await o.OnEventAsync(evt, ct);
-            Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
+            foreach (var o in _observers)
+            {
+                await o.OnTriggeredAsync(context, ct);
+                await o.OnEventAsync(evt, ct);
+            }
         }
+        Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
     }
 
     private async Task NotifyAbandonedAsync(ProcrastinationContext? context, CancellationToken ct)
     {
-        if (context == null || _observers.Count == 0) { return; }
-        foreach (var o in _observers)
+        var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "abandoned", _result.Cycles, _result.ExcuseCount, _result.Triggered, true, DateTimeOffset.UtcNow);
+        if (context != null && _observers.Count > 0)
         {
-            await o.OnAbandonedAsync(context, ct);
-            var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "abandoned", _result.Cycles, _result.ExcuseCount, _result.Triggered, true, DateTimeOffset.UtcNow);
-            await o.OnEventAsync(evt, ct);
-            Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
+            foreach (var o in _observers)
+            {
+                await o.OnAbandonedAsync(context, ct);
+                await o.OnEventAsync(evt, ct);
+            }
         }
+        Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
     }
 
     private async Task NotifyExecutedAsync(ProcrastinationResult result, CancellationToken ct)
     {
-        if (_observers.Count == 0) { return; }
-        foreach (var o in _observers)
+        var evt = new ProcrastinationObserverEvent(result.CorrelationId, result.Mode, "executed", result.Cycles, result.ExcuseCount, result.Triggered, result.Abandoned, DateTimeOffset.UtcNow);
+        if (_observers.Count > 0)
         {
-            await o.OnExecutedAsync(result, ct);
-            var evt = new ProcrastinationObserverEvent(result.CorrelationId, result.Mode, "executed", result.Cycles, result.ExcuseCount, result.Triggered, result.Abandoned, DateTimeOffset.UtcNow);
-            await o.OnEventAsync(evt, ct);
-            Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
+            foreach (var o in _observers)
+            {
+                await o.OnExecutedAsync(result, ct);
+                await o.OnEventAsync(evt, ct);
+            }
         }
+        Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
     }
 
     /// <summary>
