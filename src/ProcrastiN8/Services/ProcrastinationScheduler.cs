@@ -74,9 +74,9 @@ public static class ProcrastinationScheduler
         {
             rrPre.LastResult.CorrelationId = correlationId;
         }
-    Task FinalExecute() => strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
-    var pipeline = BuildMiddlewarePipeline(FinalExecute, middlewares, execContext, strategy, cancellationToken);
-    await pipeline();
+        Task FinalExecute() => strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
+        var pipeline = BuildMiddlewarePipeline(FinalExecute, middlewares, execContext, strategy, cancellationToken);
+        await pipeline();
         if (strategy is IResultReportingProcrastinationStrategy reporting)
         {
             var r = reporting.LastResult;

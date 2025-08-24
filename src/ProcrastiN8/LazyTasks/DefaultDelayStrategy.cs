@@ -1,7 +1,7 @@
 namespace ProcrastiN8.LazyTasks;
 
-using ProcrastiN8.JustBecause;
 using ProcrastiN8; // For IProcrastiLogger
+using ProcrastiN8.JustBecause;
 
 /// <summary>
 /// Provides a default, configurable delay strategy for simulating arbitrary stalling with optional randomness.

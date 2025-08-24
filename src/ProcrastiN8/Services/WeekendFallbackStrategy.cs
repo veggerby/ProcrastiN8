@@ -36,7 +36,7 @@ public class WeekendFallbackStrategy : ProcrastinationStrategyBase
 
         var start = timeProvider.GetUtcNow();
 
-    while (!cancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             if (CheckForExternalOverride(task)) { return; }
             var now = timeProvider.GetUtcNow();
@@ -47,13 +47,13 @@ public class WeekendFallbackStrategy : ProcrastinationStrategyBase
 
             if (weekendWindow || maxElapsedReached)
             {
-        await task();
-        MarkExecuted();
+                await task();
+                MarkExecuted();
                 return;
             }
 
-        await InvokeExcuseAsync(excuseProvider);
-        IncrementCycle();
+            await InvokeExcuseAsync(excuseProvider);
+            IncrementCycle();
             await delayStrategy.DelayAsync(TimeSpan.FromHours(1), cancellationToken: cancellationToken);
             await NotifyCycleAsync(ControlContext, cancellationToken);
             if (SafetyCapReached()) { return; }

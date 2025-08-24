@@ -60,8 +60,8 @@ public class MiddlewarePipelineTests
         records.Should().HaveCount(4);
         records[0].Should().Be("before:a");
         records[1].Should().Be("before:b");
-    records[2].Should().StartWith("after:b:");
-    records[3].Should().StartWith("after:a:");
+        records[2].Should().StartWith("after:b:");
+        records[3].Should().StartWith("after:a:");
     }
 
     [Fact]

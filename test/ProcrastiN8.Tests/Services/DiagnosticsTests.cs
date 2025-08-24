@@ -1,7 +1,8 @@
+using System.Diagnostics;
+
+using ProcrastiN8.Common;
 using ProcrastiN8.Services;
 using ProcrastiN8.Services.Diagnostics;
-using ProcrastiN8.Common;
-using System.Diagnostics;
 
 namespace ProcrastiN8.Tests.Services;
 
@@ -14,20 +15,20 @@ public class DiagnosticsTests
     [Fact]
     public async Task LoggingObserver_Emits_Log_Messages_For_Lifecycle()
     {
-    var logger = Substitute.For<IProcrastiLogger>();
-    var observer = new LoggingProcrastinationObserver(logger);
-    var ctx = new ProcrastinationContext();
-    await observer.OnCycleAsync(ctx);
-    await observer.OnExcuseAsync(ctx);
-    await observer.OnTriggeredAsync(ctx);
-    await observer.OnAbandonedAsync(ctx);
-    await observer.OnExecutedAsync(new ProcrastinationResult { Mode = ProcrastinationMode.MovingTarget, Cycles = 0, ExcuseCount = 0 });
+        var logger = Substitute.For<IProcrastiLogger>();
+        var observer = new LoggingProcrastinationObserver(logger);
+        var ctx = new ProcrastinationContext();
+        await observer.OnCycleAsync(ctx);
+        await observer.OnExcuseAsync(ctx);
+        await observer.OnTriggeredAsync(ctx);
+        await observer.OnAbandonedAsync(ctx);
+        await observer.OnExecutedAsync(new ProcrastinationResult { Mode = ProcrastinationMode.MovingTarget, Cycles = 0, ExcuseCount = 0 });
 
-    logger.Received().Debug(Arg.Is<string>(m => m.Contains("Cycle")));
-    logger.Received().Info(Arg.Is<string>(m => m.Contains("Excuse")));
-    logger.Received().Info(Arg.Is<string>(m => m.Contains("trigger", StringComparison.OrdinalIgnoreCase)));
-    logger.Received().Warn(Arg.Is<string>(m => m.Contains("abandon", StringComparison.OrdinalIgnoreCase)));
-    logger.Received().Info(Arg.Is<string>(m => m.Contains("Task executed")));
+        logger.Received().Debug(Arg.Is<string>(m => m.Contains("Cycle")));
+        logger.Received().Info(Arg.Is<string>(m => m.Contains("Excuse")));
+        logger.Received().Info(Arg.Is<string>(m => m.Contains("trigger", StringComparison.OrdinalIgnoreCase)));
+        logger.Received().Warn(Arg.Is<string>(m => m.Contains("abandon", StringComparison.OrdinalIgnoreCase)));
+        logger.Received().Info(Arg.Is<string>(m => m.Contains("Task executed")));
     }
 
     [Fact]
@@ -50,13 +51,13 @@ public class DiagnosticsTests
         };
         ActivitySource.AddActivityListener(listener);
         using var act = ProcrastinationDiagnostics.StartActivity("test-session", result);
-    act.Should().NotBeNull();
-    var mode = act!.GetTagItem("procrastination.mode")?.ToString();
-    var cycles = act.GetTagItem("procrastination.cycles")?.ToString();
-    var excuses = act.GetTagItem("procrastination.excuses")?.ToString();
-    mode.Should().Be("WeekendFallback");
-    cycles.Should().Be("7");
-    excuses.Should().Be("4");
+        act.Should().NotBeNull();
+        var mode = act!.GetTagItem("procrastination.mode")?.ToString();
+        var cycles = act.GetTagItem("procrastination.cycles")?.ToString();
+        var excuses = act.GetTagItem("procrastination.excuses")?.ToString();
+        mode.Should().Be("WeekendFallback");
+        cycles.Should().Be("7");
+        excuses.Should().Be("4");
     }
 
     [Fact]
