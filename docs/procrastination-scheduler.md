@@ -1,30 +1,84 @@
 # ProcrastinationScheduler
 
-The `ProcrastinationScheduler` is a utility for deferring tasks based on absurd but technically sound delay strategies. It provides three modes of operation:
+The `ProcrastinationScheduler` defers tasks using deliberately over-engineered strategies while exposing formal instrumentation. The ceremony is real; the productivity is optional.
 
-## API
+## Core Static API
 
 ```csharp
-public static class ProcrastinationScheduler
-{
-    public static Task Schedule(
-        Func<Task> task,
-        TimeSpan initialDelay,
-        ProcrastinationMode mode,
-        IExcuseProvider? excuseProvider = null,
-        CancellationToken cancellationToken = default);
-}
+Task Schedule(...)
+Task<ProcrastinationResult> ScheduleWithResult(...)
+ProcrastinationHandle ScheduleWithHandle(...)
 ```
 
-### Parameters
+All overloads accept optional `IExcuseProvider`, `IDelayStrategy`, `IRandomProvider`, `ITimeProvider`, `IProcrastinationStrategyFactory`, and `IEnumerable<IProcrastinationObserver>` (for the result / handle variants).
 
-- **`task`**: The task to execute.
-- **`initialDelay`**: The initial delay before starting the task.
-- **`mode`**: The scheduling strategy (`MovingTarget`, `InfiniteEstimation`, `WeekendFallback`).
-- **`excuseProvider`**: Optional provider for logging whimsical excuses.
-- **`cancellationToken`**: Token to cancel the scheduling process.
+### Key Parameters
 
-## Modes
+- `task` – The asynchronous work eventually (maybe) executed.
+- `initialDelay` – Baseline deferment window supplied to strategies.
+- `mode` – Built-in procrastination mode (enum). Custom composition uses factories.
+- Provider overrides – Inject test doubles or bespoke behaviors (deterministic randomness, simulated time, custom excuses, etc.).
+- `observers` – Receive lifecycle callbacks: cycle, excuse, triggered, abandoned, executed.
+
+### Result Object (`ProcrastinationResult`)
+
+| Property      | Meaning |
+|---------------|---------|
+| `Mode`        | Strategy requested. |
+| `Executed`    | Underlying task ran. |
+| `Triggered`   | Execution was forced early via `TriggerNow()`. |
+| `Abandoned`   | Execution skipped due to `Abandon()`. |
+| `TotalDeferral` | Wall-clock procrastination span. |
+| `Cycles`      | Count of deferment iterations. |
+| `ExcuseCount` | Number of excuses fetched. |
+
+`Triggered` and `Abandoned` are mutually exclusive in well-behaved workflows; both can be false if a strategy finished organically.
+
+### Interactive Handle
+
+`ScheduleWithHandle` returns a `ProcrastinationHandle` providing:
+
+```csharp
+handle.TriggerNow();  // Force early execution (sets Triggered flag)
+handle.Abandon();     // Skip execution entirely (sets Abandoned flag)
+await handle.Completion; // Yields populated ProcrastinationResult
+```
+
+Status transitions: `Pending -> Deferring -> (Triggered|Abandoned|Executed)`.
+
+### Observers
+
+Implement `IProcrastinationObserver` to hook lifecycle notifications. A built-in `LoggingProcrastinationObserver` emits solemn log entries via `IProcrastiLogger`.
+
+Example:
+
+```csharp
+var observers = new [] { new LoggingProcrastinationObserver(new DefaultLogger()) };
+var result = await ProcrastinationScheduler.ScheduleWithResult(
+    () => Task.CompletedTask,
+    TimeSpan.FromMilliseconds(100),
+    ProcrastinationMode.MovingTarget,
+    observers: observers);
+```
+
+### Builder / DI Helper
+
+To avoid static usage in DI-friendly contexts:
+
+```csharp
+var scheduler = ProcrastinationSchedulerBuilder
+    .Create()
+    .WithRandomProvider(RandomProvider.Default)
+    .AddObserver(new LoggingProcrastinationObserver(new DefaultLogger()))
+    .Build();
+
+var r = await scheduler.ScheduleWithResult(
+    () => Task.CompletedTask,
+    TimeSpan.FromMilliseconds(50),
+    ProcrastinationMode.MovingTarget);
+```
+
+## Built-in Modes
 
 ### MovingTarget
 
@@ -40,7 +94,7 @@ public static class ProcrastinationScheduler
 
 - Task runs if 72 hours have passed or it’s Saturday after 3 PM.
 
-## Example Usage
+## Simple Example
 
 ```csharp
 await ProcrastinationScheduler.Schedule(
@@ -48,3 +102,43 @@ await ProcrastinationScheduler.Schedule(
     TimeSpan.FromSeconds(10),
     ProcrastinationMode.MovingTarget);
 ```
+
+## Advanced Strategies & Composition
+
+You can assemble higher-order procrastination behaviors without modifying the enum:
+
+```csharp
+var composite = new CompositeProcrastinationStrategy(
+    new MovingTargetStrategy(),
+    new WeekendFallbackStrategy());
+
+await composite.ExecuteAsync(task, TimeSpan.FromSeconds(1), excuseProvider, delayStrategy, randomProvider, SystemTimeProvider.Default, CancellationToken.None);
+
+var conditional = new ConditionalProcrastinationStrategy(
+    new MovingTargetStrategy(),
+    new InfiniteEstimationStrategy(),
+    timeProvider => timeProvider.GetUtcNow().DayOfWeek == DayOfWeek.Friday);
+
+await conditional.ExecuteAsync(task, TimeSpan.FromSeconds(1), excuseProvider, delayStrategy, randomProvider, SystemTimeProvider.Default, CancellationToken.None);
+```
+
+Provide a custom `IProcrastinationStrategyFactory` to surface composites or conditionals under your own external configuration scheme.
+
+## Extensibility Summary
+
+| Extension Point | Interface | Purpose |
+|-----------------|-----------|---------|
+| Strategy Factory | `IProcrastinationStrategyFactory` | Swap / inject custom strategies. |
+| Excuses | `IExcuseProvider` | Supply thematic rationalizations. |
+| Time | `ITimeProvider` | Deterministic temporal control. |
+| Randomness | `IRandomProvider` | Deterministic stochastic rituals. |
+| Delay | `IDelayStrategy` | Custom pacing algorithms. |
+| Observers | `IProcrastinationObserver` | Telemetry & logging hooks. |
+| Scheduler Builder | `IProcrastinationSchedulerBuilder` | Instance-based wiring for DI. |
+
+## Design Rationale
+
+The system intentionally over-abstracts trivial delay loops to maximize testability, extensibility, and the appearance of architectural gravitas. Result flags (`Triggered`, `Abandoned`) provide post-hoc narrative clarity for auditors investigating why nothing happened sooner.
+
+---
+Return to [README](../README.md)
