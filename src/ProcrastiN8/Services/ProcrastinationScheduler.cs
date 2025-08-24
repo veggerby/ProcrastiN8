@@ -62,7 +62,7 @@ public static class ProcrastinationScheduler
             baseStrategy.AttachControl(handle);
             baseStrategy.AttachObservers(observers);
         }
-        await strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
+    await strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
         if (strategy is IResultReportingProcrastinationStrategy reporting)
         {
             var r = reporting.LastResult;
