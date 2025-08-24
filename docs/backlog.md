@@ -10,7 +10,7 @@ Legend:
 
 ## 🟢 High Priority – Core Expansion
 
-### 🫣 `UncertaintyDelay`
+### 🫣 `UncertaintyDelay` *(Not Implemented)*
 
 > A delay that changes unpredictably each time you check it.
 
@@ -46,7 +46,18 @@ var scheduler = ProcrastinationSchedulerBuilder
 ```
 
 Result flags now include `Triggered` and `Abandoned` for forensic clarity post-execution (or non-execution). External intervention provided via handle methods `TriggerNow()` and `Abandon()`. Additional enrichment: `CorrelationId`, `StartedUtc`, `CompletedUtc`, `CyclesPerSecond`.
-Implemented follow-on refinements: middleware pipeline, ambient safety override (`WithSafety`), automatic metrics emission (observer optional), builder convenience `.WithMetrics()`, and satirical `ProductivityIndex` metric.
+Implemented follow-on refinements: middleware pipeline, ambient safety override (`WithSafety`), automatic metrics emission (unconditional counters even without observers), builder convenience `.WithMetrics()`, satirical `ProductivityIndex` metric, composite & conditional strategies.
+
+Additional completed refinements (post initial spec):
+
+* Unconditional metrics counter emission (strategy base emits events; `MetricsObserver` now optional redundancy)
+* `ResetAmbientSafety()` helper for test isolation
+* Thread-safe `CompositeProcrastinationStrategyFactory` via internal locking
+* Conditional strategy only marks executed if chosen underlying strategy actually executed (e.g. infinite deferral branch leaves `Executed=false` unless triggered)
+* Composite strategy aggregates cycles without double-counting excuses
+* Sequence diagram + FAQ added to scheduler docs
+* Documentation clarified for composite/conditional semantics & excuses
+
 
 Implemented supporting abstractions:
 
@@ -156,7 +167,7 @@ public enum ProcrastinationMode
 
 ---
 
-### 🧯 `QuantumAbortToken`
+### 🧯 `QuantumAbortToken` *(Not Implemented)*
 
 > Cancels your task the moment it becomes important.
 
@@ -172,7 +183,7 @@ public sealed class QuantumAbortToken
 
 ---
 
-### 📉 `ProbabilityOfSuccess<T>`
+### 📉 `ProbabilityOfSuccess<T>` *(Not Implemented)*
 
 > Returns a result... or nothing. Depends on fate.
 
@@ -184,7 +195,7 @@ public static Task<T> ExecuteAsync<T>(Func<Task<T>> operation, double successPro
 
 ---
 
-### 🗂️ `ExcuseCache`
+### 🗂️ `ExcuseCache` *(Not Implemented)*
 
 > Remembers your best excuses — until you get caught.
 
