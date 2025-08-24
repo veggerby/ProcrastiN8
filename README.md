@@ -156,7 +156,33 @@ Middleware order is preserved: added first = runs outermost (its `before` execut
 
 See full details in [docs/procrastination-scheduler.md](docs/procrastination-scheduler.md).
 
-See full details in [docs/procrastination-scheduler.md](docs/procrastination-scheduler.md).
+##### Safety & Correlation
+
+Ambient safety (`WithSafety`) sets a process-wide `MaxCycles` applied to strategies lacking an explicit override. Correlation IDs are assigned before strategy execution so middleware, observers, and results share the same GUID even if execution is abandoned, capped, or triggered early.
+
+##### Extended Factory Example
+
+```csharp
+sealed class CustomFactory : IProcrastinationStrategyFactory
+{
+    public IProcrastinationStrategy Create(ProcrastinationMode mode) => mode switch
+    {
+        ProcrastinationMode.MovingTarget => new CompositeProcrastinationStrategy(
+            new MovingTargetStrategy(),
+            new WeekendFallbackStrategy()),
+        ProcrastinationMode.InfiniteEstimation => new ConditionalProcrastinationStrategy(
+            new InfiniteEstimationStrategy(),
+            new MovingTargetStrategy(),
+            tp => tp.GetUtcNow().DayOfWeek == DayOfWeek.Friday),
+        _ => new MovingTargetStrategy()
+    };
+}
+
+var scheduler = ProcrastinationSchedulerBuilder.Create()
+    .WithFactory(new CustomFactory())
+    .WithSafety(new CustomSafety(300))
+    .Build();
+```
 
 ---
 

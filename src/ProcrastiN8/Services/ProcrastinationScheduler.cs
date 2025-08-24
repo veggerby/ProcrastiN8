@@ -195,13 +195,25 @@ public static class ProcrastinationScheduler
         IProcrastinationStrategy strategy,
         CancellationToken cancellationToken)
     {
-        // Wrap terminal to capture result before unwinding so 'after' sections observe execution outcome.
+        // Wrap terminal to pre-populate Result (if supported) so 'after' middleware can observe even if execution throws.
+        ProcrastinationResult? preResult = null;
+        if (strategy is IResultReportingProcrastinationStrategy rrPre)
+        {
+            preResult = rrPre.LastResult;
+            context.Result = preResult; // provisional (Executed may remain false if exception / early exit)
+        }
         Func<Task> next = async () =>
         {
-            await terminal();
-            if (strategy is IResultReportingProcrastinationStrategy rr)
+            try
             {
-                context.Result = rr.LastResult;
+                await terminal();
+            }
+            finally
+            {
+                if (strategy is IResultReportingProcrastinationStrategy rr)
+                {
+                    context.Result = rr.LastResult; // ensure latest metrics after execution attempt
+                }
             }
         };
         if (middlewares == null)

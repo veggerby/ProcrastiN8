@@ -35,7 +35,7 @@ public sealed class ProcrastinationResult
     /// <summary>Gets a unique correlation identifier for tracing.</summary>
     public Guid CorrelationId { get; internal set; } = Guid.NewGuid();
 
-    /// <summary>Derived metric: cycles per second of deferral (informational).</summary>
+    /// <summary>Derived metric: cycles per second of deferral (rounded to 3 decimals).</summary>
     public double? CyclesPerSecond => TotalDeferral.TotalSeconds > 0 ? Math.Round(Cycles / TotalDeferral.TotalSeconds, 3) : null;
 
     /// <summary>

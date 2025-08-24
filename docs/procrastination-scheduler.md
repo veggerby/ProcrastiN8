@@ -37,6 +37,29 @@ All overloads accept optional `IExcuseProvider`, `IDelayStrategy`, `IRandomProvi
 | `CyclesPerSecond` | Derived throughput of deferment cycles (if any wall-clock time elapsed). |
 | `ProductivityIndex` | Satirical metric: `Executed ? 1 / (1 + ExcuseCount + Cycles) : 0`. Lower values indicate more ceremonious deferral. |
 
+#### Productivity Index Rationale
+
+The `ProductivityIndex` intentionally rewards immediate execution (value = 1) while asymptotically approaching zero as excuses and cycles accumulate, providing a humorously perverse incentive structure.
+
+### Safety Configuration
+
+Safety guards prevent infinite loops from consuming unbounded CPU under enthusiastic deferral strategies:
+
+- Interface: `IExecutionSafetyOptions` (`MaxCycles`)
+- Default: 500 cycles
+- Ambient override: `.WithSafety(custom)` on the builder sets a process-wide default for subsequently constructed strategies.
+- Per-strategy override: custom strategies may invoke `ConfigureSafety(...)` to supersede ambient settings.
+
+Only explicit handle calls mark `Abandoned=true`; exiting due to safety cap simply results in `Executed=false` (unless the strategy executes when leaving its loop).
+
+### Correlation Lifecycle
+
+The `CorrelationId` is generated and assigned to both `ProcrastinationExecutionContext` and the strategy's `LastResult` before strategy execution begins, ensuring consistent trace keys across middleware, observers, and final results—even if execution is never triggered.
+
+### Middleware Exception Semantics
+
+If a strategy or inner middleware throws, the pipeline ensures `context.Result` (when supported by the strategy) is still non-null for outer middleware `after` phases, reflecting whatever partial metrics were gathered prior to failure (`Executed` often `false`).
+
 `Triggered` and `Abandoned` are mutually exclusive in well-behaved workflows; both can be false if a strategy finished organically.
 
 ### Interactive Handle
