@@ -10,7 +10,7 @@ Legend:
 
 ## 🟢 High Priority – Core Expansion
 
-### 🫣 `UncertaintyDelay`
+### 🫣 `UncertaintyDelay` *(Not Implemented)*
 
 > A delay that changes unpredictably each time you check it.
 
@@ -23,31 +23,47 @@ public static Task WaitAsync(TimeSpan maxDelay, CancellationToken cancellationTo
 
 ---
 
-### 🎚️ `ProcrastinationScheduler` – Detailed Specification
+### 🎚️ `ProcrastinationScheduler` – Detailed Specification (Implemented)
 
 **Goal:** Provide an overengineered way to defer tasks based on ridiculous but technically sound delay strategies.
 
 ---
 
-#### 📦 Class + API
+#### 📦 Class + API (Implemented)
 
 ```csharp
-public static class ProcrastinationScheduler
-{
-    public static Task Schedule(
-        Func<Task> task,
-        TimeSpan initialDelay,
-        ProcrastinationMode mode,
-        IExcuseProvider? excuseProvider = null,
-        CancellationToken cancellationToken = default);
-}
+// Static facade
+Task ProcrastinationScheduler.Schedule(...);
+Task<ProcrastinationResult> ProcrastinationScheduler.ScheduleWithResult(...);
+ProcrastinationHandle ProcrastinationScheduler.ScheduleWithHandle(...);
+
+// Instance / DI usage
+var scheduler = ProcrastinationSchedulerBuilder
+    .Create()
+    .WithRandomProvider(RandomProvider.Default)
+    .AddObserver(new LoggingProcrastinationObserver(new DefaultLogger()))
+    .Build();
 ```
 
-* **`task`**: The task you want to run.
-* **`initialDelay`**: First delay duration before starting.
-* **`mode`**: Strategy used to (re)schedule.
-* **`excuseProvider` (optional)**: Injects logging flavor or textual delays (e.g. "Still waiting on design approval").
-* **`cancellationToken`**: Cancels the scheduling process entirely.
+Result flags now include `Triggered` and `Abandoned` for forensic clarity post-execution (or non-execution). External intervention provided via handle methods `TriggerNow()` and `Abandon()`. Additional enrichment: `CorrelationId`, `StartedUtc`, `CompletedUtc`, `CyclesPerSecond`.
+Implemented follow-on refinements: middleware pipeline, ambient safety override (`WithSafety`), automatic metrics emission (unconditional counters even without observers), builder convenience `.WithMetrics()`, satirical `ProductivityIndex` metric, composite & conditional strategies.
+
+Additional completed refinements (post initial spec):
+
+* Unconditional metrics counter emission (strategy base emits events; `MetricsObserver` now optional redundancy)
+* `ResetAmbientSafety()` helper for test isolation
+* Thread-safe `CompositeProcrastinationStrategyFactory` via internal locking
+* Conditional strategy only marks executed if chosen underlying strategy actually executed (e.g. infinite deferral branch leaves `Executed=false` unless triggered)
+* Composite strategy aggregates cycles without double-counting excuses
+* Sequence diagram + FAQ added to scheduler docs
+* Documentation clarified for composite/conditional semantics & excuses
+
+Implemented supporting abstractions:
+
+* `IProcrastinationMiddleware` (execution pipeline)
+* `MetricsObserver` + `ProcrastinationDiagnostics` (ActivitySource + counters)
+* Policy interfaces (`IPacingGrowthPolicy`, `IDelayCeilingPolicy`, `IExecutionSafetyOptions`)
+* Extended factory + composite / conditional strategies
 
 ---
 
@@ -68,9 +84,9 @@ public enum ProcrastinationMode
 
 > “Every time you check when it will run, it moves further away.”
 
-##### Behavior
+##### Behavior (MovingTarget)
 
-* Delay increases by **10–25%** (randomized) after each postponement check.
+* Delay increases by **~0.5–15%** (bounded jitter) after each postponement check.
 * The task is only executed after `N` stable observations or if max delay cap (e.g. 1 hour) is hit.
 * Every time you call `Schedule(...)`, log output like:
 
@@ -78,7 +94,7 @@ public enum ProcrastinationMode
 [Scheduler] New delay: 17.3s. Reason: 'Still waiting for product alignment.'
 ```
 
-##### Implementation Notes
+##### Implementation Notes (MovingTarget)
 
 * Use `IRandomProvider` to pick percentage increase.
 * Optionally allow `maxTotalDelay` and `maxAttempts` parameters.
@@ -90,17 +106,17 @@ public enum ProcrastinationMode
 
 > “Always just 5 minutes away.”
 
-##### Behavior
+##### Behavior (InfiniteEstimation)
 
-* Keeps logging: “Estimated time to start: 5 minutes.”
-* Actually never starts **unless** a `TriggerNow()` method is called, or the user gives up and cancels.
-* Can optionally set a flag `AllowSurpriseStart = true` to allow a random chance to start anyway.
+* Conceptually keeps logging: “Estimated time to start: 5 minutes.”
+* Implementation uses micro-delays (≈10ms) plus an absolute safety deadline for deterministic tests.
+* Never starts **unless** a `TriggerNow()` method is called (or canceled). Surprise start flag deferred.
 
-##### Implementation Notes
+##### Implementation Notes (InfiniteEstimation)
 
-* Loop using `Task.Delay(...)` with a 5-minute step or shorter for debugging.
-* Optionally provide a `ProcrastinationSchedulerHandle` object with `.TriggerNow()` or `.Abandon()` APIs.
-* Great for test scenarios or a long-running placeholder.
+* Loop employs synthetic micro-delays instead of real multi‑minute waits.
+* Handle (`TriggerNow()`, `Abandon()`) enables external intervention.
+* Designed to be safe and fast under test harness constraints.
 
 ---
 
@@ -150,7 +166,7 @@ public enum ProcrastinationMode
 
 ---
 
-### 🧯 `QuantumAbortToken`
+### 🧯 `QuantumAbortToken` *(Not Implemented)*
 
 > Cancels your task the moment it becomes important.
 
@@ -166,7 +182,7 @@ public sealed class QuantumAbortToken
 
 ---
 
-### 📉 `ProbabilityOfSuccess<T>`
+### 📉 `ProbabilityOfSuccess<T>` *(Not Implemented)*
 
 > Returns a result... or nothing. Depends on fate.
 
@@ -178,7 +194,7 @@ public static Task<T> ExecuteAsync<T>(Func<Task<T>> operation, double successPro
 
 ---
 
-### 🗂️ `ExcuseCache`
+### 🗂️ `ExcuseCache` *(Not Implemented)*
 
 > Remembers your best excuses — until you get caught.
 

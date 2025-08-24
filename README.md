@@ -41,6 +41,149 @@ var result = await promise.ObserveAsync();
 Console.WriteLine($"Collapse result: {result}");
 ```
 
+### ProcrastinationScheduler
+
+Defer execution ceremonially using configurable procrastination strategies while emitting structured diagnostics worthy of an internal audit.
+
+Diagnostics & Metrics:
+
+* ActivitySource: `ProcrastiN8.Procrastination` (spans per scheduling session if you start one)
+* Meter counters (unconditional emission): `procrastination.cycles`, `procrastination.excuses`, `procrastination.executions`, `procrastination.triggered`, `procrastination.abandoned`
+* Structured events: `ProcrastinationObserverEvent` (types: cycle, excuse, triggered, abandoned, executed) automatically recorded by the strategy base
+* Correlation: every run has a `CorrelationId` (GUID) for trace stitching
+
+Result enrichment fields:
+
+* `StartedUtc`, `CompletedUtc`, `TotalDeferral`, `CyclesPerSecond`
+* Flags: `Executed`, `Triggered`, `Abandoned`
+* Counters: `Cycles`, `ExcuseCount`
+* `ProductivityIndex` (satirical: `Executed ? 1 / (1 + ExcuseCount + Cycles) : 0`)
+
+Basic fire-and-forget:
+
+```csharp
+await ProcrastiN8.Services.ProcrastinationScheduler.Schedule(
+    () => DoImportantWorkAsync(),
+    initialDelay: TimeSpan.FromSeconds(5),
+    mode: ProcrastinationMode.MovingTarget);
+```
+
+Capture metrics:
+
+```csharp
+var result = await ProcrastinationScheduler.ScheduleWithResult(
+    () => DoImportantWorkAsync(),
+    TimeSpan.FromMilliseconds(250),
+    ProcrastinationMode.WeekendFallback);
+
+Console.WriteLine($"Executed={result.Executed} Cycles={result.Cycles} Excuses={result.ExcuseCount} Triggered={result.Triggered} Abandoned={result.Abandoned}");
+```
+
+Interactive control (handle):
+
+```csharp
+var handle = ProcrastinationScheduler.ScheduleWithHandle(
+    () => DoImportantWorkAsync(),
+    TimeSpan.FromSeconds(30),
+    ProcrastinationMode.InfiniteEstimation);
+
+// later externally force progress
+handle.TriggerNow();
+var summary = await handle.Completion; // includes Triggered=true
+```
+
+Fluent builder (for DI friendliness) with observers:
+
+```csharp
+var scheduler = ProcrastinationSchedulerBuilder
+    .Create()
+    .WithSafety(new CustomSafety(maxCycles: 200)) // ambient safety override (optional)
+    .WithMetrics() // optional: auto-metrics already emit counters; observer adds extensibility
+    .AddObserver(new LoggingProcrastinationObserver(new DefaultLogger()))
+    .Build();
+
+var r = await scheduler.ScheduleWithResult(
+    () => DoImportantWorkAsync(),
+    TimeSpan.FromMilliseconds(100),
+    ProcrastinationMode.MovingTarget);
+```
+
+#### Middleware Pipeline
+
+Wrap strategy execution with reusable cross‑cutting procrastination enhancers:
+
+```csharp
+// Custom middleware that annotates before/after execution
+sealed class AnnotationMiddleware : IProcrastinationMiddleware
+{
+    public async Task InvokeAsync(ProcrastinationExecutionContext ctx, Func<Task> next, CancellationToken ct)
+    {
+        Console.WriteLine($"[MW] entering {ctx.Mode} {ctx.CorrelationId}");
+        await next();
+        // ctx.Result may be populated after the core strategy completes
+        Console.WriteLine($"[MW] leaving; executed={ctx.Result?.Executed}");
+    }
+}
+
+var scheduler = ProcrastinationSchedulerBuilder.Create()
+    .AddMiddleware(new AnnotationMiddleware())
+    .AddObserver(new MetricsObserver()) // forwards structured events to counters
+    .Build();
+
+var outcome = await scheduler.ScheduleWithResult(
+    () => DoImportantWorkAsync(),
+    TimeSpan.FromMilliseconds(50),
+    ProcrastinationMode.MovingTarget);
+```
+
+Middleware order is preserved: added first = runs outermost (its `before` executes first, its `after` executes last). Middleware should be side‑effect minimal and respect the supplied `CancellationToken`.
+`context.Result` is assigned immediately after core strategy completion and is never null post‑execution (it may indicate `Executed=false` for strategies that exit without running the task such as ambient safety cap or untriggered InfiniteEstimation).
+
+#### Metrics Observer
+
+`MetricsObserver` is optional; counters already increment automatically. Attach it if you need to observe events for custom sinks.
+
+#### Extension Points (Excerpt)
+
+| Surface | Purpose |
+|---------|---------|
+| `IExcuseProvider` | Generate ceremonial rationalizations. |
+| `IDelayStrategy` | Control temporal pacing (inject fakes in tests). |
+| `IProcrastinationStrategyFactory` | Provide custom / composite / conditional strategies. |
+| `IProcrastinationObserver` | Observe lifecycle transitions and structured events. |
+| `IProcrastinationMiddleware` | Wrap execution with cross‑cutting logic (metrics, logging, chaos). |
+| `IProcrastinationSchedulerBuilder` | Fluent, DI‑friendly construction with observers & middleware. |
+
+See full details (sequence diagram, FAQ) in [docs/procrastination-scheduler.md](docs/procrastination-scheduler.md).
+
+##### Safety & Correlation
+
+Ambient safety (`WithSafety`) sets a process-wide `MaxCycles` applied to strategies lacking an explicit override. Correlation IDs are assigned before strategy execution so middleware, observers, and results share the same GUID even if execution is abandoned, capped, or triggered early.
+
+##### Extended Factory Example
+
+```csharp
+sealed class CustomFactory : IProcrastinationStrategyFactory
+{
+    public IProcrastinationStrategy Create(ProcrastinationMode mode) => mode switch
+    {
+        ProcrastinationMode.MovingTarget => new CompositeProcrastinationStrategy(
+            new MovingTargetStrategy(),
+            new WeekendFallbackStrategy()),
+        ProcrastinationMode.InfiniteEstimation => new ConditionalProcrastinationStrategy(
+            new InfiniteEstimationStrategy(),
+            new MovingTargetStrategy(),
+            tp => tp.GetUtcNow().DayOfWeek == DayOfWeek.Friday),
+        _ => new MovingTargetStrategy()
+    };
+}
+
+var scheduler = ProcrastinationSchedulerBuilder.Create()
+    .WithFactory(new CustomFactory())
+    .WithSafety(new CustomSafety(300))
+    .Build();
+```
+
 ---
 
 ## 🧑‍💻 Usage & API
