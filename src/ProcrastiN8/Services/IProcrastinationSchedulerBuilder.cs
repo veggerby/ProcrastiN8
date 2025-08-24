@@ -23,6 +23,10 @@ public interface IProcrastinationSchedulerBuilder
     IProcrastinationSchedulerBuilder AddObserver(IProcrastinationObserver observer);
     /// <summary>Adds a middleware component that can wrap execution for cross-cutting concerns (metrics, logging, chaos).</summary>
     IProcrastinationSchedulerBuilder AddMiddleware(IProcrastinationMiddleware middleware);
+    /// <summary>Overrides execution safety options applied ambiently to strategies (e.g., MaxCycles).</summary>
+    IProcrastinationSchedulerBuilder WithSafety(IExecutionSafetyOptions safety);
+    /// <summary>Convenience method: attaches a metrics observer (optional since auto-metrics also emit counters).</summary>
+    IProcrastinationSchedulerBuilder WithMetrics();
     /// <summary>Finalizes the configuration and returns a scheduler instance.</summary>
     IProcrastinationScheduler Build();
 }

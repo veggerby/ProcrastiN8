@@ -70,6 +70,10 @@ public static class ProcrastinationScheduler
         }
         var correlationId = Guid.NewGuid();
         var execContext = new ProcrastinationExecutionContext(mode, correlationId);
+        if (strategy is IResultReportingProcrastinationStrategy rrPre)
+        {
+            rrPre.LastResult.CorrelationId = correlationId;
+        }
     Task FinalExecute() => strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
     var pipeline = BuildMiddlewarePipeline(FinalExecute, middlewares, execContext, strategy, cancellationToken);
     await pipeline();
@@ -119,6 +123,10 @@ public static class ProcrastinationScheduler
             {
                 var correlationId = Guid.NewGuid();
                 var execContext = new ProcrastinationExecutionContext(mode, correlationId);
+                if (strategy is IResultReportingProcrastinationStrategy rrPre)
+                {
+                    rrPre.LastResult.CorrelationId = correlationId;
+                }
                 Task FinalExecute() => strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
                 var pipeline = BuildMiddlewarePipeline(FinalExecute, middlewares, execContext, strategy, cancellationToken);
                 await pipeline();
@@ -171,6 +179,10 @@ public static class ProcrastinationScheduler
         }
         var correlationId = Guid.NewGuid();
         var execContext = new ProcrastinationExecutionContext(mode, correlationId);
+        if (strategy is IResultReportingProcrastinationStrategy rrPre)
+        {
+            rrPre.LastResult.CorrelationId = correlationId;
+        }
         Task FinalExecute() => strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
         var pipeline = BuildMiddlewarePipeline(FinalExecute, middlewares, execContext, strategy, cancellationToken);
         await pipeline();
