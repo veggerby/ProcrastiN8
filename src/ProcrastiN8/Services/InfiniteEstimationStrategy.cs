@@ -5,10 +5,12 @@ using ProcrastiN8.LazyTasks;
 namespace ProcrastiN8.Services;
 
 /// <summary>
-/// A strategy that continuously re-estimates work in fixed five minute increments without ever executing the task.
+/// A strategy that conceptually re-estimates start time in perpetual five-minute increments without ever executing the task.
 /// </summary>
 /// <remarks>
-/// This intentionally never invokes the supplied task, affirming the purity of unstarted work.
+/// In production metaphors it would wait real minutes; in this implementation it uses micro-delays (~10ms) plus an absolute
+/// deadline to remain test-friendly and deterministic. The underlying task is only invoked if externally forced via a control
+/// handle trigger. This affirms the purity of unstarted work while still terminating promptly under test safety caps.
 /// </remarks>
 public class InfiniteEstimationStrategy : ProcrastinationStrategyBase
 {

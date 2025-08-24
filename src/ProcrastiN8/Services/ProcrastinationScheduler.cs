@@ -14,9 +14,12 @@ public static class ProcrastinationScheduler
         IDelayStrategy? delayStrategy = null,
         IRandomProvider? randomProvider = null,
         ITimeProvider? timeProvider = null,
+        IProcrastinationStrategyFactory? factory = null,
+        IEnumerable<IProcrastinationObserver>? observers = null,
+        IEnumerable<IProcrastinationMiddleware>? middlewares = null,
         CancellationToken cancellationToken = default)
     {
-        await ScheduleInternal(task, initialDelay, mode, excuseProvider, delayStrategy, randomProvider, timeProvider, factory: null, cancellationToken);
+        await ScheduleInternal(task, initialDelay, mode, excuseProvider, delayStrategy, randomProvider, timeProvider, factory, observers, middlewares, cancellationToken);
     }
 
     /// <summary>
@@ -31,8 +34,10 @@ public static class ProcrastinationScheduler
         IDelayStrategy? delayStrategy = null,
         IRandomProvider? randomProvider = null,
         ITimeProvider? timeProvider = null,
+        IEnumerable<IProcrastinationObserver>? observers = null,
+        IEnumerable<IProcrastinationMiddleware>? middlewares = null,
         CancellationToken cancellationToken = default) =>
-        await ScheduleInternal(task, initialDelay, mode, excuseProvider, delayStrategy, randomProvider, timeProvider, factory, cancellationToken);
+        await ScheduleInternal(task, initialDelay, mode, excuseProvider, delayStrategy, randomProvider, timeProvider, factory, observers, middlewares, cancellationToken);
 
     /// <summary>
     /// Schedules and returns a detailed result.
@@ -47,6 +52,7 @@ public static class ProcrastinationScheduler
         ITimeProvider? timeProvider = null,
         IProcrastinationStrategyFactory? factory = null,
         IEnumerable<IProcrastinationObserver>? observers = null,
+        IEnumerable<IProcrastinationMiddleware>? middlewares = null,
         CancellationToken cancellationToken = default)
     {
         delayStrategy ??= new DefaultDelayStrategy();
@@ -62,7 +68,11 @@ public static class ProcrastinationScheduler
             baseStrategy.AttachControl(handle);
             baseStrategy.AttachObservers(observers);
         }
-    await strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
+        var correlationId = Guid.NewGuid();
+        var execContext = new ProcrastinationExecutionContext(mode, correlationId);
+    Task FinalExecute() => strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
+    var pipeline = BuildMiddlewarePipeline(FinalExecute, middlewares, execContext, strategy, cancellationToken);
+    await pipeline();
         if (strategy is IResultReportingProcrastinationStrategy reporting)
         {
             var r = reporting.LastResult;
@@ -71,7 +81,7 @@ public static class ProcrastinationScheduler
             return r;
         }
 
-    return new ProcrastinationResult { Mode = mode, Executed = true, TotalDeferral = TimeSpan.Zero, ExcuseCount = 0, Cycles = 0 };
+        return new ProcrastinationResult { Mode = mode, Executed = true, TotalDeferral = TimeSpan.Zero, ExcuseCount = 0, Cycles = 0 };
     }
 
     /// <summary>
@@ -87,6 +97,7 @@ public static class ProcrastinationScheduler
         ITimeProvider? timeProvider = null,
         IProcrastinationStrategyFactory? factory = null,
         IEnumerable<IProcrastinationObserver>? observers = null,
+        IEnumerable<IProcrastinationMiddleware>? middlewares = null,
         CancellationToken cancellationToken = default)
     {
         delayStrategy ??= new DefaultDelayStrategy();
@@ -106,7 +117,11 @@ public static class ProcrastinationScheduler
         {
             try
             {
-                await strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
+                var correlationId = Guid.NewGuid();
+                var execContext = new ProcrastinationExecutionContext(mode, correlationId);
+                Task FinalExecute() => strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
+                var pipeline = BuildMiddlewarePipeline(FinalExecute, middlewares, execContext, strategy, cancellationToken);
+                await pipeline();
                 if (strategy is IResultReportingProcrastinationStrategy reporting)
                 {
                     var r = reporting.LastResult;
@@ -140,6 +155,8 @@ public static class ProcrastinationScheduler
         IRandomProvider? randomProvider,
         ITimeProvider? timeProvider,
         IProcrastinationStrategyFactory? factory,
+        IEnumerable<IProcrastinationObserver>? observers,
+        IEnumerable<IProcrastinationMiddleware>? middlewares,
         CancellationToken cancellationToken)
     {
         delayStrategy ??= new DefaultDelayStrategy();
@@ -148,6 +165,43 @@ public static class ProcrastinationScheduler
         factory ??= new DefaultProcrastinationStrategyFactory();
 
         var strategy = factory.Create(mode);
-        await strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
+        if (strategy is ProcrastinationStrategyBase baseStrategy)
+        {
+            baseStrategy.AttachObservers(observers);
+        }
+        var correlationId = Guid.NewGuid();
+        var execContext = new ProcrastinationExecutionContext(mode, correlationId);
+        Task FinalExecute() => strategy.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
+        var pipeline = BuildMiddlewarePipeline(FinalExecute, middlewares, execContext, strategy, cancellationToken);
+        await pipeline();
+    }
+
+    private static Func<Task> BuildMiddlewarePipeline(
+        Func<Task> terminal,
+        IEnumerable<IProcrastinationMiddleware>? middlewares,
+        ProcrastinationExecutionContext context,
+        IProcrastinationStrategy strategy,
+        CancellationToken cancellationToken)
+    {
+        // Wrap terminal to capture result before unwinding so 'after' sections observe execution outcome.
+        Func<Task> next = async () =>
+        {
+            await terminal();
+            if (strategy is IResultReportingProcrastinationStrategy rr)
+            {
+                context.Result = rr.LastResult;
+            }
+        };
+        if (middlewares == null)
+        {
+            return next;
+        }
+        var ordered = middlewares.Reverse().ToArray();
+        foreach (var m in ordered)
+        {
+            var localNext = next;
+            next = () => m.InvokeAsync(context, localNext, cancellationToken);
+        }
+        return next;
     }
 }
