@@ -265,7 +265,7 @@ await ProcrastinationScheduler.Schedule(
 
 ## Advanced Strategies & Composition
 
-You can assemble higher-order procrastination behaviors without modifying the enum:
+You can assemble higher-order procrastination behaviors without modifying the enum. Composite strategies aggregate cycle counts (not excuses, to avoid inflated justification metrics). Conditional strategies now propagate execution only if the chosen underlying strategy actually executes; selecting an infinite deferral branch (e.g., `InfiniteEstimationStrategy`) will yield `Executed=false` unless externally triggered.
 
 ```csharp
 var composite = new CompositeProcrastinationStrategy(

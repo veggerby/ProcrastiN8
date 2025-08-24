@@ -27,15 +27,17 @@ public sealed class ConditionalProcrastinationStrategy(
     {
         var chosen = _predicate(timeProvider) ? _ifTrue : _ifFalse;
         await chosen.ExecuteAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
-        if (chosen is IResultReportingProcrastinationStrategy r && r.LastResult.Executed)
+        if (chosen is IResultReportingProcrastinationStrategy r)
         {
-            MarkExecuted();
-            for (int c = 0; c < r.LastResult.Cycles; c++) { IncrementCycle(); }
-            for (int e = 0; e < r.LastResult.ExcuseCount; e++) { await InvokeExcuseAsync(null); }
+            if (r.LastResult.Executed)
+            {
+                MarkExecuted();
+                for (int c = 0; c < r.LastResult.Cycles; c++) { IncrementCycle(); }
+                // Do not re-invoke excuses to avoid double counting.
+            }
         }
         else
         {
-            // Assume execution occurred if predicate-chosen strategy completed and task ran (best effort)
             MarkExecuted();
         }
     }
