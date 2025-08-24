@@ -16,6 +16,7 @@ public interface IExtendedProcrastinationStrategyFactory : IProcrastinationStrat
 public sealed class CompositeProcrastinationStrategyFactory : IExtendedProcrastinationStrategyFactory
 {
     private readonly Dictionary<string, Func<IProcrastinationStrategy>> _registry = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object _sync = new();
 
     public CompositeProcrastinationStrategyFactory()
     {
@@ -28,16 +29,22 @@ public sealed class CompositeProcrastinationStrategyFactory : IExtendedProcrasti
     public IProcrastinationStrategy Create(ProcrastinationMode mode) => Create(mode.ToString());
     public IProcrastinationStrategy Create(string key)
     {
-        if (!_registry.TryGetValue(key, out var factory))
+        lock (_sync)
         {
-            throw new KeyNotFoundException($"No procrastination strategy registered for key '{key}'.");
+            if (!_registry.TryGetValue(key, out var factory))
+            {
+                throw new KeyNotFoundException($"No procrastination strategy registered for key '{key}'.");
+            }
+            return factory();
         }
-        return factory();
     }
 
     public void Register(string key, Func<IProcrastinationStrategy> factory)
     {
         if (string.IsNullOrWhiteSpace(key)) { throw new ArgumentException("Key required", nameof(key)); }
-        _registry[key] = factory ?? throw new ArgumentNullException(nameof(factory));
+        lock (_sync)
+        {
+            _registry[key] = factory ?? throw new ArgumentNullException(nameof(factory));
+        }
     }
 }

@@ -48,7 +48,7 @@ Defer execution ceremonially using configurable procrastination strategies while
 Diagnostics & Metrics:
 
 * ActivitySource: `ProcrastiN8.Procrastination` (spans per scheduling session if you start one)
-* Meter counters: `procrastination.cycles`, `procrastination.excuses`, `procrastination.executions`, `procrastination.triggered`, `procrastination.abandoned`
+* Meter counters (unconditional emission): `procrastination.cycles`, `procrastination.excuses`, `procrastination.executions`, `procrastination.triggered`, `procrastination.abandoned`
 * Structured events: `ProcrastinationObserverEvent` (types: cycle, excuse, triggered, abandoned, executed) automatically recorded by the strategy base
 * Correlation: every run has a `CorrelationId` (GUID) for trace stitching
 
@@ -154,7 +154,7 @@ Middleware order is preserved: added first = runs outermost (its `before` execut
 | `IProcrastinationMiddleware` | Wrap execution with cross‑cutting logic (metrics, logging, chaos). |
 | `IProcrastinationSchedulerBuilder` | Fluent, DI‑friendly construction with observers & middleware. |
 
-See full details in [docs/procrastination-scheduler.md](docs/procrastination-scheduler.md).
+See full details (sequence diagram, FAQ) in [docs/procrastination-scheduler.md](docs/procrastination-scheduler.md).
 
 ##### Safety & Correlation
 

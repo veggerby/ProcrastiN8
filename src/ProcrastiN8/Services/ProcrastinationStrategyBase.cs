@@ -229,4 +229,6 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
 
     /// <summary>Sets global ambient safety applied to strategies that have not been explicitly configured.</summary>
     public static void SetAmbientSafety(IExecutionSafetyOptions safety) => _ambientSafety = safety ?? DefaultExecutionSafetyOptions.Instance;
+    /// <summary>Resets ambient safety to defaults (test isolation helper).</summary>
+    public static void ResetAmbientSafety() => _ambientSafety = DefaultExecutionSafetyOptions.Instance;
 }

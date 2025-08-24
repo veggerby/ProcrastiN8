@@ -122,6 +122,30 @@ public class AdditionalCoverageTests
     }
 
     [Fact]
+    public async Task ConditionalStrategy_InfiniteBranch_Does_Not_Report_Executed()
+    {
+        // arrange
+        var infinite = new InfiniteEstimationStrategy();
+        var weekend = new WeekendFallbackStrategy();
+        Func<ITimeProvider, bool> predicate = _ => true; // choose infinite
+        var conditional = new ConditionalProcrastinationStrategy(infinite, weekend, predicate);
+        var delay = new NoOpDelayStrategy();
+        var random = Substitute.For<IRandomProvider>();
+        random.GetDouble().Returns(0.02);
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(250));
+        var executed = false;
+        Func<Task> task = () => { executed = true; return Task.CompletedTask; };
+
+        // act
+        await conditional.ExecuteAsync(task, TimeSpan.Zero, null, delay, random, SystemTimeProvider.Default, cts.Token);
+        var res = conditional.LastResult;
+
+        // assert
+        executed.Should().BeFalse();
+        res.Executed.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task MetricsCounters_MovingTarget_Record_Lifecycle()
     {
         // arrange
