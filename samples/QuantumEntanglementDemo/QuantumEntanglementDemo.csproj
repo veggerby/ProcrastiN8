@@ -11,4 +11,9 @@
     <ProjectReference Include="..\..\src\ProcrastiN8\ProcrastiN8.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.12.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.12.0" />
+  </ItemGroup>
+
 </Project>

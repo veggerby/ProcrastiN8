@@ -65,7 +65,7 @@ public static class Eventually
         ProcrastinationMetrics.TotalTimeProcrastinated.Add((long)delay.TotalSeconds,
             KeyValuePair.Create<string, object?>("reason", excuse));
 
-        using var activity = ActivitySource.StartActivity("Eventually.Do", ActivityKind.Internal);
+        using var activity = ActivitySource.StartActivity("ProcrastiN8.Eventually.Do", ActivityKind.Internal);
         activity?.AddTag("eventually.delay.ms", delay.TotalMilliseconds);
         activity?.AddTag("eventually.excuse", excuse);
 

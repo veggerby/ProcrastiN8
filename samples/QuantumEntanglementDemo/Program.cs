@@ -1,7 +1,41 @@
-using System;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+
+using OpenTelemetry;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
 using ProcrastiN8.JustBecause;
 using ProcrastiN8.JustBecause.CollapseBehaviors;
+
+var serviceName = "ProcrastiN8.Samples.QuantumEntanglementDemo";
+var serviceVersion = "1.0.0";
+
+var tracerProvider = Sdk.CreateTracerProviderBuilder()
+    .AddSource(serviceName)
+    .AddSource("ProcrastiN8.*")
+    .ConfigureResource(resource =>
+        resource.AddService(
+          serviceName: serviceName,
+          serviceVersion: serviceVersion))
+    .AddConsoleExporter()
+    .AddOtlpExporter()
+    .Build();
+
+var meterProvider = Sdk.CreateMeterProviderBuilder()
+    .AddMeter("ProcrastiN8.*")
+    .AddConsoleExporter()
+    .AddOtlpExporter()
+    .Build();
+
+var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder.AddOpenTelemetry(logging =>
+    {
+        logging.AddConsoleExporter().AddOtlpExporter();
+    });
+});
 
 Console.WriteLine("Quantum Entanglement Demo Starting...");
 
@@ -27,3 +61,7 @@ var result2 = await promise2.ObserveAsync();
 Console.WriteLine($"Observed value of promise2: {result2}");
 
 Console.WriteLine("Quantum Entanglement Demo Completed.");
+
+tracerProvider.Dispose();
+meterProvider.Dispose();
+loggerFactory.Dispose();
