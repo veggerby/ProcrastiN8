@@ -78,7 +78,23 @@ var r = await scheduler.ScheduleWithResult(
     ProcrastinationMode.MovingTarget);
 ```
 
+
 ## Built-in Modes
+
+## Diagnostics & Metrics
+
+ActivitySource: `ProcrastiN8.Procrastination`
+
+Meter (counters):
+
+- `procrastination.cycles`
+- `procrastination.excuses`
+- `procrastination.executions`
+- `procrastination.triggered`
+- `procrastination.abandoned`
+
+Observer structured events (`ProcrastinationObserverEvent`) deliver immutable payloads for each lifecycle occurrence.
+
 
 ### MovingTarget
 

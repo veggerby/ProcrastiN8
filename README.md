@@ -43,6 +43,16 @@ Console.WriteLine($"Collapse result: {result}");
 
 ### ProcrastinationScheduler
 
+Diagnostics & Metrics:
+
+The library emits ActivitySource (ProcrastiN8.Procrastination) spans and Meter counters (cycles, excuses, executions, triggered, abandoned). Subscribe via OpenTelemetry or System.Diagnostics listeners for performance theater.
+
+Defer execution ceremonially using configurable procrastination strategies.
+Diagnostics & Metrics:
+
+The library emits ActivitySource (ProcrastiN8.Procrastination) spans and Meter counters (cycles, excuses, executions, triggered, abandoned). Subscribe via OpenTelemetry or System.Diagnostics listeners for performance theater.
+
+
 Defer execution ceremonially using configurable procrastination strategies.
 
 Basic fire-and-forget:
