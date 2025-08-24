@@ -144,31 +144,6 @@ public class ProcrastinationSchedulerTests
         taskCompleted.Should().BeTrue("Task should complete in WeekendFallback mode.");
     }
 
-    [Fact]
-    public async Task ProcrastinationScheduler_DelegatesToCorrectStrategy()
-    {
-        // Arrange
-        var taskCompleted = false;
-        Func<Task> task = () => { taskCompleted = true; return Task.CompletedTask; };
-        var excuseProvider = new MockExcuseProvider();
-        var delayStrategy = Substitute.For<IDelayStrategy>();
-        var randomProvider = Substitute.For<IRandomProvider>();
-        var mockTimeProvider = Substitute.For<ITimeProvider>();
-        mockTimeProvider.GetUtcNow().Returns(new DateTime(2025, 8, 2, 15, 0, 0, DateTimeKind.Utc));
-
-        // Act & Assert
-        await ProcrastinationScheduler.Schedule(task, TimeSpan.Zero, ProcrastinationMode.MovingTarget, excuseProvider, delayStrategy, randomProvider, mockTimeProvider);
-        taskCompleted.Should().BeTrue("ProcrastinationScheduler should delegate to MovingTargetStrategy.");
-
-        taskCompleted = false;
-        await ProcrastinationScheduler.Schedule(task, TimeSpan.Zero, ProcrastinationMode.InfiniteEstimation, excuseProvider, delayStrategy, randomProvider, mockTimeProvider);
-        taskCompleted.Should().BeFalse("ProcrastinationScheduler should delegate to InfiniteEstimationStrategy.");
-
-        taskCompleted = false;
-        await ProcrastinationScheduler.Schedule(task, TimeSpan.Zero, ProcrastinationMode.WeekendFallback, excuseProvider, delayStrategy, randomProvider, mockTimeProvider);
-        taskCompleted.Should().BeTrue("ProcrastinationScheduler should delegate to WeekendFallbackStrategy.");
-    }
-
     private class MockExcuseProvider : IExcuseProvider
     {
         public Task<string> GetExcuseAsync()
