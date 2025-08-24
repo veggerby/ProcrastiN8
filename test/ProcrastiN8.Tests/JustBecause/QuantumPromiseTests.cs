@@ -42,7 +42,8 @@ public class QuantumPromiseTests
         Func<Task> act = async () => await promise.ObserveAsync();
         // Assert
         await act.Should().ThrowAsync<CollapseException>()
-            .Where(e => e is CollapseTooLateException || e is CollapseToVoidException);
+            .Where(e => e is CollapseTooLateException || e is CollapseToVoidException || e is CollapseTooEarlyException,
+                "quantum observation windows are capricious; either boundary violation counts");
     }
 
     [Fact]
@@ -117,13 +118,17 @@ public class QuantumPromiseTests
         Action act2 = () => promise.ObserveAsync().GetAwaiter().GetResult();
 
         // Assert
-        if (first is CollapseToVoidException)
+        switch (first)
         {
-            act2.Should().Throw<CollapseToVoidException>("the void is persistent");
-        }
-        else
-        {
-            act2.Should().Throw<InvalidOperationException>("the original failure should persist");
+            case CollapseToVoidException:
+                act2.Should().Throw<CollapseToVoidException>("the void is persistent");
+                break;
+            case CollapseTooEarlyException:
+                act2.Should().Throw<CollapseTooEarlyException>("quantum impatience remains a crime");
+                break;
+            default:
+                act2.Should().Throw<InvalidOperationException>("the original failure should persist");
+                break;
         }
     }
 
