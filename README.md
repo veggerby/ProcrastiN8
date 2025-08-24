@@ -43,17 +43,20 @@ Console.WriteLine($"Collapse result: {result}");
 
 ### ProcrastinationScheduler
 
+Defer execution ceremonially using configurable procrastination strategies while emitting structured diagnostics worthy of an internal audit.
+
 Diagnostics & Metrics:
 
-The library emits ActivitySource (ProcrastiN8.Procrastination) spans and Meter counters (cycles, excuses, executions, triggered, abandoned). Subscribe via OpenTelemetry or System.Diagnostics listeners for performance theater.
+* ActivitySource: `ProcrastiN8.Procrastination` (spans per scheduling session if you start one)
+* Meter counters: `procrastination.cycles`, `procrastination.excuses`, `procrastination.executions`, `procrastination.triggered`, `procrastination.abandoned`
+* Structured events: `ProcrastinationObserverEvent` (types: cycle, excuse, triggered, abandoned, executed)
+* Correlation: every run has a `CorrelationId` (GUID) for trace stitching
 
-Defer execution ceremonially using configurable procrastination strategies.
-Diagnostics & Metrics:
+Result enrichment fields:
 
-The library emits ActivitySource (ProcrastiN8.Procrastination) spans and Meter counters (cycles, excuses, executions, triggered, abandoned). Subscribe via OpenTelemetry or System.Diagnostics listeners for performance theater.
-
-
-Defer execution ceremonially using configurable procrastination strategies.
+* `StartedUtc`, `CompletedUtc`, `TotalDeferral`, `CyclesPerSecond`
+* Flags: `Executed`, `Triggered`, `Abandoned`
+* Counters: `Cycles`, `ExcuseCount`
 
 Basic fire-and-forget:
 
@@ -101,6 +104,54 @@ var r = await scheduler.ScheduleWithResult(
     TimeSpan.FromMilliseconds(100),
     ProcrastinationMode.MovingTarget);
 ```
+
+#### Middleware Pipeline
+
+Wrap strategy execution with reusable cross‑cutting procrastination enhancers:
+
+```csharp
+// Custom middleware that annotates before/after execution
+sealed class AnnotationMiddleware : IProcrastinationMiddleware
+{
+    public async Task InvokeAsync(ProcrastinationExecutionContext ctx, Func<Task> next, CancellationToken ct)
+    {
+        Console.WriteLine($"[MW] entering {ctx.Mode} {ctx.CorrelationId}");
+        await next();
+        // ctx.Result may be populated after the core strategy completes
+        Console.WriteLine($"[MW] leaving; executed={ctx.Result?.Executed}");
+    }
+}
+
+var scheduler = ProcrastinationSchedulerBuilder.Create()
+    .AddMiddleware(new AnnotationMiddleware())
+    .AddObserver(new MetricsObserver()) // forwards structured events to counters
+    .Build();
+
+var outcome = await scheduler.ScheduleWithResult(
+    () => DoImportantWorkAsync(),
+    TimeSpan.FromMilliseconds(50),
+    ProcrastinationMode.MovingTarget);
+```
+
+Middleware order is preserved: added first = runs outermost (its `before` executes first, its `after` executes last). Middleware should be side‑effect minimal and respect the supplied `CancellationToken`.
+`context.Result` is assigned after the core strategy completes; middleware must tolerate it being null (e.g., perpetual deferral strategies without trigger).
+
+#### Metrics Observer
+
+`MetricsObserver` is a built‑in `IProcrastinationObserver` that translates structured lifecycle events into the exported counters. Add it through the builder or manually in observer collections.
+
+#### Extension Points (Excerpt)
+
+| Surface | Purpose |
+|---------|---------|
+| `IExcuseProvider` | Generate ceremonial rationalizations. |
+| `IDelayStrategy` | Control temporal pacing (inject fakes in tests). |
+| `IProcrastinationStrategyFactory` | Provide custom / composite / conditional strategies. |
+| `IProcrastinationObserver` | Observe lifecycle transitions and structured events. |
+| `IProcrastinationMiddleware` | Wrap execution with cross‑cutting logic (metrics, logging, chaos). |
+| `IProcrastinationSchedulerBuilder` | Fluent, DI‑friendly construction with observers & middleware. |
+
+See full details in [docs/procrastination-scheduler.md](docs/procrastination-scheduler.md).
 
 See full details in [docs/procrastination-scheduler.md](docs/procrastination-scheduler.md).
 

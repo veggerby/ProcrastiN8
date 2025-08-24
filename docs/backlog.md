@@ -23,7 +23,7 @@ public static Task WaitAsync(TimeSpan maxDelay, CancellationToken cancellationTo
 
 ---
 
-### 🎚️ `ProcrastinationScheduler` – Detailed Specification
+### 🎚️ `ProcrastinationScheduler` – Detailed Specification (Implemented)
 
 **Goal:** Provide an overengineered way to defer tasks based on ridiculous but technically sound delay strategies.
 
@@ -45,7 +45,14 @@ var scheduler = ProcrastinationSchedulerBuilder
     .Build();
 ```
 
-Result flags now include `Triggered` and `Abandoned` for forensic clarity post-execution (or non-execution). External intervention provided via handle methods `TriggerNow()` and `Abandon()`.
+Result flags now include `Triggered` and `Abandoned` for forensic clarity post-execution (or non-execution). External intervention provided via handle methods `TriggerNow()` and `Abandon()`. Additional enrichment: `CorrelationId`, `StartedUtc`, `CompletedUtc`, `CyclesPerSecond`.
+
+Implemented supporting abstractions:
+
+* `IProcrastinationMiddleware` (execution pipeline)
+* `MetricsObserver` + `ProcrastinationDiagnostics` (ActivitySource + counters)
+* Policy interfaces (`IPacingGrowthPolicy`, `IDelayCeilingPolicy`, `IExecutionSafetyOptions`)
+* Extended factory + composite / conditional strategies
 
 ---
 
@@ -68,7 +75,7 @@ public enum ProcrastinationMode
 
 ##### Behavior (MovingTarget)
 
-* Delay increases by **10–25%** (randomized) after each postponement check.
+* Delay increases by **~0.5–15%** (bounded jitter) after each postponement check.
 * The task is only executed after `N` stable observations or if max delay cap (e.g. 1 hour) is hit.
 * Every time you call `Schedule(...)`, log output like:
 
@@ -90,15 +97,15 @@ public enum ProcrastinationMode
 
 ##### Behavior (InfiniteEstimation)
 
-* Keeps logging: “Estimated time to start: 5 minutes.”
-* Actually never starts **unless** a `TriggerNow()` method is called, or the user gives up and cancels.
-* Can optionally set a flag `AllowSurpriseStart = true` to allow a random chance to start anyway.
+* Conceptually keeps logging: “Estimated time to start: 5 minutes.”
+* Implementation uses micro-delays (≈10ms) plus an absolute safety deadline for deterministic tests.
+* Never starts **unless** a `TriggerNow()` method is called (or canceled). Surprise start flag deferred.
 
 ##### Implementation Notes (InfiniteEstimation)
 
-* Loop using `Task.Delay(...)` with a 5-minute step or shorter for debugging.
-* Optionally provide a `ProcrastinationSchedulerHandle` object with `.TriggerNow()` or `.Abandon()` APIs.
-* Great for test scenarios or a long-running placeholder.
+* Loop employs synthetic micro-delays instead of real multi‑minute waits.
+* Handle (`TriggerNow()`, `Abandon()`) enables external intervention.
+* Designed to be safe and fast under test harness constraints.
 
 ---
 

@@ -31,6 +31,7 @@ internal sealed class ProcrastinationSchedulerBuilderImpl : IProcrastinationSche
     public IProcrastinationSchedulerBuilder AddObserver(IProcrastinationObserver observer) { _observers.Add(observer); return this; }
     /// <summary>Adds a middleware component.</summary>
     public ProcrastinationSchedulerBuilderImpl AddMiddleware(IProcrastinationMiddleware middleware) { _middlewares.Add(middleware); return this; }
+    IProcrastinationSchedulerBuilder IProcrastinationSchedulerBuilder.AddMiddleware(IProcrastinationMiddleware middleware) => AddMiddleware(middleware);
     /// <summary>Resets previously configured components (observers & middlewares preserved unless reset called).</summary>
     public ProcrastinationSchedulerBuilderImpl Reset(bool preserveObservers = true)
     {
@@ -71,19 +72,19 @@ internal sealed class ProcrastinationSchedulerBuilderImpl : IProcrastinationSche
     Task IProcrastinationScheduler.Schedule(Func<Task> task, TimeSpan initialDelay, ProcrastinationMode mode, CancellationToken cancellationToken)
     {
         EnsureBuilt();
-    return ProcrastinationScheduler.Schedule(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, cancellationToken);
+    return ProcrastinationScheduler.Schedule(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, _factory, _observers, _middlewares, cancellationToken);
     }
 
     Task<ProcrastinationResult> IProcrastinationScheduler.ScheduleWithResult(Func<Task> task, TimeSpan initialDelay, ProcrastinationMode mode, CancellationToken cancellationToken)
     {
         EnsureBuilt();
-    return ProcrastinationScheduler.ScheduleWithResult(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, _factory, _observers, cancellationToken);
+    return ProcrastinationScheduler.ScheduleWithResult(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, _factory, _observers, _middlewares, cancellationToken);
     }
 
     ProcrastinationHandle IProcrastinationScheduler.ScheduleWithHandle(Func<Task> task, TimeSpan initialDelay, ProcrastinationMode mode, CancellationToken cancellationToken)
     {
         EnsureBuilt();
-    return ProcrastinationScheduler.ScheduleWithHandle(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, _factory, _observers, cancellationToken);
+    return ProcrastinationScheduler.ScheduleWithHandle(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, _factory, _observers, _middlewares, cancellationToken);
     }
 }
 

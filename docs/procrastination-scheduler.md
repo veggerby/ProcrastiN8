@@ -10,7 +10,7 @@ Task<ProcrastinationResult> ScheduleWithResult(...)
 ProcrastinationHandle ScheduleWithHandle(...)
 ```
 
-All overloads accept optional `IExcuseProvider`, `IDelayStrategy`, `IRandomProvider`, `ITimeProvider`, `IProcrastinationStrategyFactory`, and `IEnumerable<IProcrastinationObserver>` (for the result / handle variants).
+All overloads accept optional `IExcuseProvider`, `IDelayStrategy`, `IRandomProvider`, `ITimeProvider`, `IProcrastinationStrategyFactory`, `IEnumerable<IProcrastinationObserver>`, and (via builder) `IEnumerable<IProcrastinationMiddleware>`.
 
 ### Key Parameters
 
@@ -28,9 +28,13 @@ All overloads accept optional `IExcuseProvider`, `IDelayStrategy`, `IRandomProvi
 | `Executed`    | Underlying task ran. |
 | `Triggered`   | Execution was forced early via `TriggerNow()`. |
 | `Abandoned`   | Execution skipped due to `Abandon()`. |
+| `StartedUtc`  | UTC timestamp when procrastination ritual began. |
+| `CompletedUtc`| UTC timestamp when ritual concluded. |
 | `TotalDeferral` | Wall-clock procrastination span. |
 | `Cycles`      | Count of deferment iterations. |
 | `ExcuseCount` | Number of excuses fetched. |
+| `CorrelationId` | Unique GUID for tracing across observers/middleware. |
+| `CyclesPerSecond` | Derived throughput of deferment cycles. |
 
 `Triggered` and `Abandoned` are mutually exclusive in well-behaved workflows; both can be false if a strategy finished organically.
 
@@ -79,6 +83,46 @@ var r = await scheduler.ScheduleWithResult(
 ```
 
 
+### Middleware
+
+`IProcrastinationMiddleware` components wrap execution, enabling cross-cutting instrumentation, logging, chaos engineering, or synthetic latency injection.
+
+Execution ordering: Added first = outermost wrapper (`before` runs first, `after` runs last). Middlewares receive a `ProcrastinationExecutionContext` containing the `Mode`, `CorrelationId`, and (post-core) the `Result`.
+
+Result availability: `context.Result` is populated after the core strategy finishes. If a strategy intentionally never executes the task
+(e.g., InfiniteEstimation without external trigger) the result may remain null or report `Executed=false`. Middleware should defensively
+handle a null `Result`.
+
+Example timing decorator:
+
+```csharp
+sealed class TimingMiddleware : IProcrastinationMiddleware
+{
+    public async Task InvokeAsync(ProcrastinationExecutionContext ctx, Func<Task> next, CancellationToken ct)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        await next();
+        sw.Stop();
+        Console.WriteLine($"[Timing] {ctx.Mode} {ctx.CorrelationId} took {sw.ElapsedMilliseconds}ms deferral span (exec={ctx.Result?.Executed})");
+    }
+}
+```
+
+Register via builder:
+
+```csharp
+var scheduler = ProcrastinationSchedulerBuilder.Create()
+    .AddMiddleware(new TimingMiddleware())
+    .AddObserver(new MetricsObserver())
+    .Build();
+```
+
+### Metrics Observer
+
+`MetricsObserver` converts structured `ProcrastinationObserverEvent` callbacks into counter increments exposed by `ProcrastinationDiagnostics`.
+
+---
+
 ## Built-in Modes
 
 ## Diagnostics & Metrics
@@ -94,17 +138,29 @@ Meter (counters):
 - `procrastination.abandoned`
 
 Observer structured events (`ProcrastinationObserverEvent`) deliver immutable payloads for each lifecycle occurrence.
+`MetricsObserver` may be attached to transform these events into counter increments automatically.
+
+## Strategy Comparison Matrix
+
+| Strategy | Core Delay Pattern | Executes Automatically | External Trigger Effect | Safety Caps Applied | Notes |
+|----------|--------------------|------------------------|-------------------------|---------------------|-------|
+| MovingTarget | Jitter growth (~0.5–15% per cycle) with upper delay & cycle ceilings | Yes (after ceilings or loop exit) | Forces immediate execution, sets `Triggered` | Max cycles (`IExecutionSafetyOptions`), absolute deadline in tests | Uses growth & ceiling policies; excuses each cycle. |
+| InfiniteEstimation | Conceptual 5m constant; implemented as ~10ms micro-delay loops | No (never by itself) | Forces one-off task execution then marks `Triggered` | Max cycles + absolute 2s deadline (tests) | Preserves ideal of perpetual estimation while remaining test-friendly. |
+| WeekendFallback | Hourly polling until weekend window or 72h elapsed | Yes (when weekend window or 72h cap) | Forces immediate execution ahead of window | Max cycles | Simulates culturally convenient deferral rituals. |
+
+All strategies report structured lifecycle events and update `ProcrastinationResult` with correlation metadata.
 
 
 ### MovingTarget
 
-- Delay increases by 10–25% after each postponement.
-- Task executes after a maximum delay cap or stable observations.
+- Delay increases by approximately 0.5–15% (bounded jitter) each postponement.
+- Task executes after a maximum delay cap or safety ceiling.
 
 ### InfiniteEstimation
 
-- Logs “Estimated time to start: 5 minutes.” repeatedly.
-- Task starts only if `TriggerNow()` is called or canceled.
+- Conceptually keeps reporting “Estimated time to start: 5 minutes.” forever.
+- Implementation uses tiny (≈10ms) synthetic delays plus an absolute safety deadline in tests to avoid multi-minute hangs.
+- Task only runs if externally triggered (otherwise it purposefully never executes).
 
 ### WeekendFallback
 

@@ -21,6 +21,8 @@ public interface IProcrastinationSchedulerBuilder
     IProcrastinationSchedulerBuilder WithFactory(IProcrastinationStrategyFactory factory);
     /// <summary>Adds an observer to receive lifecycle instrumentation callbacks.</summary>
     IProcrastinationSchedulerBuilder AddObserver(IProcrastinationObserver observer);
+    /// <summary>Adds a middleware component that can wrap execution for cross-cutting concerns (metrics, logging, chaos).</summary>
+    IProcrastinationSchedulerBuilder AddMiddleware(IProcrastinationMiddleware middleware);
     /// <summary>Finalizes the configuration and returns a scheduler instance.</summary>
     IProcrastinationScheduler Build();
 }
