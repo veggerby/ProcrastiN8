@@ -11,6 +11,28 @@ public class ProcrastinationResultTests
             => Task.CompletedTask; // no-op
     }
 
+    private sealed class FixedExcuseProvider : ProcrastiN8.Common.IExcuseProvider
+    {
+        private int _i;
+        public Task<string> GetExcuseAsync() => Task.FromResult($"Excuse {_i++}");
+    }
+
+    [Fact]
+    public async Task ProductivityIndex_Should_Decrease_With_Cycles_And_Excuses()
+    {
+        var scheduler = ProcrastinationSchedulerBuilder.Create()
+            .WithDelayStrategy(new InstantDelayStrategy())
+            .WithExcuseProvider(new FixedExcuseProvider())
+            .Build();
+
+        var result = await scheduler.ScheduleWithResult(() => Task.CompletedTask, TimeSpan.FromMilliseconds(1), ProcrastinationMode.MovingTarget);
+        result.Executed.Should().BeTrue();
+        (result.Cycles + result.ExcuseCount).Should().BeGreaterThan(0, "at least one ceremonial deferment expected");
+        var expected = Math.Round(1.0 / (1 + result.ExcuseCount + result.Cycles), 4);
+        result.ProductivityIndex.Should().Be(expected);
+        result.ProductivityIndex.Should().BeLessThan(1.0);
+    }
+
     private sealed class TestSafety(int maxCycles) : IExecutionSafetyOptions
     {
         public int MaxCycles { get; } = maxCycles;
