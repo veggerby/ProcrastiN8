@@ -14,6 +14,22 @@ namespace ProcrastiN8.Services;
 /// </remarks>
 public class InfiniteEstimationStrategy : ProcrastinationStrategyBase
 {
+    /// <summary>Default absolute deadline offset (keeps strategy from looping forever in test environments).</summary>
+    public static readonly TimeSpan DefaultAbsoluteDeadlineOffset = TimeSpan.FromSeconds(2);
+    /// <summary>Tiny synthetic per-iteration delay to avoid busy looping while preserving rapid test execution.</summary>
+    public static readonly TimeSpan DefaultMicroDelay = TimeSpan.FromMilliseconds(10);
+
+    private readonly TimeSpan _absoluteDeadlineOffset;
+    private readonly TimeSpan _microDelay;
+
+    /// <summary>
+    /// Creates an infinite estimation strategy with optional overrides for deterministic test or production tuning.
+    /// </summary>
+    public InfiniteEstimationStrategy(TimeSpan? absoluteDeadlineOffset = null, TimeSpan? microDelay = null)
+    {
+        _absoluteDeadlineOffset = absoluteDeadlineOffset ?? DefaultAbsoluteDeadlineOffset;
+        _microDelay = microDelay ?? DefaultMicroDelay;
+    }
     protected override async Task ExecuteCoreAsync(
         Func<Task> task,
         TimeSpan initialDelay,
@@ -32,7 +48,7 @@ public class InfiniteEstimationStrategy : ProcrastinationStrategyBase
             // Still acceptable; proceed without ceremonial justification.
         }
 
-        var absoluteDeadline = StartUtc + TimeSpan.FromSeconds(2);
+    var absoluteDeadline = StartUtc + _absoluteDeadlineOffset;
         while (!cancellationToken.IsCancellationRequested)
         {
             if (CheckForExternalOverride(task)) { return; }
@@ -40,7 +56,7 @@ public class InfiniteEstimationStrategy : ProcrastinationStrategyBase
             IncrementCycle();
             await Task.Yield();
             // Use a tiny synthetic delay in library context to avoid real multi-minute waits.
-            await delayStrategy.DelayAsync(TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(10), cancellationToken: cancellationToken);
+            await delayStrategy.DelayAsync(_microDelay, _microDelay, cancellationToken: cancellationToken);
             await NotifyCycleAsync(ControlContext, cancellationToken);
             if (SafetyCapReached() || timeProvider.GetUtcNow() >= absoluteDeadline) { return; }
         }
