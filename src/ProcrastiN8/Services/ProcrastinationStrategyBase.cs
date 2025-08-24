@@ -13,10 +13,12 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
     private DateTimeOffset _startUtc;
     private IProcrastinationExecutionControl? _control;
     private IReadOnlyList<IProcrastinationObserver> _observers = Array.Empty<IProcrastinationObserver>();
-    private readonly int _safetyCycleCap = 500; // Global cap to prevent accidental infinite tight loops in test scenarios.
+    private IExecutionSafetyOptions _safety = DefaultExecutionSafetyOptions.Instance; // default safety options.
 
     /// <summary>Exposes the mutable context from the attached control, if available.</summary>
     protected ProcrastinationContext? ControlContext => _control?.Context;
+    /// <summary>UTC time scheduling began (for derived elapsed calculations).</summary>
+    protected DateTimeOffset StartUtc => _startUtc;
 
     /// <inheritdoc />
     public ProcrastinationResult LastResult => _result;
@@ -31,13 +33,17 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
         ITimeProvider timeProvider,
         CancellationToken cancellationToken)
     {
-        _startUtc = timeProvider.GetUtcNow();
+    _startUtc = timeProvider.GetUtcNow();
+    _result.StartedUtc = _startUtc;
+    _result.CorrelationId = Guid.NewGuid();
         _result.Executed = false;
         _result.ExcuseCount = 0;
         _result.Cycles = 0;
         _control?.MarkStatus(ProcrastinationStatus.Deferring);
         await ExecuteCoreAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
-    _result.TotalDeferral = timeProvider.GetUtcNow() - _startUtc;
+    var end = timeProvider.GetUtcNow();
+    _result.TotalDeferral = end - _startUtc;
+    _result.CompletedUtc = end;
         if (_result.Executed)
         {
             await NotifyExecutedAsync(_result, cancellationToken);
@@ -119,7 +125,7 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
     /// </summary>
     protected bool SafetyCapReached()
     {
-        return _result.Cycles >= _safetyCycleCap;
+    return _result.Cycles >= _safety.MaxCycles;
     }
 
     protected async Task NotifyCycleAsync(ProcrastinationContext? context, CancellationToken ct)
@@ -169,4 +175,7 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
 
     /// <summary>Marks that execution was abandoned.</summary>
     protected void MarkAbandoned() => _result.Abandoned = true;
+
+    /// <summary>Allows derived strategies or factories to override safety options.</summary>
+    public void ConfigureSafety(IExecutionSafetyOptions safety) => _safety = safety ?? DefaultExecutionSafetyOptions.Instance;
 }

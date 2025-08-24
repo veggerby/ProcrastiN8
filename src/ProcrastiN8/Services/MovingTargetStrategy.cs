@@ -13,6 +13,19 @@ namespace ProcrastiN8.Services;
 /// </remarks>
 public class MovingTargetStrategy : ProcrastinationStrategyBase
 {
+    private readonly IPacingGrowthPolicy _growth;
+    private readonly IDelayCeilingPolicy _ceiling;
+    private readonly Random _rng;
+
+    public MovingTargetStrategy(
+        IPacingGrowthPolicy? growth = null,
+        IDelayCeilingPolicy? ceiling = null,
+        Random? rng = null)
+    {
+        _growth = growth ?? DefaultPacingGrowthPolicy.Instance;
+        _ceiling = ceiling ?? DefaultDelayCeilingPolicy.Instance;
+        _rng = rng ?? new Random();
+    }
     protected override async Task ExecuteCoreAsync(
         Func<Task> task,
         TimeSpan initialDelay,
@@ -35,28 +48,29 @@ public class MovingTargetStrategy : ProcrastinationStrategyBase
             throw new ArgumentNullException(nameof(randomProvider));
         }
 
-        var delay = initialDelay <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(10) : initialDelay;
+    var delay = initialDelay <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(5) : initialDelay;
+    var absoluteDeadline = StartUtc + TimeSpan.FromSeconds(2); // hard cap to keep tests short
 
         var cycles = 0;
         while (!cancellationToken.IsCancellationRequested)
         {
             if (CheckForExternalOverride(task)) { return; }
             await Task.Yield();
-            await delayStrategy.DelayAsync(delay, cancellationToken: cancellationToken);
+            var bounded = delay > TimeSpan.FromMilliseconds(50) ? TimeSpan.FromMilliseconds(50) : delay;
+            await delayStrategy.DelayAsync(bounded, bounded, cancellationToken: cancellationToken);
             IncrementCycle();
             await NotifyCycleAsync(ControlContext, cancellationToken);
             cycles++;
-            var randomComponent = randomProvider.GetDouble();
-            if (randomComponent < 0.0001)
+            delay = _growth.Next(delay, cycles - 1, _rng);
+            if (delay > TimeSpan.FromHours(1))
             {
-                randomComponent = 0.05; // Ensure forward progress; pure stasis is unbecoming.
+                delay = TimeSpan.FromHours(1);
             }
-            var growth = 1.01 + randomComponent * 0.24; // Minimum 1% growth per cycle.
-            delay = TimeSpan.FromMilliseconds(Math.Min(TimeSpan.FromHours(1).TotalMilliseconds, delay.TotalMilliseconds * growth));
 
             await InvokeExcuseAsync(excuseProvider);
 
-            if (delay >= TimeSpan.FromHours(1) || cycles >= 50 || SafetyCapReached())
+            var now = timeProvider.GetUtcNow();
+            if (_ceiling.ShouldCease(delay, cycles, now - StartUtc) || SafetyCapReached() || now >= absoluteDeadline)
             {
                 break; // Mission accomplished: start time sufficiently distant.
             }

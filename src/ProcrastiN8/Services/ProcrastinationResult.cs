@@ -25,4 +25,16 @@ public sealed class ProcrastinationResult
 
     /// <summary>Gets or sets a value indicating whether the workflow was abandoned prior to execution.</summary>
     public bool Abandoned { get; internal set; }
+
+    /// <summary>UTC timestamp when scheduling began.</summary>
+    public DateTimeOffset StartedUtc { get; internal set; }
+
+    /// <summary>UTC timestamp when scheduling concluded (execution, trigger, abandon, or cancellation).</summary>
+    public DateTimeOffset CompletedUtc { get; internal set; }
+
+    /// <summary>Gets a unique correlation identifier for tracing.</summary>
+    public Guid CorrelationId { get; internal set; } = Guid.NewGuid();
+
+    /// <summary>Derived metric: cycles per second of deferral (informational).</summary>
+    public double? CyclesPerSecond => TotalDeferral.TotalSeconds > 0 ? Math.Round(Cycles / TotalDeferral.TotalSeconds, 3) : null;
 }
