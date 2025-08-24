@@ -14,6 +14,7 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
     private IProcrastinationExecutionControl? _control;
     private IReadOnlyList<IProcrastinationObserver> _observers = Array.Empty<IProcrastinationObserver>();
     private IExecutionSafetyOptions _safety = DefaultExecutionSafetyOptions.Instance; // default safety options.
+    private static IExecutionSafetyOptions _ambientSafety = DefaultExecutionSafetyOptions.Instance;
 
     /// <summary>Exposes the mutable context from the attached control, if available.</summary>
     protected ProcrastinationContext? ControlContext => _control?.Context;
@@ -33,17 +34,24 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
         ITimeProvider timeProvider,
         CancellationToken cancellationToken)
     {
-    _startUtc = timeProvider.GetUtcNow();
-    _result.StartedUtc = _startUtc;
-    _result.CorrelationId = Guid.NewGuid();
+        _startUtc = timeProvider.GetUtcNow();
+        _result.StartedUtc = _startUtc;
+        if (_result.CorrelationId == Guid.Empty)
+        {
+            _result.CorrelationId = Guid.NewGuid();
+        }
+        if (_safety == DefaultExecutionSafetyOptions.Instance && _ambientSafety != DefaultExecutionSafetyOptions.Instance)
+        {
+            _safety = _ambientSafety; // adopt ambient if not explicitly overridden
+        }
         _result.Executed = false;
         _result.ExcuseCount = 0;
         _result.Cycles = 0;
         _control?.MarkStatus(ProcrastinationStatus.Deferring);
         await ExecuteCoreAsync(task, initialDelay, excuseProvider, delayStrategy, randomProvider, timeProvider, cancellationToken);
-    var end = timeProvider.GetUtcNow();
-    _result.TotalDeferral = end - _startUtc;
-    _result.CompletedUtc = end;
+        var end = timeProvider.GetUtcNow();
+        _result.TotalDeferral = end - _startUtc;
+        _result.CompletedUtc = end;
         if (_result.Executed)
         {
             await NotifyExecutedAsync(_result, cancellationToken);
@@ -134,7 +142,9 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
         foreach (var o in _observers)
         {
             await o.OnCycleAsync(context, ct);
-            await o.OnEventAsync(new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "cycle", _result.Cycles, _result.ExcuseCount, _result.Triggered, _result.Abandoned, DateTimeOffset.UtcNow), ct);
+            var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "cycle", _result.Cycles, _result.ExcuseCount, _result.Triggered, _result.Abandoned, DateTimeOffset.UtcNow);
+            await o.OnEventAsync(evt, ct);
+            Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
         }
     }
 
@@ -144,7 +154,9 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
         foreach (var o in _observers)
         {
             await o.OnExcuseAsync(context, ct);
-            await o.OnEventAsync(new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "excuse", _result.Cycles, _result.ExcuseCount, _result.Triggered, _result.Abandoned, DateTimeOffset.UtcNow), ct);
+            var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "excuse", _result.Cycles, _result.ExcuseCount, _result.Triggered, _result.Abandoned, DateTimeOffset.UtcNow);
+            await o.OnEventAsync(evt, ct);
+            Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
         }
     }
 
@@ -154,7 +166,9 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
         foreach (var o in _observers)
         {
             await o.OnTriggeredAsync(context, ct);
-            await o.OnEventAsync(new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "triggered", _result.Cycles, _result.ExcuseCount, true, _result.Abandoned, DateTimeOffset.UtcNow), ct);
+            var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "triggered", _result.Cycles, _result.ExcuseCount, true, _result.Abandoned, DateTimeOffset.UtcNow);
+            await o.OnEventAsync(evt, ct);
+            Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
         }
     }
 
@@ -164,7 +178,9 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
         foreach (var o in _observers)
         {
             await o.OnAbandonedAsync(context, ct);
-            await o.OnEventAsync(new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "abandoned", _result.Cycles, _result.ExcuseCount, _result.Triggered, true, DateTimeOffset.UtcNow), ct);
+            var evt = new ProcrastinationObserverEvent(_result.CorrelationId, _result.Mode, "abandoned", _result.Cycles, _result.ExcuseCount, _result.Triggered, true, DateTimeOffset.UtcNow);
+            await o.OnEventAsync(evt, ct);
+            Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
         }
     }
 
@@ -174,7 +190,9 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
         foreach (var o in _observers)
         {
             await o.OnExecutedAsync(result, ct);
-            await o.OnEventAsync(new ProcrastinationObserverEvent(result.CorrelationId, result.Mode, "executed", result.Cycles, result.ExcuseCount, result.Triggered, result.Abandoned, DateTimeOffset.UtcNow), ct);
+            var evt = new ProcrastinationObserverEvent(result.CorrelationId, result.Mode, "executed", result.Cycles, result.ExcuseCount, result.Triggered, result.Abandoned, DateTimeOffset.UtcNow);
+            await o.OnEventAsync(evt, ct);
+            Diagnostics.ProcrastinationDiagnostics.RecordEvent(evt);
         }
     }
 
@@ -198,4 +216,7 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
 
     /// <summary>Allows derived strategies or factories to override safety options.</summary>
     public void ConfigureSafety(IExecutionSafetyOptions safety) => _safety = safety ?? DefaultExecutionSafetyOptions.Instance;
+
+    /// <summary>Sets global ambient safety applied to strategies that have not been explicitly configured.</summary>
+    public static void SetAmbientSafety(IExecutionSafetyOptions safety) => _ambientSafety = safety ?? DefaultExecutionSafetyOptions.Instance;
 }

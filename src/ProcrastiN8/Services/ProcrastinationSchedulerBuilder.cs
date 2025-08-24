@@ -11,6 +11,7 @@ internal sealed class ProcrastinationSchedulerBuilderImpl : IProcrastinationSche
     private IRandomProvider? _randomProvider;
     private ITimeProvider? _timeProvider;
     private IProcrastinationStrategyFactory? _factory;
+    private IExecutionSafetyOptions? _safety;
     private readonly List<IProcrastinationObserver> _observers = new();
     private readonly List<IProcrastinationMiddleware> _middlewares = new();
     private bool _built;
@@ -32,6 +33,12 @@ internal sealed class ProcrastinationSchedulerBuilderImpl : IProcrastinationSche
     /// <summary>Adds a middleware component.</summary>
     public ProcrastinationSchedulerBuilderImpl AddMiddleware(IProcrastinationMiddleware middleware) { _middlewares.Add(middleware); return this; }
     IProcrastinationSchedulerBuilder IProcrastinationSchedulerBuilder.AddMiddleware(IProcrastinationMiddleware middleware) => AddMiddleware(middleware);
+    /// <summary>Overrides execution safety options (max cycles, etc.).</summary>
+    public ProcrastinationSchedulerBuilderImpl WithSafety(IExecutionSafetyOptions safety) { _safety = safety; return this; }
+    IProcrastinationSchedulerBuilder IProcrastinationSchedulerBuilder.WithSafety(IExecutionSafetyOptions safety) => WithSafety(safety);
+    /// <summary>Convenience: attaches MetricsObserver for counter emission.</summary>
+    public ProcrastinationSchedulerBuilderImpl WithMetrics() { _observers.Add(new Diagnostics.MetricsObserver()); return this; }
+    IProcrastinationSchedulerBuilder IProcrastinationSchedulerBuilder.WithMetrics() { return WithMetrics(); }
     /// <summary>Resets previously configured components (observers & middlewares preserved unless reset called).</summary>
     public ProcrastinationSchedulerBuilderImpl Reset(bool preserveObservers = true)
     {
@@ -51,12 +58,17 @@ internal sealed class ProcrastinationSchedulerBuilderImpl : IProcrastinationSche
         clone._factory = _factory;
         foreach (var o in _observers) clone._observers.Add(o);
         foreach (var m in _middlewares) clone._middlewares.Add(m);
+    clone._safety = _safety;
         return clone;
     }
 
     /// <inheritdoc />
     public IProcrastinationScheduler Build()
     {
+        if (_safety != null)
+        {
+            ProcrastinationStrategyBase.SetAmbientSafety(_safety);
+        }
         _built = true;
         return this;
     }
@@ -87,6 +99,7 @@ internal sealed class ProcrastinationSchedulerBuilderImpl : IProcrastinationSche
     return ProcrastinationScheduler.ScheduleWithHandle(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, _factory, _observers, _middlewares, cancellationToken);
     }
 }
+
 
 /// <summary>
 /// Entry point for creating a procrastination scheduler builder.

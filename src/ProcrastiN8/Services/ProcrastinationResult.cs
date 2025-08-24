@@ -37,4 +37,12 @@ public sealed class ProcrastinationResult
 
     /// <summary>Derived metric: cycles per second of deferral (informational).</summary>
     public double? CyclesPerSecond => TotalDeferral.TotalSeconds > 0 ? Math.Round(Cycles / TotalDeferral.TotalSeconds, 3) : null;
+
+    /// <summary>
+    /// A tongue-in-cheek productivity index (MPI) giving diminishing credit for execution after excessive excuses and cycles.
+    /// </summary>
+    /// <remarks>
+    /// Defined as Executed ? 1 / (1 + ExcuseCount + Cycles) : 0. Lower is more theatrically elaborate.
+    /// </remarks>
+    public double ProductivityIndex => Executed ? Math.Round(1.0 / (1 + ExcuseCount + Cycles), 4) : 0.0;
 }
