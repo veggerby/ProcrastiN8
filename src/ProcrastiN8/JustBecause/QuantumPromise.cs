@@ -20,7 +20,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumPromise");
 
-    private readonly Func<Task<T>> _lazyInitializer = lazyInitializer ?? throw new ArgumentNullException(nameof(lazyInitializer));
+    private readonly Lazy<Task<T>> _lazyInitializer = new Lazy<Task<T>>(lazyInitializer) ?? throw new ArgumentNullException(nameof(lazyInitializer));
     private readonly ITimeProvider _timeProvider = timeProvider ?? new SystemTimeProvider();
     private readonly DateTimeOffset _creationTime = (timeProvider ?? new SystemTimeProvider()).GetUtcNow();
     private readonly IDelayStrategy _delayStrategy = delayStrategy ?? new DefaultDelayStrategy();
@@ -75,7 +75,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     {
         QuantumPromiseMetrics.Observations.Add(1);
 
-        using var activity = ActivitySource.StartActivity("QuantumPromise.Observe", ActivityKind.Internal);
+        using var activity = ActivitySource.StartActivity("ProcrastiN8.QuantumPromise.Observe", ActivityKind.Internal);
 
         lock (_lock)
         {
@@ -141,7 +141,7 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
             throw _collapseFailure;
         }
 
-        var result = await _lazyInitializer.Invoke();
+        var result = await _lazyInitializer.Value;
 
         sw.Stop();
         QuantumPromiseMetrics.CollapseDuration.Record(sw.Elapsed.TotalMilliseconds);
