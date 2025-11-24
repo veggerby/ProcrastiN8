@@ -66,16 +66,15 @@ public sealed class RelativisticTimeProvider : ITimeProvider
         var distanceToDeadline = (_deadline - realNow).TotalSeconds;
         
         // Apply exponential time dilation: the closer we get, the slower time flows
-        // dilation = 1 / (1 + dilationFactor / distance)
-        var dilation = 1.0 / (1.0 + (_dilationFactor / Math.Max(distanceToDeadline, 1.0)));
+        // When near the deadline, dilation factor increases the perceived distance
+        var perceivedDistance = distanceToDeadline * (1.0 + _dilationFactor / Math.Max(distanceToDeadline, 1.0));
         
         // Add quantum jitter (±5% randomness) to simulate observer effects
         var jitter = 1.0 + (_randomProvider.GetDouble() - 0.5) * 0.1;
-        dilation *= jitter;
+        perceivedDistance *= jitter;
 
-        // Apply dilation to time progression
-        var dilatedDistance = distanceToDeadline * dilation;
-        var dilatedNow = _deadline.AddSeconds(-dilatedDistance);
+        // Apply dilation to time progression - we're further from deadline than we think
+        var dilatedNow = _deadline.AddSeconds(-perceivedDistance);
 
         return dilatedNow;
     }

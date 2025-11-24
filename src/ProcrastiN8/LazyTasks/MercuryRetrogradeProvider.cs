@@ -87,9 +87,10 @@ public sealed class MercuryRetrogradeProvider : ITimeProvider
             // Safety check: too many consecutive rewinds causes temporal whiplash
             if (_consecutiveRewinds > 5)
             {
+                var count = _consecutiveRewinds;
                 _consecutiveRewinds = 0;
                 throw new TemporalWhiplashException(
-                    $"Mercury retrograde caused {_consecutiveRewinds} consecutive rewinds. Temporal stability compromised.");
+                    $"Mercury retrograde caused {count} consecutive rewinds. Temporal stability compromised.");
             }
 
             // Rewind by a random amount, up to maxRewindDuration
