@@ -3,27 +3,31 @@ namespace ProcrastiN8.Cluster.Abstractions;
 /// <summary>
 /// Event arguments for cluster membership changes.
 /// </summary>
-public sealed class ClusterMembershipChangedEventArgs : EventArgs
+public sealed class ClusterMembershipChangedEventArgs(
+    MembershipChangeType changeType,
+    IProcrastinationNode affectedNode,
+    DateTimeOffset timestamp,
+    string? reason = null) : EventArgs
 {
     /// <summary>
     /// Gets the type of membership change.
     /// </summary>
-    public required MembershipChangeType ChangeType { get; init; }
+    public MembershipChangeType ChangeType { get; } = changeType;
 
     /// <summary>
     /// Gets the node that was affected.
     /// </summary>
-    public required IProcrastinationNode AffectedNode { get; init; }
+    public IProcrastinationNode AffectedNode { get; } = affectedNode;
 
     /// <summary>
     /// Gets the timestamp of the change.
     /// </summary>
-    public required DateTimeOffset Timestamp { get; init; }
+    public DateTimeOffset Timestamp { get; } = timestamp;
 
     /// <summary>
     /// Gets the reason for the change (excuse).
     /// </summary>
-    public string? Reason { get; init; }
+    public string? Reason { get; } = reason;
 }
 
 /// <summary>
