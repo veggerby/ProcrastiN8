@@ -98,16 +98,14 @@ public class ProcrastinationNodeTests
     {
         // Arrange
         var node = new ProcrastinationNode("test-node", "localhost:5000");
-        var initialHeartbeat = node.LastHeartbeat;
+        var originalHeartbeat = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        node.RecordHeartbeat(originalHeartbeat);
 
-        // Small delay to ensure different timestamp
-        Thread.Sleep(10);
-
-        // Act
+        // Act - record a new heartbeat (uses DateTimeOffset.UtcNow internally)
         node.RecordHeartbeat();
 
-        // Assert
-        node.LastHeartbeat.Should().BeAfter(initialHeartbeat);
+        // Assert - the new heartbeat should be after our manually set timestamp
+        node.LastHeartbeat.Should().BeAfter(originalHeartbeat);
     }
 
     [Fact]

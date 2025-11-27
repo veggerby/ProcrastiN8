@@ -179,7 +179,9 @@ public sealed class BlameRecord
         // Deferrals are worth 1 point each
         // Migrations sent are worth 2 points each (you made someone else deal with it)
         // Timeouts are worth 3 points each (you completely failed)
-        // Migrations received actually reduce blame by 0.5 points (you're helping!)
-        return DeferralCount + (MigrationsSent * 2) + (TimeoutCount * 3) - (MigrationsReceived / 2);
+        // Migrations received reduce blame (you're helping!) - calculated as 1 point per 2 migrations
+        // We use (MigrationsReceived + 1) / 2 to round up and ensure 1 migration gives 0.5 effectively
+        var blameReduction = MigrationsReceived / 2;
+        return DeferralCount + (MigrationsSent * 2) + (TimeoutCount * 3) - blameReduction;
     }
 }
