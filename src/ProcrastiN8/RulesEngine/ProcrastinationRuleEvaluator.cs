@@ -59,6 +59,12 @@ public sealed class CircularConflictResolver : IConflictResolver
             return (new RuleActionResult(), 0);
         }
 
+        // Only one valid result means no conflict to resolve
+        if (actionResults.Count == 1)
+        {
+            return (actionResults[0], 0);
+        }
+
         var negotiationCycles = 0;
         var totalDeferral = TimeSpan.Zero;
         var totalRegret = 1.0;

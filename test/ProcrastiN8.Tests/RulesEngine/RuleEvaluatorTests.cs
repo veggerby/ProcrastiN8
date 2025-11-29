@@ -253,7 +253,7 @@ public class RuleEvaluatorTests
         public override string Description => "A test policy pack.";
         public override Version Version => new Version(1, 0, 0);
 
-        public void AddRule(IRule rule)
+        public new void AddRule(IRule rule)
         {
             base.AddRule(rule);
         }
