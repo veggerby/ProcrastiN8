@@ -230,12 +230,9 @@ public sealed class ProcrastinationRuleEvaluator : IRuleEvaluator
         }
 
         // Add all accumulated excuses from context
-        foreach (var excuse in context.Excuses)
+        foreach (var excuse in context.Excuses.Where(excuse => !result.Excuses.Contains(excuse)))
         {
-            if (!result.Excuses.Contains(excuse))
-            {
-                result.Excuses.Add(excuse);
-            }
+            result.Excuses.Add(excuse);
         }
 
         result.FinalRegretFactor = context.RegretFactor;
@@ -382,7 +379,8 @@ public sealed class ProcrastinationRuleEvaluator : IRuleEvaluator
                     sb.AppendLine($"  Deferral: {ruleResult.ActionResult.DeferralDuration.TotalMinutes:F1} minutes");
                 }
 
-                if (ruleResult.ActionResult.RegretMultiplier != 1.0)
+                const double epsilon = 1e-6;
+                if (Math.Abs(ruleResult.ActionResult.RegretMultiplier - 1.0) > epsilon)
                 {
                     sb.AppendLine($"  Regret multiplier applied: {ruleResult.ActionResult.RegretMultiplier:F2}x");
                 }

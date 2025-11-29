@@ -10,14 +10,14 @@ public class PolicyHostTests
     [Fact]
     public void PolicyHost_LoadsPolicy()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack("TEST-001", "Test Policy", new Version(1, 0, 0));
 
-        // act
+        // Act
         host.LoadPolicy(policy);
 
-        // assert
+        // Assert
         host.LoadedPolicies.Should().Contain(policy, "policy should be loaded");
         host.LoadedPolicies.Should().HaveCount(1);
     }
@@ -25,15 +25,15 @@ public class PolicyHostTests
     [Fact]
     public void PolicyHost_UnloadsPolicy()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack("TEST-001", "Test Policy", new Version(1, 0, 0));
         host.LoadPolicy(policy);
 
-        // act
+        // Act
         var result = host.UnloadPolicy("TEST-001");
 
-        // assert
+        // Assert
         result.Should().BeTrue("policy should be successfully unloaded");
         host.LoadedPolicies.Should().BeEmpty("no policies should remain after unload");
     }
@@ -41,20 +41,20 @@ public class PolicyHostTests
     [Fact]
     public void PolicyHost_UnloadPolicy_ReturnsFalseForUnknownPolicy()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
 
-        // act
+        // Act
         var result = host.UnloadPolicy("NONEXISTENT");
 
-        // assert
+        // Assert
         result.Should().BeFalse("cannot unload a policy that was never loaded");
     }
 
     [Fact]
     public void PolicyHost_AllRules_AggregatesFromAllPolicies()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy1 = new TestPolicyPack("P1", "Policy 1", new Version(1, 0, 0));
         policy1.AddTestRule(new ProcrastinationRule("R1", "Rule 1", new AlwaysTrueCondition(), new FixedDeferralAction(TimeSpan.FromMinutes(5)), 10));
@@ -65,10 +65,10 @@ public class PolicyHostTests
         host.LoadPolicy(policy1);
         host.LoadPolicy(policy2);
 
-        // act
+        // Act
         var allRules = host.AllRules;
 
-        // assert
+        // Assert
         allRules.Should().HaveCount(2, "both rules from both policies should be aggregated");
         allRules.Select(r => r.Id).Should().Contain("R1").And.Contain("R2");
     }
@@ -76,7 +76,7 @@ public class PolicyHostTests
     [Fact]
     public void PolicyHost_AllRules_SortedByPriority()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack("P1", "Policy 1", new Version(1, 0, 0));
         policy.AddTestRule(new ProcrastinationRule("R1", "Low Priority", new AlwaysTrueCondition(), new FixedDeferralAction(TimeSpan.FromMinutes(5)), 100));
@@ -85,10 +85,10 @@ public class PolicyHostTests
 
         host.LoadPolicy(policy);
 
-        // act
+        // Act
         var allRules = host.AllRules;
 
-        // assert - lower priority value = higher priority, so should be first
+        // Assert - lower priority value = higher priority, so should be first
         allRules[0].Id.Should().Be("R2", "highest priority rule should be first");
         allRules[1].Id.Should().Be("R3", "medium priority rule should be second");
         allRules[2].Id.Should().Be("R1", "lowest priority rule should be last");
@@ -97,22 +97,22 @@ public class PolicyHostTests
     [Fact]
     public void PolicyHost_CreateSnapshot_CreatesRestorableState()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy1 = new TestPolicyPack("P1", "Policy 1", new Version(1, 0, 0));
         host.LoadPolicy(policy1);
 
-        // act
+        // Act
         var snapshotId = host.CreateSnapshot();
 
-        // assert
+        // Assert
         snapshotId.Should().NotBeNullOrEmpty("snapshot ID should be generated");
     }
 
     [Fact]
     public void PolicyHost_RollbackTo_RestoresPreviousState()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy1 = new TestPolicyPack("P1", "Policy 1", new Version(1, 0, 0));
         host.LoadPolicy(policy1);
@@ -124,10 +124,10 @@ public class PolicyHostTests
 
         host.LoadedPolicies.Should().HaveCount(2, "two policies should be loaded before rollback");
 
-        // act
+        // Act
         var result = host.RollbackTo(snapshotId);
 
-        // assert
+        // Assert
         result.Should().BeTrue("rollback should succeed");
         host.LoadedPolicies.Should().HaveCount(1, "should only have policies from snapshot");
         host.LoadedPolicies.Single().Id.Should().Be("P1", "should be the policy from snapshot");
@@ -136,30 +136,30 @@ public class PolicyHostTests
     [Fact]
     public void PolicyHost_RollbackTo_ReturnsFalseForUnknownSnapshot()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
 
-        // act
+        // Act
         var result = host.RollbackTo("NONEXISTENT");
 
-        // assert
+        // Assert
         result.Should().BeFalse("cannot rollback to unknown snapshot");
     }
 
     [Fact]
     public void PolicyHost_GetHistory_RecordsPolicyChanges()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack("P1", "Policy 1", new Version(1, 0, 0));
 
-        // act
+        // Act
         host.LoadPolicy(policy);
         host.UnloadPolicy("P1");
 
         var history = host.GetHistory();
 
-        // assert
+        // Assert
         history.Should().HaveCount(2, "load and unload should be recorded");
         history[0].ChangeType.Should().Be(PolicyChangeType.Loaded);
         history[1].ChangeType.Should().Be(PolicyChangeType.Unloaded);
@@ -168,24 +168,24 @@ public class PolicyHostTests
     [Fact]
     public void PolicyHost_RaisesPolicyLoadedEvent()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack("P1", "Policy 1", new Version(1, 0, 0));
         IPolicyPack? loadedPolicy = null;
 
         host.PolicyLoaded += (sender, args) => loadedPolicy = args.PolicyPack;
 
-        // act
+        // Act
         host.LoadPolicy(policy);
 
-        // assert
+        // Assert
         loadedPolicy.Should().Be(policy, "event should be raised with loaded policy");
     }
 
     [Fact]
     public void PolicyHost_RaisesPolicyUnloadedEvent()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack("P1", "Policy 1", new Version(1, 0, 0));
         string? unloadedPolicyId = null;
@@ -193,10 +193,10 @@ public class PolicyHostTests
         host.PolicyUnloaded += (sender, args) => unloadedPolicyId = args.PolicyId;
         host.LoadPolicy(policy);
 
-        // act
+        // Act
         host.UnloadPolicy("P1");
 
-        // assert
+        // Assert
         unloadedPolicyId.Should().Be("P1", "event should be raised with unloaded policy ID");
     }
 

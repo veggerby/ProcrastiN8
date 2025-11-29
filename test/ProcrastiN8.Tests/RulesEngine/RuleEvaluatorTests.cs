@@ -11,7 +11,7 @@ public class RuleEvaluatorTests
     [Fact]
     public async Task ProcrastinationRuleEvaluator_EvaluatesAllRules()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack();
         policy.AddRule(new ProcrastinationRule("R1", "Rule 1", new AlwaysTrueCondition(), new FixedDeferralAction(TimeSpan.FromMinutes(5)), 10));
@@ -24,10 +24,10 @@ public class RuleEvaluatorTests
         randomProvider.GetDouble().Returns(0.5);
         var context = new RuleEvaluationContext(task, randomProvider: randomProvider);
 
-        // act
+        // Act
         var result = await evaluator.EvaluateAsync(context, CancellationToken.None);
 
-        // assert
+        // Assert
         result.RulesEvaluated.Should().Be(2, "both rules should be evaluated");
         result.RulesMatched.Should().Be(2, "both rules have AlwaysTrue conditions");
     }
@@ -35,7 +35,7 @@ public class RuleEvaluatorTests
     [Fact]
     public async Task ProcrastinationRuleEvaluator_AccumulatesDeferral()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack();
         policy.AddRule(new ProcrastinationRule("R1", "Rule 1", new AlwaysTrueCondition(), new FixedDeferralAction(TimeSpan.FromMinutes(5)), 10));
@@ -47,17 +47,17 @@ public class RuleEvaluatorTests
         randomProvider.GetDouble().Returns(0.5);
         var context = new RuleEvaluationContext(task, randomProvider: randomProvider);
 
-        // act
+        // Act
         var result = await evaluator.EvaluateAsync(context, CancellationToken.None);
 
-        // assert
+        // Assert
         result.TotalDeferral.Should().BeGreaterThan(TimeSpan.Zero, "deferral should be accumulated");
     }
 
     [Fact]
     public async Task ProcrastinationRuleEvaluator_ResolvesConflictsWithMultipleMatchingRules()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack();
         policy.AddRule(new ProcrastinationRule("R1", "Rule 1", new AlwaysTrueCondition(), new FixedDeferralAction(TimeSpan.FromMinutes(10)), 10));
@@ -70,10 +70,10 @@ public class RuleEvaluatorTests
         randomProvider.GetDouble().Returns(0.1);
         var context = new RuleEvaluationContext(task, randomProvider: randomProvider);
 
-        // act
+        // Act
         var result = await evaluator.EvaluateAsync(context, CancellationToken.None);
 
-        // assert
+        // Assert
         result.ConflictResolutionCycles.Should().BeGreaterThan(0, "conflict resolution should occur with multiple matching rules");
         result.TotalDeferral.Should().BeGreaterThan(TimeSpan.Zero, "resolved deferral should be calculated");
     }
@@ -81,7 +81,7 @@ public class RuleEvaluatorTests
     [Fact]
     public async Task ProcrastinationRuleEvaluator_CollectsExcuses()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack();
         policy.AddRule(new ProcrastinationRule("R1", "Rule 1", new AlwaysTrueCondition(), new ExcuseOnlyAction("Excuse 1"), 10));
@@ -92,17 +92,17 @@ public class RuleEvaluatorTests
         var task = new ProcrastinationTask();
         var context = new RuleEvaluationContext(task);
 
-        // act
+        // Act
         var result = await evaluator.EvaluateAsync(context, CancellationToken.None);
 
-        // assert
+        // Assert
         result.Excuses.Should().NotBeEmpty("excuses should be collected");
     }
 
     [Fact]
     public async Task ProcrastinationRuleEvaluator_SetsBlockingState()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack();
         policy.AddRule(new ProcrastinationRule("R1", "Blocking Rule", new AlwaysTrueCondition(), new BlockTaskAction("Blocked!"), 10));
@@ -112,10 +112,10 @@ public class RuleEvaluatorTests
         var task = new ProcrastinationTask();
         var context = new RuleEvaluationContext(task);
 
-        // act
+        // Act
         var result = await evaluator.EvaluateAsync(context, CancellationToken.None);
 
-        // assert
+        // Assert
         result.IsBlocked.Should().BeTrue("task should be blocked");
         result.BlockingReason.Should().Be("Blocked!");
     }
@@ -123,7 +123,7 @@ public class RuleEvaluatorTests
     [Fact]
     public async Task ProcrastinationRuleEvaluator_TracksRegretFactor()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack();
         policy.AddRule(new ProcrastinationRule("R1", "Regret Rule", new AlwaysTrueCondition(), new ExponentialRegretAction(TimeSpan.FromMinutes(5), 1.5), 10));
@@ -133,17 +133,17 @@ public class RuleEvaluatorTests
         var task = new ProcrastinationTask();
         var context = new RuleEvaluationContext(task);
 
-        // act
+        // Act
         var result = await evaluator.EvaluateAsync(context, CancellationToken.None);
 
-        // assert
+        // Assert
         result.FinalRegretFactor.Should().BeGreaterThan(1.0, "regret factor should accumulate");
     }
 
     [Fact]
     public async Task ProcrastinationRuleEvaluator_HandlesCancellation()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var policy = new TestPolicyPack();
         policy.AddRule(new ProcrastinationRule("R1", "Rule 1", new AlwaysTrueCondition(), new FixedDeferralAction(TimeSpan.FromMinutes(5)), 10));
@@ -154,10 +154,10 @@ public class RuleEvaluatorTests
         var randomProvider = Substitute.For<IRandomProvider>();
         randomProvider.GetDouble().Returns(0.5);
         var context = new RuleEvaluationContext(task, randomProvider: randomProvider);
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        // act & assert
+        // Act & assert
         await FluentActions
             .Awaiting(async () => await evaluator.EvaluateAsync(context, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>("cancellation should be respected");
@@ -166,7 +166,7 @@ public class RuleEvaluatorTests
     [Fact]
     public void ProcrastinationRuleEvaluator_GeneratesExplainabilityReport()
     {
-        // arrange
+        // Arrange
         var host = new PolicyHost();
         var evaluator = new ProcrastinationRuleEvaluator(host);
         var task = new ProcrastinationTask { Name = "Test Task" };
@@ -182,10 +182,10 @@ public class RuleEvaluatorTests
         result.Excuses.Add("Test excuse 1");
         result.Excuses.Add("Test excuse 2");
 
-        // act
+        // Act
         var report = evaluator.GenerateReport(result);
 
-        // assert
+        // Assert
         report.Should().NotBeNull();
         report.Title.Should().Contain("Test Task");
         report.ExecutiveSummary.Should().NotBeNullOrEmpty();
@@ -196,7 +196,7 @@ public class RuleEvaluatorTests
     [Fact]
     public void ExplainabilityReport_ToFullReport_GeneratesVerboseOutput()
     {
-        // arrange
+        // Arrange
         var report = new ExplainabilityReport
         {
             Title = "Test Report",
@@ -223,10 +223,10 @@ public class RuleEvaluatorTests
             PhilosophicalBasis = "According to Nietzsche, productivity is an illusion anyway."
         });
 
-        // act
+        // Act
         var fullReport = report.ToFullReport();
 
-        // assert
+        // Assert
         fullReport.Should().NotBeNullOrEmpty();
         fullReport.Should().Contain("Test Report");
         fullReport.Should().Contain("EXECUTIVE SUMMARY");
@@ -239,10 +239,10 @@ public class RuleEvaluatorTests
     [Fact]
     public void ExplainabilityReport_EstimatedPageCount_AimsFor12Pages()
     {
-        // arrange - even minimal reports aim for 12 pages
+        // Arrange - even minimal reports aim for 12 pages
         var report = new ExplainabilityReport();
 
-        // act & assert
+        // Act & assert
         report.EstimatedPageCount.Should().BeGreaterThanOrEqualTo(12, "compliance reports must be suitably verbose");
     }
 
