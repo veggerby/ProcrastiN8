@@ -1,5 +1,6 @@
 using ProcrastiN8.LazyTasks;
 using ProcrastiN8.Services;
+using NSubstitute;
 
 namespace ProcrastiN8.Tests.Services;
 
@@ -56,14 +57,24 @@ public class ProcrastinationResultTests
     [Fact]
     public async Task AmbientSafety_Should_Limit_Cycles_And_Prevent_WeekendFallback_Execution()
     {
+        // Arrange - Use a mocked time provider that returns a non-weekend time (Wednesday)
+        // so that the weekend window check never passes and safety cap is tested.
+        var timeProvider = Substitute.For<ITimeProvider>();
+        // Wednesday at noon - definitely not a weekend window
+        var wednesday = new DateTimeOffset(2025, 11, 26, 12, 0, 0, TimeSpan.Zero);
+        timeProvider.GetUtcNow().Returns(wednesday);
+
         // WeekendFallbackStrategy only executes when weekend window reached; with tiny MaxCycles we expect early termination without execution.
         var scheduler = ProcrastinationSchedulerBuilder.Create()
                 .WithDelayStrategy(new InstantDelayStrategy())
+                .WithTimeProvider(timeProvider)
                 .WithSafety(new TestSafety(maxCycles: 2))
                 .Build();
 
+        // Act
         var result = await scheduler.ScheduleWithResult(() => Task.CompletedTask, TimeSpan.Zero, ProcrastinationMode.WeekendFallback);
 
+        // Assert
         result.Executed.Should().BeFalse("safety cap should short-circuit before weekend window");
         result.Cycles.Should().BeLessThanOrEqualTo(2);
         result.ProductivityIndex.Should().Be(0.0);
