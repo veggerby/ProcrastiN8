@@ -44,11 +44,13 @@ public sealed class CircularConflictResolver : IConflictResolver
             return (new RuleActionResult(), 0);
         }
 
+        // Fast path: single input result (regardless of whether action executed)
         if (results.Count == 1)
         {
             return (results[0].ActionResult ?? new RuleActionResult(), 0);
         }
 
+        // Filter to only results where action actually executed with a valid result
         var actionResults = results
             .Where(r => r.ActionExecuted && r.ActionResult != null)
             .Select(r => r.ActionResult!)
@@ -59,7 +61,8 @@ public sealed class CircularConflictResolver : IConflictResolver
             return (new RuleActionResult(), 0);
         }
 
-        // Only one valid result means no conflict to resolve
+        // Only one valid result after filtering means no conflict to resolve
+        // (other input results had conditions that didn't match)
         if (actionResults.Count == 1)
         {
             return (actionResults[0], 0);

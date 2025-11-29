@@ -253,6 +253,10 @@ public class RuleEvaluatorTests
         public override string Description => "A test policy pack.";
         public override Version Version => new Version(1, 0, 0);
 
+        /// <summary>
+        /// Exposes the protected AddRule method for testing purposes.
+        /// The 'new' modifier changes visibility from protected to public.
+        /// </summary>
         public new void AddRule(IRule rule)
         {
             base.AddRule(rule);
