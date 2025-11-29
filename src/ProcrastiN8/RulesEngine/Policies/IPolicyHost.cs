@@ -64,11 +64,17 @@ public interface IPolicyHost
 /// <summary>
 /// Records a change to the policy configuration.
 /// </summary>
+/// <remarks>
+/// Id and Timestamp should be set explicitly for testability.
+/// </remarks>
 public sealed class PolicyChangeRecord
 {
     /// <summary>
     /// Gets or sets the unique identifier for this change.
     /// </summary>
+    /// <remarks>
+    /// Should be set explicitly for testability. Defaults to a new GUID if not set.
+    /// </remarks>
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
     /// <summary>
@@ -84,7 +90,10 @@ public sealed class PolicyChangeRecord
     /// <summary>
     /// Gets or sets when the change occurred.
     /// </summary>
-    public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
+    /// <remarks>
+    /// Should be set explicitly using an ITimeProvider for testability.
+    /// </remarks>
+    public DateTimeOffset Timestamp { get; set; }
 
     /// <summary>
     /// Gets or sets the snapshot ID before this change.

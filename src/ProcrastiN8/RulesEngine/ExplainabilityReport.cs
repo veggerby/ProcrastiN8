@@ -9,6 +9,7 @@ namespace ProcrastiN8.RulesEngine;
 /// The explainability report is designed to be absurdly detailed,
 /// providing a 12-page justification for procrastination decisions.
 /// Perfect for compliance audits and blame deflection.
+/// GeneratedAt should be set explicitly using an ITimeProvider for testability.
 /// </remarks>
 public sealed class ExplainabilityReport
 {
@@ -55,7 +56,10 @@ public sealed class ExplainabilityReport
     /// <summary>
     /// Gets or sets when the report was generated.
     /// </summary>
-    public DateTimeOffset GeneratedAt { get; set; } = DateTimeOffset.UtcNow;
+    /// <remarks>
+    /// Should be set explicitly using an ITimeProvider for testability.
+    /// </remarks>
+    public DateTimeOffset GeneratedAt { get; set; }
 
     /// <summary>
     /// Gets the estimated page count (always aims for 12+ pages).

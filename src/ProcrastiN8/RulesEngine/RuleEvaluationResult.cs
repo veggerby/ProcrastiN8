@@ -5,6 +5,7 @@ namespace ProcrastiN8.RulesEngine;
 /// </summary>
 /// <remarks>
 /// Captures whether the rule fired, the action result, and explanations for traceability.
+/// EvaluatedAt should be set explicitly using an ITimeProvider for testability.
 /// </remarks>
 public sealed class RuleEvaluationResult
 {
@@ -45,5 +46,8 @@ public sealed class RuleEvaluationResult
     /// <summary>
     /// Gets or sets the timestamp when this rule was evaluated.
     /// </summary>
-    public DateTimeOffset EvaluatedAt { get; set; } = DateTimeOffset.UtcNow;
+    /// <remarks>
+    /// Should be set explicitly using an ITimeProvider for testability.
+    /// </remarks>
+    public DateTimeOffset EvaluatedAt { get; set; }
 }

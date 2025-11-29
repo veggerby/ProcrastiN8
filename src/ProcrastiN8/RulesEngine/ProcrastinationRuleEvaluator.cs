@@ -150,6 +150,7 @@ public sealed class ProcrastinationRuleEvaluator : IRuleEvaluator
     private readonly IPolicyHost _policyHost;
     private readonly IConflictResolver _conflictResolver;
     private readonly IProcrastiLogger? _logger;
+    private readonly ITimeProvider _timeProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProcrastinationRuleEvaluator"/> class.
@@ -157,14 +158,17 @@ public sealed class ProcrastinationRuleEvaluator : IRuleEvaluator
     /// <param name="policyHost">The policy host containing rules to evaluate.</param>
     /// <param name="conflictResolver">Optional conflict resolver; defaults to circular negotiation.</param>
     /// <param name="logger">Optional logger for verbose output.</param>
+    /// <param name="timeProvider">Optional time provider for testability. Defaults to system time.</param>
     public ProcrastinationRuleEvaluator(
         IPolicyHost policyHost,
         IConflictResolver? conflictResolver = null,
-        IProcrastiLogger? logger = null)
+        IProcrastiLogger? logger = null,
+        ITimeProvider? timeProvider = null)
     {
         _policyHost = policyHost ?? throw new ArgumentNullException(nameof(policyHost));
         _conflictResolver = conflictResolver ?? new CircularConflictResolver();
         _logger = logger;
+        _timeProvider = timeProvider ?? SystemTimeProvider.Default;
     }
 
     /// <inheritdoc />
@@ -254,7 +258,7 @@ public sealed class ProcrastinationRuleEvaluator : IRuleEvaluator
         var report = new ExplainabilityReport
         {
             Title = $"Procrastination Decision Explainability Report for Task: {result.Task.Name}",
-            GeneratedAt = DateTimeOffset.UtcNow
+            GeneratedAt = _timeProvider.GetUtcNow()
         };
 
         // Executive Summary

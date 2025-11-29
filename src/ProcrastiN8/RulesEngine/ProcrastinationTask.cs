@@ -6,12 +6,16 @@ namespace ProcrastiN8.RulesEngine;
 /// <remarks>
 /// Tasks are the subjects of procrastination rules. They carry metadata like tags,
 /// priority, and estimated effort that conditions can evaluate against.
+/// Note: Id and CreatedAt should be set explicitly for testability.
 /// </remarks>
 public sealed class ProcrastinationTask
 {
     /// <summary>
     /// Gets or sets the unique identifier for this task.
     /// </summary>
+    /// <remarks>
+    /// Should be set explicitly for testability. Defaults to a new GUID if not set.
+    /// </remarks>
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
     /// <summary>
@@ -47,6 +51,9 @@ public sealed class ProcrastinationTask
     /// <summary>
     /// Gets or sets when this task was created.
     /// </summary>
+    /// <remarks>
+    /// Should be set explicitly for testability. Defaults to UtcNow if not set.
+    /// </remarks>
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     /// <summary>

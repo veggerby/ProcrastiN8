@@ -5,6 +5,7 @@ namespace ProcrastiN8.RulesEngine;
 /// </summary>
 /// <remarks>
 /// Contains the final deferral recommendation, all excuses, and the complete evaluation trail.
+/// Timestamps should be set explicitly using an ITimeProvider for testability.
 /// </remarks>
 public sealed class RuleEngineResult
 {
@@ -70,12 +71,18 @@ public sealed class RuleEngineResult
     /// <summary>
     /// Gets or sets the timestamp when evaluation began.
     /// </summary>
-    public DateTimeOffset EvaluationStartedAt { get; set; } = DateTimeOffset.UtcNow;
+    /// <remarks>
+    /// Should be set explicitly using an ITimeProvider for testability.
+    /// </remarks>
+    public DateTimeOffset EvaluationStartedAt { get; set; }
 
     /// <summary>
     /// Gets or sets the timestamp when evaluation completed.
     /// </summary>
-    public DateTimeOffset EvaluationCompletedAt { get; set; } = DateTimeOffset.UtcNow;
+    /// <remarks>
+    /// Should be set explicitly using an ITimeProvider for testability.
+    /// </remarks>
+    public DateTimeOffset EvaluationCompletedAt { get; set; }
 
     /// <summary>
     /// Gets the evaluation duration.

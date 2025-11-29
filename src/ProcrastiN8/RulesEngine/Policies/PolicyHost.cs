@@ -1,3 +1,5 @@
+using ProcrastiN8.LazyTasks;
+
 namespace ProcrastiN8.RulesEngine.Policies;
 
 /// <summary>
@@ -13,6 +15,16 @@ public sealed class PolicyHost : IPolicyHost
     private readonly Dictionary<string, PolicySnapshot> _snapshots = new();
     private readonly List<PolicyChangeRecord> _history = new();
     private readonly object _lock = new();
+    private readonly ITimeProvider _timeProvider;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PolicyHost"/> class.
+    /// </summary>
+    /// <param name="timeProvider">Optional time provider for testability. Defaults to system time.</param>
+    public PolicyHost(ITimeProvider? timeProvider = null)
+    {
+        _timeProvider = timeProvider ?? SystemTimeProvider.Default;
+    }
 
     /// <inheritdoc />
     public IReadOnlyList<IPolicyPack> LoadedPolicies
@@ -66,7 +78,8 @@ public sealed class PolicyHost : IPolicyHost
                 ChangeType = PolicyChangeType.Loaded,
                 PolicyId = policyPack.Id,
                 PreviousSnapshotId = previousSnapshotId,
-                NewSnapshotId = newSnapshotId
+                NewSnapshotId = newSnapshotId,
+                Timestamp = _timeProvider.GetUtcNow()
             });
         }
 
@@ -99,7 +112,8 @@ public sealed class PolicyHost : IPolicyHost
                     ChangeType = PolicyChangeType.Unloaded,
                     PolicyId = policyId,
                     PreviousSnapshotId = previousSnapshotId,
-                    NewSnapshotId = newSnapshotId
+                    NewSnapshotId = newSnapshotId,
+                    Timestamp = _timeProvider.GetUtcNow()
                 });
             }
         }
@@ -137,7 +151,8 @@ public sealed class PolicyHost : IPolicyHost
                 ChangeType = PolicyChangeType.Rollback,
                 PolicyId = snapshotId,
                 PreviousSnapshotId = previousSnapshotId,
-                NewSnapshotId = snapshotId
+                NewSnapshotId = snapshotId,
+                Timestamp = _timeProvider.GetUtcNow()
             });
 
             return true;
@@ -155,7 +170,8 @@ public sealed class PolicyHost : IPolicyHost
             {
                 ChangeType = PolicyChangeType.SnapshotCreated,
                 PolicyId = string.Empty,
-                NewSnapshotId = snapshotId
+                NewSnapshotId = snapshotId,
+                Timestamp = _timeProvider.GetUtcNow()
             });
 
             return snapshotId;
@@ -169,7 +185,7 @@ public sealed class PolicyHost : IPolicyHost
         {
             Id = snapshotId,
             Policies = _policies.Values.ToList(),
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = _timeProvider.GetUtcNow()
         };
 
         _snapshots[snapshotId] = snapshot;
