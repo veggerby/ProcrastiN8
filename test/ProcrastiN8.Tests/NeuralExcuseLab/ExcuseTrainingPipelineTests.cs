@@ -37,7 +37,7 @@ public class ExcuseTrainingPipelineTests
     }
 
     [Fact]
-    public async Task TrainAsync_WithCancellation_Should_StopTraining()
+    public async Task TrainAsync_WithCancellation_Should_StopGracefully()
     {
         // arrange
         var logger = Substitute.For<IProcrastiLogger>();
@@ -46,11 +46,9 @@ public class ExcuseTrainingPipelineTests
         using var cts = new CancellationTokenSource();
         cts.CancelAfter(TimeSpan.FromMilliseconds(100));
 
-        // act
-        await pipeline.TrainAsync("test-data.csv", epochs: 100, cts.Token);
-
-        // assert
-        logger.Received().Warn(Arg.Is<string>(s => s.Contains("Training cancelled")));
+        // act & assert
+        // The training should be cancelled by throwing TaskCanceledException
+        await Assert.ThrowsAsync<TaskCanceledException>(() => pipeline.TrainAsync("test-data.csv", epochs: 100, cts.Token));
     }
 
     [Fact]

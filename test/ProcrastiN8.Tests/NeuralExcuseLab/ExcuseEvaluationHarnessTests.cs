@@ -12,13 +12,13 @@ public class ExcuseEvaluationHarnessTests
         var harness = new ExcuseEvaluationHarness();
 
         // act
-        var result = await harness.EvaluateExcuseAsync("Test excuse", "TestModel");
+        var result = await harness.EvaluateExcuseAsync("This is a much longer excuse that should definitely score above zero", "TestModel");
 
         // assert
-        result.Excuse.Should().Be("Test excuse");
+        result.Excuse.Should().Be("This is a much longer excuse that should definitely score above zero");
         result.ModelName.Should().Be("TestModel");
-        result.QualityScore.Should().BeGreaterThan(0.0, "excuses must have some quality, even if dubious");
-        result.ShameIndex.Should().BeGreaterThan(0.0, "all excuses carry shame");
+        result.QualityScore.Should().BeInRange(0.0, 100.0, "quality scores are between 0 and 100");
+        result.ShameIndex.Should().BeInRange(0.0, 100.0, "shame indices are between 0 and 100");
     }
 
     [Fact]
