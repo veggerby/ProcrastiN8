@@ -43,7 +43,7 @@ public class ExcuseTrainingPipelineTests
         var logger = Substitute.For<IProcrastiLogger>();
         var pipeline = new ExcuseTrainingPipeline(logger: logger);
         
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         cts.CancelAfter(TimeSpan.FromMilliseconds(100));
 
         // act

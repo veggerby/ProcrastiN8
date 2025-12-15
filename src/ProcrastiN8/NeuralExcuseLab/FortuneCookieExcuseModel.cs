@@ -1,4 +1,5 @@
 using ProcrastiN8.JustBecause;
+using ProcrastiN8.LazyTasks;
 
 namespace ProcrastiN8.NeuralExcuseLab;
 
@@ -12,10 +13,15 @@ namespace ProcrastiN8.NeuralExcuseLab;
 /// Initializes a new instance of the <see cref="FortuneCookieExcuseModel"/> class.
 /// </remarks>
 /// <param name="randomProvider">Random provider for fortune selection.</param>
+/// <param name="delayProvider">Delay provider for simulating API latency.</param>
 /// <param name="logger">Optional logger for fortune cookie philosophy.</param>
-public class FortuneCookieExcuseModel(IRandomProvider? randomProvider = null, IProcrastiLogger? logger = null) : IExcuseModel
+public class FortuneCookieExcuseModel(
+    IRandomProvider? randomProvider = null,
+    IDelayProvider? delayProvider = null,
+    IProcrastiLogger? logger = null) : IExcuseModel
 {
     private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
+    private readonly IDelayProvider _delayProvider = delayProvider ?? new TaskDelayProvider();
     private readonly IProcrastiLogger? _logger = logger;
 
     private static readonly string[] FortuneCookieExcuses =
@@ -41,7 +47,7 @@ public class FortuneCookieExcuseModel(IRandomProvider? randomProvider = null, IP
         _logger?.Info($"[{ModelName}] Consulting ancient wisdom for: {prompt}");
         
         // Simulate network latency to a fictional fortune cookie API
-        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(20, 80)), cancellationToken);
+        await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(20, 80)), cancellationToken);
         
         var fortune = FortuneCookieExcuses[_randomProvider.GetRandom(FortuneCookieExcuses.Length)];
         

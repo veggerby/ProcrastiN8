@@ -1,4 +1,5 @@
 using ProcrastiN8.JustBecause;
+using ProcrastiN8.LazyTasks;
 
 namespace ProcrastiN8.NeuralExcuseLab;
 
@@ -13,10 +14,15 @@ namespace ProcrastiN8.NeuralExcuseLab;
 /// Initializes a new instance of the <see cref="ExcuseTrainingPipeline"/> class.
 /// </remarks>
 /// <param name="randomProvider">Random provider for training metrics.</param>
+/// <param name="delayProvider">Delay provider for simulating training time.</param>
 /// <param name="logger">Logger for training output.</param>
-public class ExcuseTrainingPipeline(IRandomProvider? randomProvider = null, IProcrastiLogger? logger = null)
+public class ExcuseTrainingPipeline(
+    IRandomProvider? randomProvider = null,
+    IDelayProvider? delayProvider = null,
+    IProcrastiLogger? logger = null)
 {
     private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
+    private readonly IDelayProvider _delayProvider = delayProvider ?? new TaskDelayProvider();
     private readonly IProcrastiLogger _logger = logger ?? new DefaultLogger();
 
     /// <summary>
@@ -37,15 +43,15 @@ public class ExcuseTrainingPipeline(IRandomProvider? randomProvider = null, IPro
         _logger.Info($"[Pipeline] Epochs: {epochs}");
         _logger.Info($"");
 
-        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(100, 300)), cancellationToken);
+        await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(100, 300)), cancellationToken);
 
         _logger.Info($"[DataLoader] Loading backlog comments from {datasetPath}...");
-        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(200, 500)), cancellationToken);
+        await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(200, 500)), cancellationToken);
         
         var recordCount = _randomProvider.GetRandom(1000, 10000);
         _logger.Info($"[DataLoader] Loaded {recordCount:N0} training samples");
         _logger.Info($"[DataLoader] Tokenizing excuses...");
-        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(300, 700)), cancellationToken);
+        await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(300, 700)), cancellationToken);
         _logger.Info($"[DataLoader] Vocabulary size: {_randomProvider.GetRandom(5000, 15000):N0} tokens");
         _logger.Info($"");
 
@@ -66,7 +72,7 @@ public class ExcuseTrainingPipeline(IRandomProvider? randomProvider = null, IPro
                 var accuracy = Math.Min(0.95, 0.5 + (epoch * 0.05) + _randomProvider.GetDouble() * 0.05);
                 
                 _logger.Info($"  Batch {batch}/{batchCount} - Loss: {loss:F4} - Accuracy: {accuracy:F4}");
-                await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(50, 150)), cancellationToken);
+                await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(50, 150)), cancellationToken);
             }
 
             var epochLoss = 10.0 / (epoch * 0.5 + 1);
@@ -78,7 +84,7 @@ public class ExcuseTrainingPipeline(IRandomProvider? randomProvider = null, IPro
 
         _logger.Info($"[Pipeline] Training complete!");
         _logger.Info($"[Pipeline] Saving model weights to disk (not really)...");
-        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(200, 500)), cancellationToken);
+        await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(200, 500)), cancellationToken);
         _logger.Info($"[Pipeline] Model checkpoint saved: /models/excuse-fine-tuned-{DateTime.UtcNow:yyyyMMdd-HHmmss}.pt");
         _logger.Info($"");
         _logger.Info($"✓ Training pipeline completed successfully");

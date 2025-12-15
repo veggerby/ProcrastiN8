@@ -12,12 +12,15 @@ namespace ProcrastiN8.NeuralExcuseLab;
 /// <remarks>
 /// Initializes a new instance of the <see cref="ExcuseModelFactory"/> class.
 /// </remarks>
-/// <param name="httpClient">HTTP client for cloud-based providers.</param>
+/// <param name="httpClient">
+/// HTTP client for cloud-based providers. Must be a long-lived instance (e.g., from IHttpClientFactory or a singleton).
+/// Required to avoid socket exhaustion from creating new HttpClient instances.
+/// </param>
 /// <param name="randomProvider">Random provider for local and fortune cookie models.</param>
 /// <param name="logger">Optional logger for factory operations.</param>
-public class ExcuseModelFactory(HttpClient? httpClient = null, IRandomProvider? randomProvider = null, IProcrastiLogger? logger = null) : IExcuseModelFactory
+public class ExcuseModelFactory(HttpClient httpClient, IRandomProvider? randomProvider = null, IProcrastiLogger? logger = null) : IExcuseModelFactory
 {
-    private readonly HttpClient _httpClient = httpClient ?? new HttpClient();
+    private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
     private readonly IProcrastiLogger? _logger = logger;
 
@@ -56,15 +59,15 @@ public class ExcuseModelFactory(HttpClient? httpClient = null, IRandomProvider? 
 
     private IExcuseModel CreateLocalModel(IDictionary<string, object> configuration)
     {
-        var modelPath = configuration.TryGetValue("model_path", out var path) 
-            ? path.ToString() 
+        var modelPath = configuration.TryGetValue("model_path", out var path)
+            ? path.ToString() ?? "models/excuse-llama-7b.gguf"
             : "models/excuse-llama-7b.gguf";
 
-        return new LocalExcuseModel(modelPath!, _randomProvider, _logger);
+        return new LocalExcuseModel(modelPath, _randomProvider, null, _logger);
     }
 
     private IExcuseModel CreateFortuneCookieModel(IDictionary<string, object> configuration)
     {
-        return new FortuneCookieExcuseModel(_randomProvider, _logger);
+        return new FortuneCookieExcuseModel(_randomProvider, null, _logger);
     }
 }

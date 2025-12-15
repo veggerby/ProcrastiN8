@@ -59,7 +59,7 @@ public class ExcuseEvaluationHarnessTests
         var model = new LocalExcuseModel();
         var harness = new ExcuseEvaluationHarness();
 
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         cts.Cancel();
 
         // act

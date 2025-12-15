@@ -1,4 +1,5 @@
 using ProcrastiN8.JustBecause;
+using ProcrastiN8.LazyTasks;
 
 namespace ProcrastiN8.NeuralExcuseLab;
 
@@ -13,10 +14,15 @@ namespace ProcrastiN8.NeuralExcuseLab;
 /// Initializes a new instance of the <see cref="ExcuseQualityScorer"/> class.
 /// </remarks>
 /// <param name="randomProvider">Random provider for score variation.</param>
+/// <param name="delayProvider">Delay provider for simulating computation time.</param>
 /// <param name="logger">Optional logger for scoring operations.</param>
-public class ExcuseQualityScorer(IRandomProvider? randomProvider = null, IProcrastiLogger? logger = null)
+public class ExcuseQualityScorer(
+    IRandomProvider? randomProvider = null,
+    IDelayProvider? delayProvider = null,
+    IProcrastiLogger? logger = null)
 {
     private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
+    private readonly IDelayProvider _delayProvider = delayProvider ?? new TaskDelayProvider();
     private readonly IProcrastiLogger? _logger = logger;
 
     /// <summary>
@@ -29,10 +35,10 @@ public class ExcuseQualityScorer(IRandomProvider? randomProvider = null, IProcra
     /// </remarks>
     public async Task<double> CalculateQualityScoreAsync(string excuse)
     {
-        _logger?.Info($"[QualityScorer] Computing BLEU-score for excuse: {excuse.Substring(0, Math.Min(50, excuse.Length))}...");
+        _logger?.Info($"[QualityScorer] Computing BLEU-score for excuse: {excuse[..Math.Min(50, excuse.Length)]}...");
 
         // Simulate computational complexity
-        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(10, 50)));
+        await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(10, 50)));
 
         // Generate a believable score based on excuse length and complexity
         var baseScore = Math.Min(100, excuse.Length * 0.5);
@@ -58,7 +64,7 @@ public class ExcuseQualityScorer(IRandomProvider? randomProvider = null, IProcra
         _logger?.Info($"[QualityScorer] Computing Shame Index...");
 
         // Simulate shame analysis
-        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(10, 50)));
+        await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(10, 50)));
 
         // Shame is inversely proportional to excuse quality (usually)
         var shameIndicators = new[]

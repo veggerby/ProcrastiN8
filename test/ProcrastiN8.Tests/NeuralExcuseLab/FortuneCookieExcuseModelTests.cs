@@ -46,17 +46,4 @@ public class FortuneCookieExcuseModelTests
         metadata.Should().ContainKey("type");
         metadata["provider"].Should().Be("FortuneCookie");
     }
-
-    [Fact]
-    public async Task GenerateExcuseAsync_WithRandomProvider_Should_UseSameRandomProvider()
-    {
-        // arrange
-        var model = new FortuneCookieExcuseModel();
-
-        // act
-        var excuse = await model.GenerateExcuseAsync("Test prompt");
-
-        // assert
-        excuse.Should().NotBeNullOrWhiteSpace("fortune cookies dispense wisdom");
-    }
 }

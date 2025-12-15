@@ -9,7 +9,8 @@ public class ExcuseModelFactoryTests
     public void CreateModel_WithLocalProvider_Should_ReturnLocalModel()
     {
         // arrange
-        var factory = new ExcuseModelFactory();
+        var httpClient = new HttpClient();
+        var factory = new ExcuseModelFactory(httpClient);
 
         // act
         var model = factory.CreateModel("local");
@@ -23,7 +24,8 @@ public class ExcuseModelFactoryTests
     public void CreateModel_WithFortuneProvider_Should_ReturnFortuneCookieModel()
     {
         // arrange
-        var factory = new ExcuseModelFactory();
+        var httpClient = new HttpClient();
+        var factory = new ExcuseModelFactory(httpClient);
 
         // act
         var model = factory.CreateModel("fortune");
@@ -37,7 +39,8 @@ public class ExcuseModelFactoryTests
     public void CreateModel_WithOpenAIProvider_Should_ReturnOpenAIModel()
     {
         // arrange
-        var factory = new ExcuseModelFactory();
+        var httpClient = new HttpClient();
+        var factory = new ExcuseModelFactory(httpClient);
         var config = new Dictionary<string, object>
         {
             { "api_key", "test-key-12345" }
@@ -55,7 +58,8 @@ public class ExcuseModelFactoryTests
     public void CreateModel_WithUnknownProvider_Should_ThrowException()
     {
         // arrange
-        var factory = new ExcuseModelFactory();
+        var httpClient = new HttpClient();
+        var factory = new ExcuseModelFactory(httpClient);
 
         // act & assert
         var exception = Assert.Throws<ArgumentException>(() => factory.CreateModel("unknown-provider"));
@@ -66,7 +70,8 @@ public class ExcuseModelFactoryTests
     public void CreateModel_WithOpenAIProviderAndNoApiKey_Should_ThrowException()
     {
         // arrange
-        var factory = new ExcuseModelFactory();
+        var httpClient = new HttpClient();
+        var factory = new ExcuseModelFactory(httpClient);
 
         // act & assert
         var exception = Assert.Throws<ArgumentException>(() => factory.CreateModel("openai"));
@@ -77,7 +82,8 @@ public class ExcuseModelFactoryTests
     public void GetRegisteredProviders_Should_ReturnAllProviders()
     {
         // arrange
-        var factory = new ExcuseModelFactory();
+        var httpClient = new HttpClient();
+        var factory = new ExcuseModelFactory(httpClient);
 
         // act
         var providers = factory.GetRegisteredProviders();
@@ -92,7 +98,8 @@ public class ExcuseModelFactoryTests
     public void CreateModel_WithCustomModelPath_Should_UseCustomPath()
     {
         // arrange
-        var factory = new ExcuseModelFactory();
+        var httpClient = new HttpClient();
+        var factory = new ExcuseModelFactory(httpClient);
         var config = new Dictionary<string, object>
         {
             { "model_path", "custom/model.gguf" }

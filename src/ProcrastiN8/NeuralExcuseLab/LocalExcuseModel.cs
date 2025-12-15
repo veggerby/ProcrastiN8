@@ -1,5 +1,6 @@
 using ProcrastiN8.Common;
 using ProcrastiN8.JustBecause;
+using ProcrastiN8.LazyTasks;
 
 namespace ProcrastiN8.NeuralExcuseLab;
 
@@ -15,11 +16,17 @@ namespace ProcrastiN8.NeuralExcuseLab;
 /// </remarks>
 /// <param name="modelPath">The fictional path to the local model weights.</param>
 /// <param name="randomProvider">Random provider for excuse generation.</param>
+/// <param name="delayProvider">Delay provider for simulating loading times.</param>
 /// <param name="logger">Optional logger for verbose diagnostic output.</param>
-public class LocalExcuseModel(string modelPath = "models/excuse-llama-7b.gguf", IRandomProvider? randomProvider = null, IProcrastiLogger? logger = null) : IExcuseModel
+public class LocalExcuseModel(
+    string modelPath = "models/excuse-llama-7b.gguf",
+    IRandomProvider? randomProvider = null,
+    IDelayProvider? delayProvider = null,
+    IProcrastiLogger? logger = null) : IExcuseModel
 {
     private readonly string _modelPath = modelPath;
     private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
+    private readonly IDelayProvider _delayProvider = delayProvider ?? new TaskDelayProvider();
     private readonly IProcrastiLogger? _logger = logger;
 
     /// <inheritdoc />
@@ -29,13 +36,13 @@ public class LocalExcuseModel(string modelPath = "models/excuse-llama-7b.gguf", 
     public async Task<string> GenerateExcuseAsync(string prompt, CancellationToken cancellationToken = default)
     {
         _logger?.Info($"[{ModelName}] Loading model from {_modelPath}...");
-        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(50, 200)), cancellationToken);
+        await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(50, 200)), cancellationToken);
         
         _logger?.Info($"[{ModelName}] Initializing tensor cores...");
-        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(30, 100)), cancellationToken);
+        await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(30, 100)), cancellationToken);
         
         _logger?.Info($"[{ModelName}] Running inference with prompt: {prompt}");
-        await Task.Delay(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(100, 300)), cancellationToken);
+        await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(_randomProvider.GetRandom(100, 300)), cancellationToken);
         
         var excuse = ExcuseGenerator.GetRandomExcuse(_randomProvider);
         

@@ -1,4 +1,5 @@
 using ProcrastiN8.JustBecause;
+using ProcrastiN8.LazyTasks;
 
 namespace ProcrastiN8.NeuralExcuseLab;
 
@@ -15,14 +16,16 @@ namespace ProcrastiN8.NeuralExcuseLab;
 /// <param name="scorer">The quality scorer to use.</param>
 /// <param name="metrics">The metrics collector to use.</param>
 /// <param name="randomProvider">Random provider for evaluation.</param>
+/// <param name="delayProvider">Delay provider for simulating evaluation time.</param>
 /// <param name="logger">Logger for evaluation operations.</param>
 public class ExcuseEvaluationHarness(
     ExcuseQualityScorer? scorer = null,
     IExcuseMetrics? metrics = null,
     IRandomProvider? randomProvider = null,
+    IDelayProvider? delayProvider = null,
     IProcrastiLogger? logger = null)
 {
-    private readonly ExcuseQualityScorer _scorer = scorer ?? new ExcuseQualityScorer(randomProvider, logger);
+    private readonly ExcuseQualityScorer _scorer = scorer ?? new ExcuseQualityScorer(randomProvider, delayProvider, logger);
     private readonly IExcuseMetrics _metrics = metrics ?? new ExcuseMetricsCollector();
     private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
     private readonly IProcrastiLogger? _logger = logger;
