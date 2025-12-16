@@ -62,12 +62,6 @@ public class ExcuseTrainingPipeline(
             var batchCount = _randomProvider.GetRandom(10, 50);
             for (var batch = 1; batch <= batchCount; batch++)
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    _logger.Warn($"[Pipeline] Training cancelled at epoch {epoch}, batch {batch}");
-                    return;
-                }
-
                 var loss = 10.0 / (epoch * 0.5 + 1) * (1 + _randomProvider.GetDouble() * 0.2);
                 var accuracy = Math.Min(0.95, 0.5 + (epoch * 0.05) + _randomProvider.GetDouble() * 0.05);
                 
