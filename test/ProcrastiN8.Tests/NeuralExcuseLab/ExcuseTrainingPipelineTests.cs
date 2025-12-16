@@ -1,4 +1,5 @@
 using ProcrastiN8.JustBecause;
+using ProcrastiN8.LazyTasks;
 using ProcrastiN8.NeuralExcuseLab;
 
 namespace ProcrastiN8.Tests.NeuralExcuseLab;
@@ -10,7 +11,9 @@ public class ExcuseTrainingPipelineTests
     {
         // arrange
         var logger = Substitute.For<IProcrastiLogger>();
-        var pipeline = new ExcuseTrainingPipeline(logger: logger);
+        var delayProvider = Substitute.For<IDelayProvider>();
+        delayProvider.DelayAsync(Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        var pipeline = new ExcuseTrainingPipeline(delayProvider: delayProvider, logger: logger);
 
         // act
         await pipeline.TrainAsync("fake-dataset.csv", epochs: 2);
@@ -25,7 +28,9 @@ public class ExcuseTrainingPipelineTests
     {
         // arrange
         var logger = Substitute.For<IProcrastiLogger>();
-        var pipeline = new ExcuseTrainingPipeline(logger: logger);
+        var delayProvider = Substitute.For<IDelayProvider>();
+        delayProvider.DelayAsync(Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        var pipeline = new ExcuseTrainingPipeline(delayProvider: delayProvider, logger: logger);
 
         // act
         await pipeline.TrainAsync("test-data.csv", epochs: 3);
@@ -56,7 +61,9 @@ public class ExcuseTrainingPipelineTests
     {
         // arrange
         var logger = Substitute.For<IProcrastiLogger>();
-        var pipeline = new ExcuseTrainingPipeline(logger: logger);
+        var delayProvider = Substitute.For<IDelayProvider>();
+        delayProvider.DelayAsync(Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        var pipeline = new ExcuseTrainingPipeline(delayProvider: delayProvider, logger: logger);
 
         // act
         await pipeline.TrainAsync("jira-comments.csv", epochs: 1);
@@ -71,7 +78,9 @@ public class ExcuseTrainingPipelineTests
     {
         // arrange
         var logger = Substitute.For<IProcrastiLogger>();
-        var pipeline = new ExcuseTrainingPipeline(logger: logger);
+        var delayProvider = Substitute.For<IDelayProvider>();
+        delayProvider.DelayAsync(Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        var pipeline = new ExcuseTrainingPipeline(delayProvider: delayProvider, logger: logger);
 
         // act
         await pipeline.TrainAsync("test-data.csv", epochs: 1);
