@@ -1,0 +1,20 @@
+{
+    "id": "cross-distro-packages",
+    "version": "1.0.0",
+    "name": "Cross-Distribution Package Manager",
+    "description": "Install system packages with automatic distribution detection (supports apt and apk)",
+    "documentationURL": "https://github.com/veggerby/container-superposition/tree/main/features/cross-distro-packages",
+    "options": {
+        "apt": {
+            "type": "string",
+            "default": "",
+            "description": "Space-separated list of packages for apt-based distros (Debian, Ubuntu)"
+        },
+        "apk": {
+            "type": "string",
+            "default": "",
+            "description": "Space-separated list of packages for apk-based distros (Alpine)"
+        }
+    },
+    "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}

@@ -1,74 +1,124 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
 {
-	"name": "ProcrastiN8",
-    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-    "image": "mcr.microsoft.com/devcontainers/base:bookworm",
-
-	"forwardPorts": [
-    ],
-
-	"portsAttributes": {
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.base.schema.json",
+  "name": "ProcrastiN8",
+  "image": "mcr.microsoft.com/devcontainers/base:trixie",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "vscode",
+      "userUid": "automatic",
+      "userGid": "automatic"
     },
-
-	"features": {
-		"ghcr.io/devcontainers/features/common-utils:2": {
-			"installZsh": true,
-			"installOhMyZsh": true,
-			"upgradePackages": true,
-			"username": "automatic",
-			"userUid": "automatic",
-			"userGid": "automatic"
-		},
-		"ghcr.io/devcontainers/features/git:1": {
-			"ppa": true,
-			"version": "os-provided"
-		},
-        "ghcr.io/devcontainers/features/dotnet:2": {
-            "version": "9.0",
-            "additionalVersions": "8.0"
-        },
-		"ghcr.io/devcontainers/features/node:1": {
-            "version": "lts"
-        },
-        "ghcr.io/devcontainers-extra/features/apt-get-packages:1": {
-            "packages": "bash-completion xdg-utils pass sshpass"
-        },
-        "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {
-            "jq": "latest",
-            "yq": "latest"
-        },
-        "ghcr.io/devcontainers/features/github-cli:1": {}
-	},
-
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"ms-dotnettools.csdevkit",
-				"heaths.vscode-guid",
-				"DavidAnson.vscode-markdownlint",
-				"EditorConfig.EditorConfig",
-				"streetsidesoftware.code-spell-checker",
-				"nuke.support",
-				"dbaeumer.vscode-eslint",
-				"GitHub.copilot",
-				"GitHub.copilot-chat",
-				"redhat.vscode-yaml",
-				"github.vscode-github-actions",
-				"bierner.markdown-mermaid",
-				"humao.rest-client",
-				"GitHub.vscode-pull-request-github"
-			]
-		}
-	},
-
-    "mounts": [
-        "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readOnly=true"
-    ],
-
-    "remoteEnv": {
-        "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "os-provided",
+      "ppa": true
     },
-
-	"postCreateCommand": ".devcontainer/scripts/post_create"
+    "./features/cross-distro-packages": {
+      "apt": "bash-completion curl wget vim less xdg-utils pass sshpass build-essential netcat-traditional iputils-ping dnsutils git-lfs sqlite3",
+      "apk": "bash-completion curl wget vim less xdg-utils pass sshpass build-base netcat-openbsd iputils bind-tools git-lfs sqlite"
+    },
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "10.0"
+    },
+    "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {
+      "jq": "latest",
+      "yq": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts",
+      "nodeGypDependencies": true,
+      "installYarnUsingApt": true
+    },
+    "ghcr.io/devcontainers/features/git-lfs:1": {
+      "version": "latest"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "EditorConfig.EditorConfig",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "ms-dotnettools.csdevkit",
+        "heaths.vscode-guid",
+        "nuke.support",
+        "humao.rest-client",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "christian-kohler.npm-intellisense",
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+        "mhutchie.git-graph"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "[csharp]": {
+          "editor.formatOnSave": true
+        },
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "git.enableCommitSigning": false,
+        "git.enableSmartCommit": true,
+        "git.confirmSync": false,
+        "git.autofetch": true
+      }
+    }
+  },
+  "mounts": [],
+  "remoteEnv": {
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+    "PATH": "${containerEnv:HOME}/.dotnet/tools:${containerEnv:HOME}/.local/share/pnpm:${containerEnv:HOME}/.npm-global/bin:${containerEnv:PATH}",
+    "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal"
+  },
+  "remoteUser": "vscode",
+  "forwardPorts": [
+    5000,
+    5001,
+    8080,
+    3000
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "Dev Server",
+      "onAutoForward": "openBrowser"
+    },
+    "5000": {
+      "label": "HTTP",
+      "onAutoForward": "notify"
+    },
+    "5001": {
+      "label": "HTTPS",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "Web App",
+      "onAutoForward": "notify"
+    }
+  },
+  "postStartCommand": {
+    "enable-git-safe-directory": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+    "verify-dotnet": "bash .devcontainer/scripts/verify-dotnet.sh",
+    "verify-nodejs": "bash .devcontainer/scripts/verify-nodejs.sh",
+    "verify-codex": "bash .devcontainer/scripts/verify-codex.sh"
+  },
+  "postCreateCommand": {
+    "setup-dotnet": "bash .devcontainer/scripts/setup-dotnet.sh",
+    "setup-nodejs": "bash .devcontainer/scripts/setup-nodejs.sh",
+    "setup-codex": "bash .devcontainer/scripts/setup-codex.sh",
+    "setup-git-helpers": "bash .devcontainer/scripts/setup-git-helpers.sh",
+    "setup-modern-cli-tools": "bash .devcontainer/scripts/setup-modern-cli-tools.sh"
+  }
 }

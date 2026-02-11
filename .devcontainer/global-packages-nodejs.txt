@@ -1,0 +1,16 @@
+# Node.js Global Packages
+# Customize this file to add or remove globally installed npm packages
+# Format: one package per line, with optional version
+# Example: typescript@5.3.0
+
+# pnpm - Fast, disk space efficient package manager
+pnpm
+
+# Add your custom global packages here
+# Common examples:
+# typescript
+# ts-node
+# nodemon
+# pm2
+# eslint
+# prettier

@@ -1,0 +1,24 @@
+# .NET Global Tools
+# Customize this file to add or remove .NET global tools
+# Format: one tool per line, with optional version
+# Example: dotnet-ef::8.0.0
+
+# Entity Framework Core CLI
+dotnet-ef
+
+# Code formatter
+dotnet-format
+
+# Dependency updater
+dotnet-outdated-tool
+
+# Report generator for code coverage
+# dotnet-reportgenerator-globaltool
+
+# Cake build tool
+# cake.tool
+
+# .NET Aspire workload
+# Microsoft.NET.Sdk.Aspire.Manifest-8.0.100
+
+# Add your custom tools here

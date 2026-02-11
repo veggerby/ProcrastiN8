@@ -1,0 +1,14 @@
+{
+  "version": "0.1.0",
+  "generated": "2026-02-11T11:46:31.091Z",
+  "baseTemplate": "plain",
+  "baseImage": "trixie",
+  "overlays": [
+    "dotnet",
+    "nodejs",
+    "codex",
+    "git-helpers",
+    "modern-cli-tools"
+  ],
+  "containerName": "ProcrastiN8"
+}
