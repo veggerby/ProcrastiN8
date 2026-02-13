@@ -46,7 +46,7 @@ ProcrastiN8
 - [InfiniteSpinner](./infinite-spinner.md)
 - [BusyWaitSimulator](./busy-wait-simulator.md)
 - [QuantumPromise](./quantum-promise.md)
-- [QuantumEntanglementRegistry](./quantum-entanglement-registry.md)
+- [QuantumEntanglementRegistry](./quantum-entanglement.md)
 - [QuantumUndecider](./quantum-undecider.md)
 - [CommentaryGenerator](./commentary-generator.md)
 - [ExcuseGenerator](./excuse-generator.md)

@@ -47,7 +47,7 @@ Please follow these basic guidelines to keep everything smooth:
 ## 🛠 Local Setup
 
 - Clone the repository.
-- Build the solution (`ProcrastiN8.sln`) using .NET 8 or later.
+- Build the solution (`ProcrastiN8.sln`) using .NET 10 SDK (recommended) or later.
 - Run the tests (`ProcrastiN8.Tests`) to make sure everything passes before you push.
 
 ```bash
