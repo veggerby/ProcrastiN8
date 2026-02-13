@@ -26,11 +26,12 @@ public class OpenAIExcuseModel(string apiKey, HttpClient httpClient, IProcrastiL
     public async Task<string> GenerateExcuseAsync(string prompt, CancellationToken cancellationToken = default)
     {
         _logger?.Info($"[{ModelName}] Generating excuse with prompt: {prompt}");
-        
-        var excuse = await _provider.GetExcuseAsync();
-        
+
+        var effectivePrompt = string.IsNullOrWhiteSpace(prompt) ? "Generate an excuse for procrastination." : prompt;
+        var excuse = await _provider.GetExcuseAsync(effectivePrompt, cancellationToken);
+
         _logger?.Info($"[{ModelName}] Generated excuse: {excuse}");
-        
+
         return excuse;
     }
 

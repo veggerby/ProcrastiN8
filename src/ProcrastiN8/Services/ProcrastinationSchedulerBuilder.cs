@@ -36,7 +36,7 @@ internal sealed class ProcrastinationSchedulerBuilderImpl : IProcrastinationSche
     /// <summary>Overrides execution safety options (max cycles, etc.).</summary>
     public ProcrastinationSchedulerBuilderImpl WithSafety(IExecutionSafetyOptions safety) { _safety = safety; return this; }
     IProcrastinationSchedulerBuilder IProcrastinationSchedulerBuilder.WithSafety(IExecutionSafetyOptions safety) => WithSafety(safety);
-    /// <summary>Convenience: attaches MetricsObserver for counter emission.</summary>
+    /// <summary>Convenience: attaches MetricsObserver (counters are emitted by default strategy instrumentation).</summary>
     public ProcrastinationSchedulerBuilderImpl WithMetrics() { _observers.Add(new Diagnostics.MetricsObserver()); return this; }
     IProcrastinationSchedulerBuilder IProcrastinationSchedulerBuilder.WithMetrics() { return WithMetrics(); }
     /// <summary>Resets previously configured components (observers & middlewares preserved unless reset called).</summary>
@@ -65,10 +65,6 @@ internal sealed class ProcrastinationSchedulerBuilderImpl : IProcrastinationSche
     /// <inheritdoc />
     public IProcrastinationScheduler Build()
     {
-        if (_safety != null)
-        {
-            ProcrastinationStrategyBase.SetAmbientSafety(_safety);
-        }
         _built = true;
         return this;
     }
@@ -84,19 +80,44 @@ internal sealed class ProcrastinationSchedulerBuilderImpl : IProcrastinationSche
     Task IProcrastinationScheduler.Schedule(Func<Task> task, TimeSpan initialDelay, ProcrastinationMode mode, CancellationToken cancellationToken)
     {
         EnsureBuilt();
-        return ProcrastinationScheduler.Schedule(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, _factory, _observers, _middlewares, cancellationToken);
+        return ProcrastinationScheduler.Schedule(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, ResolveFactory(), _observers, _middlewares, cancellationToken);
     }
 
     Task<ProcrastinationResult> IProcrastinationScheduler.ScheduleWithResult(Func<Task> task, TimeSpan initialDelay, ProcrastinationMode mode, CancellationToken cancellationToken)
     {
         EnsureBuilt();
-        return ProcrastinationScheduler.ScheduleWithResult(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, _factory, _observers, _middlewares, cancellationToken);
+        return ProcrastinationScheduler.ScheduleWithResult(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, ResolveFactory(), _observers, _middlewares, cancellationToken);
     }
 
     ProcrastinationHandle IProcrastinationScheduler.ScheduleWithHandle(Func<Task> task, TimeSpan initialDelay, ProcrastinationMode mode, CancellationToken cancellationToken)
     {
         EnsureBuilt();
-        return ProcrastinationScheduler.ScheduleWithHandle(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, _factory, _observers, _middlewares, cancellationToken);
+        return ProcrastinationScheduler.ScheduleWithHandle(task, initialDelay, mode, _excuseProvider, _delayStrategy, _randomProvider, _timeProvider, ResolveFactory(), _observers, _middlewares, cancellationToken);
+    }
+
+    private IProcrastinationStrategyFactory ResolveFactory()
+    {
+        var factory = _factory ?? new DefaultProcrastinationStrategyFactory();
+        if (_safety is null)
+        {
+            return factory;
+        }
+
+        return new SafetyApplyingFactory(factory, _safety);
+    }
+
+    private sealed class SafetyApplyingFactory(IProcrastinationStrategyFactory inner, IExecutionSafetyOptions safety) : IProcrastinationStrategyFactory
+    {
+        public IProcrastinationStrategy Create(ProcrastinationMode mode)
+        {
+            var strategy = inner.Create(mode);
+            if (strategy is ProcrastinationStrategyBase baseStrategy)
+            {
+                baseStrategy.ConfigureSafety(safety);
+            }
+
+            return strategy;
+        }
     }
 }
 

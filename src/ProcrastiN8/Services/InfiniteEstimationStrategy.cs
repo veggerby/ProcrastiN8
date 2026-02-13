@@ -48,10 +48,10 @@ public class InfiniteEstimationStrategy : ProcrastinationStrategyBase
             // Still acceptable; proceed without ceremonial justification.
         }
 
-    var absoluteDeadline = StartUtc + _absoluteDeadlineOffset;
+        var absoluteDeadline = StartUtc + _absoluteDeadlineOffset;
         while (!cancellationToken.IsCancellationRequested)
         {
-            if (CheckForExternalOverride(task)) { return; }
+            if (await CheckForExternalOverrideAsync(task)) { return; }
             await InvokeExcuseAsync(excuseProvider);
             IncrementCycle();
             await Task.Yield();

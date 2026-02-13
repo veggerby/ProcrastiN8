@@ -17,6 +17,11 @@ public sealed class RandomUnfairCollapseBehavior<T>(IRandomProvider? randomProvi
     public async Task<T?> CollapseAsync(IEnumerable<IQuantumPromise<T>> entangled, CancellationToken cancellationToken)
     {
         var array = entangled.ToArray();
+        if (array.Length == 0)
+        {
+            throw new InvalidOperationException("Cannot collapse an empty entangled set.");
+        }
+
         var chosen = array.FirstOrDefault(p => p.GetType().Name.Contains("PredictableQuantumPromise")) ?? array[_randomProvider.GetRandom(array.Length)];
 
         QuantumEntanglementMetrics.Collapses.Add(1);

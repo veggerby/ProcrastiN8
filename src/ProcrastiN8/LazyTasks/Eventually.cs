@@ -72,6 +72,7 @@ public static class Eventually
         logger.Info("Eventually scheduled in {DelaySeconds:0.0}s. Reason: {Excuse}", delay.TotalSeconds, excuse);
 
         var chatter = ProcrastinationChatter(delay, logger, cancellationToken);
+        var succeeded = false;
 
         try
         {
@@ -80,6 +81,7 @@ public static class Eventually
 
             ProcrastinationMetrics.TasksCompleted.Add(1);
             logger.Info("Eventually completed the task.");
+            succeeded = true;
         }
         catch (Exception ex)
         {
@@ -91,7 +93,10 @@ public static class Eventually
         finally
         {
             chatter.Dispose();
-            activity?.SetStatus(ActivityStatusCode.Ok);
+            if (succeeded)
+            {
+                activity?.SetStatus(ActivityStatusCode.Ok);
+            }
         }
     }
 

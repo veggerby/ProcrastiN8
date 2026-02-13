@@ -7,6 +7,19 @@ namespace ProcrastiN8.Tests.JustBecause.CollapseBehaviors;
 public class ForkingCollapseBehaviorTests
 {
     [Fact]
+    public async Task CollapseAsync_With_Empty_Set_Should_Throw()
+    {
+        // Arrange
+        var behavior = new ForkingCollapseBehavior<string>();
+
+        // Act
+        Func<Task> act = async () => await behavior.CollapseAsync(Array.Empty<IQuantumPromise<string>>(), CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
     public async Task CollapseAsync_Should_Observe_And_Fork()
     {
         // Arrange

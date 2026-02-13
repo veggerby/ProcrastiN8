@@ -13,11 +13,21 @@ namespace ProcrastiN8.Common;
 /// <param name="httpClient">The HttpClient instance used for making API requests.</param>
 public class OpenAIExcuseProvider(string apiKey, HttpClient httpClient) : IExcuseProvider
 {
+    private const string DefaultPrompt = "Generate an excuse for procrastination.";
+    private const string Endpoint = "https://api.openai.com/v1/chat/completions";
     private readonly string _apiKey = apiKey;
     private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
     /// <inheritdoc />
-    public async Task<string> GetExcuseAsync()
+    public Task<string> GetExcuseAsync()
+    {
+        return GetExcuseAsync(DefaultPrompt, CancellationToken.None);
+    }
+
+    /// <summary>
+    /// Generates an excuse with a custom prompt.
+    /// </summary>
+    public async Task<string> GetExcuseAsync(string prompt, CancellationToken cancellationToken = default)
     {
         var requestBody = new
         {
@@ -25,17 +35,20 @@ public class OpenAIExcuseProvider(string apiKey, HttpClient httpClient) : IExcus
             messages = new[]
             {
                 new { role = "system", content = "You are an excuse generator. Provide a creative excuse." },
-                new { role = "user", content = "Generate an excuse for procrastination." }
+                new { role = "user", content = string.IsNullOrWhiteSpace(prompt) ? DefaultPrompt : prompt }
             }
         };
 
-        var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-        _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
+        using var request = new HttpRequestMessage(HttpMethod.Post, Endpoint)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
+        };
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
 
-        var response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", requestContent);
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
         var jsonResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
         return jsonResponse.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? "No excuse available.";
     }

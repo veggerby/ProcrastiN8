@@ -38,7 +38,7 @@ public class WeekendFallbackStrategy : ProcrastinationStrategyBase
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            if (CheckForExternalOverride(task)) { return; }
+            if (await CheckForExternalOverrideAsync(task)) { return; }
             var now = timeProvider.GetUtcNow();
             var elapsed = now - start;
 

@@ -55,4 +55,25 @@ public class ProcrastinationHandleTests
     result.Abandoned.Should().BeTrue();
     result.Triggered.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task TriggerNow_Executes_Async_Task_Without_Blocking_Path()
+    {
+        // arrange
+        var executed = false;
+        var handle = ProcrastinationScheduler.ScheduleWithHandle(async () =>
+        {
+            await Task.Delay(5);
+            executed = true;
+        }, TimeSpan.Zero, ProcrastinationMode.InfiniteEstimation);
+
+        // act
+        handle.TriggerNow();
+        var result = await handle.Completion;
+
+        // assert
+        executed.Should().BeTrue();
+        result.Executed.Should().BeTrue();
+        result.Triggered.Should().BeTrue();
+    }
 }

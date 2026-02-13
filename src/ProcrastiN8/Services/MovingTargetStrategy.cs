@@ -76,7 +76,7 @@ public class MovingTargetStrategy : ProcrastinationStrategyBase
         var cycles = 0;
         while (!cancellationToken.IsCancellationRequested)
         {
-            if (CheckForExternalOverride(task)) { return; }
+            if (await CheckForExternalOverrideAsync(task)) { return; }
             await Task.Yield();
             var bounded = delay > _maxSingleDelay ? _maxSingleDelay : delay;
             await delayStrategy.DelayAsync(bounded, bounded, cancellationToken: cancellationToken);

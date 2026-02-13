@@ -104,7 +104,7 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
     /// <summary>
     /// Checks for external trigger/abandon hints and acts accordingly.
     /// </summary>
-    protected bool CheckForExternalOverride(Func<Task> task)
+    protected async Task<bool> CheckForExternalOverrideAsync(Func<Task> task)
     {
         if (_control == null)
         {
@@ -113,16 +113,16 @@ public abstract class ProcrastinationStrategyBase : IResultReportingProcrastinat
         if (_control.AbandonRequested)
         {
             MarkAbandoned();
-            _ = NotifyAbandonedAsync(_control.Context, CancellationToken.None);
+            await NotifyAbandonedAsync(_control.Context, CancellationToken.None);
             return true; // end silently
         }
         if (_control.TriggerNowRequested && !_result.Executed)
         {
-            task().GetAwaiter().GetResult();
+            await task();
             MarkExecuted();
             MarkTriggered();
             _control.MarkStatus(ProcrastinationStatus.Executed);
-            _ = NotifyTriggeredAsync(_control.Context, CancellationToken.None);
+            await NotifyTriggeredAsync(_control.Context, CancellationToken.None);
             return true;
         }
         return false;

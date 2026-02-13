@@ -36,4 +36,32 @@ public class RetryServiceTests
         await act.Should().ThrowAsync<InvalidOperationException>();
         count.Should().Be(2);
     }
+
+    [Fact]
+    public async Task RetryUntilDone_Throws_When_MaxAttempts_Is_Invalid()
+    {
+        // Arrange
+        var service = new RetryService();
+
+        // Act
+        Func<Task> act = async () => await service.RetryUntilDone(() => Task.FromResult(1), 0);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public async Task RetryUntilDone_Respects_Cancellation()
+    {
+        // Arrange
+        var service = new RetryService();
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        // Act
+        Func<Task> act = async () => await service.RetryUntilDone(() => Task.FromResult(1), 3, cts.Token);
+
+        // Assert
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
 }
