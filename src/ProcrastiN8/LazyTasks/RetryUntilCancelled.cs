@@ -1,5 +1,6 @@
 using System.Diagnostics;
 
+using ProcrastiN8.JustBecause;
 using ProcrastiN8.Metrics;
 using ProcrastiN8.Services;
 
@@ -10,8 +11,6 @@ namespace ProcrastiN8.LazyTasks;
 /// </summary>
 public static class RetryUntilCancelled
 {
-    // Random number generator for retry jitter
-    private static readonly Random Rng = new();
     // Activity source for tracing retry operations
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.LazyTasks.RetryUntilCancelled");
 
@@ -30,14 +29,22 @@ public static class RetryUntilCancelled
     /// <summary>
     /// Keeps retrying the action until it works, is cancelled, or max retries is reached.
     /// </summary>
+    /// <param name="action">The action to attempt on each retry cycle.</param>
+    /// <param name="initialDelay">The base delay before the first retry.</param>
+    /// <param name="maxRetries">Maximum number of attempts before raising <see cref="RetryExhaustedException"/>.</param>
+    /// <param name="logger">Logger for retry commentary. If not provided, a default logger is used.</param>
+    /// <param name="randomProvider">Random provider for jitter calculation. If not provided, the default provider is used.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
     public static async Task RunForever(
         Func<Task> action,
         TimeSpan? initialDelay = null,
         int? maxRetries = null,
         IProcrastiLogger? logger = null,
+        IRandomProvider? randomProvider = null,
         CancellationToken cancellationToken = default)
     {
         logger ??= new DefaultLogger();
+        randomProvider ??= RandomProvider.Default;
         initialDelay ??= TimeSpan.FromMilliseconds(DefaultInitialDelayMs);
         int attempt = 0;
         using var activity = ActivitySource.StartActivity("ProcrastiN8.RetryUntilCancelled.RunForever", ActivityKind.Internal);
@@ -72,7 +79,7 @@ public static class RetryUntilCancelled
                     throw new RetryExhaustedException(attempt, ex);
                 }
 
-                var delay = GetBackoffDelay(initialDelay.Value, attempt);
+                var delay = GetBackoffDelay(initialDelay.Value, attempt, randomProvider);
                 logger.Debug("[Retry] Waiting {DelayMs:0}ms before next attempt...", delay.TotalMilliseconds);
 
                 await DelayService.DelayWithProcrastinationAsync("retry-backoff", delay, cancellationToken);
@@ -86,11 +93,11 @@ public static class RetryUntilCancelled
     /// <summary>
     /// Calculates exponential backoff delay with random jitter.
     /// </summary>
-    private static TimeSpan GetBackoffDelay(TimeSpan initial, int attempt)
+    private static TimeSpan GetBackoffDelay(TimeSpan initial, int attempt, IRandomProvider randomProvider)
     {
         // Exponential backoff with jitter
         var backoff = Math.Min(initial.TotalMilliseconds * Math.Pow(2, attempt - 1), MaxBackoffDelayMs);
-        var jitter = Rng.NextDouble() * MaxJitterMs;
+        var jitter = randomProvider.GetDouble() * MaxJitterMs;
         return TimeSpan.FromMilliseconds(backoff + jitter);
     }
 

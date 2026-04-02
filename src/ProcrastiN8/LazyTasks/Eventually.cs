@@ -28,17 +28,6 @@ public static class Eventually
     /// Service for generating excuses for procrastination.
     /// </summary>
     private static readonly ExcuseService ExcuseService = new();
-    /// <summary>
-    /// Service for generating and logging random commentary during procrastination.
-    /// </summary>
-    private static readonly CommentaryService CommentaryService = new();
-
-    private static IRandomProvider _randomProvider = RandomProvider.Default;
-
-    public static void SetRandomProvider(IRandomProvider provider)
-    {
-        _randomProvider = provider;
-    }
 
     /// <summary>
     /// Executes an async action after a random delay, with logging, tracing, and metrics support.
@@ -47,18 +36,24 @@ public static class Eventually
     /// <param name="within">The maximum delay before execution. Defaults to 30 seconds if not specified.</param>
     /// <param name="excuse">Optional excuse for the delay. If not provided, one will be generated.</param>
     /// <param name="logger">Logger for progress and commentary. If not provided, a default logger is used.</param>
+    /// <param name="randomProvider">Random provider for delay calculation. If not provided, the default provider is used.</param>
+    /// <param name="commentaryService">Commentary service for chatter during the delay. If not provided, a default is used.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     public static async Task Do(
         Func<Task> action,
         TimeSpan? within = null,
         string? excuse = null,
         IProcrastiLogger? logger = null,
+        IRandomProvider? randomProvider = null,
+        ICommentaryService? commentaryService = null,
         CancellationToken cancellationToken = default)
     {
         logger ??= new DefaultLogger();
+        randomProvider ??= RandomProvider.Default;
+        commentaryService ??= new CommentaryService(randomProvider);
 
         var maxDelay = within ?? TimeSpan.FromSeconds(DefaultMaxDelaySeconds);
-        var delay = GetDelay(maxDelay);
+        var delay = GetDelay(maxDelay, randomProvider);
 
         excuse ??= ExcuseService.GenerateExcuse(); // Now tracked in metrics
         ProcrastinationMetrics.DelaysTotal.Add(1);
@@ -71,7 +66,7 @@ public static class Eventually
 
         logger.Info("Eventually scheduled in {DelaySeconds:0.0}s. Reason: {Excuse}", delay.TotalSeconds, excuse);
 
-        var chatter = ProcrastinationChatter(delay, logger, cancellationToken);
+        var chatter = ProcrastinationChatter(delay, logger, commentaryService, cancellationToken);
         var succeeded = false;
 
         try
@@ -104,10 +99,11 @@ public static class Eventually
     /// Returns a random delay up to the specified maximum.
     /// </summary>
     /// <param name="max">The maximum delay.</param>
+    /// <param name="randomProvider">The random provider used to compute the delay.</param>
     /// <returns>A random TimeSpan between 0 and max.</returns>
-    private static TimeSpan GetDelay(TimeSpan max)
+    private static TimeSpan GetDelay(TimeSpan max, IRandomProvider randomProvider)
     {
-        var jitter = _randomProvider.GetDouble() * max.TotalMilliseconds;
+        var jitter = randomProvider.GetDouble() * max.TotalMilliseconds;
         return TimeSpan.FromMilliseconds(jitter);
     }
 
@@ -116,15 +112,16 @@ public static class Eventually
     /// </summary>
     /// <param name="delay">The total delay duration.</param>
     /// <param name="logger">Logger for commentary.</param>
+    /// <param name="commentaryService">Service responsible for emitting remarks.</param>
     /// <param name="cancellationToken">Token to cancel commentary.</param>
     /// <returns>A Timer that can be disposed to stop commentary.</returns>
-    private static Timer ProcrastinationChatter(TimeSpan delay, IProcrastiLogger logger, CancellationToken cancellationToken)
+    private static Timer ProcrastinationChatter(TimeSpan delay, IProcrastiLogger logger, ICommentaryService commentaryService, CancellationToken cancellationToken)
     {
         var timer = new Timer(_ =>
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                CommentaryService.LogRandomRemark(); // Also tracks metric
+                commentaryService.LogRandomRemark(); // Also tracks metric
             }
         }, null, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(5));
 

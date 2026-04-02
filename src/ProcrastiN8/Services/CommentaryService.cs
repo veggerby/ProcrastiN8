@@ -4,12 +4,16 @@ using ProcrastiN8.Metrics;
 
 namespace ProcrastiN8.Services;
 
-public class CommentaryService(IRandomProvider? randomProvider = null)
+/// <summary>
+/// Generates and logs random remarks that acknowledge the procrastination without doing anything about it.
+/// </summary>
+public class CommentaryService(IRandomProvider? randomProvider = null) : ICommentaryService
 {
     // Increment value for commentary metric
     private const int CommentaryIncrement = 1;
     private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
 
+    /// <inheritdoc />
     public virtual void LogRandomRemark(IProcrastiLogger? logger = null)
     {
         ProcrastinationMetrics.CommentaryTotal.Add(CommentaryIncrement);

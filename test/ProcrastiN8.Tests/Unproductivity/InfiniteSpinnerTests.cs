@@ -12,10 +12,9 @@ public class InfiniteSpinnerTests
         var loggerSub = Substitute.For<IProcrastiLogger>();
         var cts = new CancellationTokenSource();
         var tickRate = TimeSpan.FromMilliseconds(10);
-        InfiniteSpinner.SetCommentaryService(new CommentaryService());
 
         // act
-        var spinTask = InfiniteSpinner.SpinForeverAsync(loggerSub, tickRate, cts.Token);
+        var spinTask = InfiniteSpinner.SpinForeverAsync(loggerSub, tickRate, cts.Token, new CommentaryService());
         await Task.Delay(30); // Let it spin a few times
         cts.Cancel();
         await spinTask;
@@ -33,10 +32,9 @@ public class InfiniteSpinnerTests
         var loggerSub = Substitute.For<IProcrastiLogger>();
         var cts = new CancellationTokenSource();
         var tickRate = TimeSpan.FromMilliseconds(5);
-        InfiniteSpinner.SetCommentaryService(new CommentaryService());
 
         // Act
-        var spinTask = InfiniteSpinner.SpinForeverAsync(loggerSub, tickRate, cts.Token);
+        var spinTask = InfiniteSpinner.SpinForeverAsync(loggerSub, tickRate, cts.Token, new CommentaryService());
         await Task.Delay(20); // Let it spin a few times
         cts.Cancel();
         await spinTask;
@@ -63,10 +61,9 @@ public class InfiniteSpinnerTests
         var tickRate = TimeSpan.FromMilliseconds(5);
         var cts = new CancellationTokenSource();
         var ex = new InvalidOperationException("Simulated failure");
-        InfiniteSpinner.SetCommentaryService(new FailingCommentaryService(ex));
 
         // Act
-        Func<Task> act = async () => await InfiniteSpinner.SpinForeverAsync(loggerSub, tickRate, cts.Token);
+        Func<Task> act = async () => await InfiniteSpinner.SpinForeverAsync(loggerSub, tickRate, cts.Token, new FailingCommentaryService(ex));
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
