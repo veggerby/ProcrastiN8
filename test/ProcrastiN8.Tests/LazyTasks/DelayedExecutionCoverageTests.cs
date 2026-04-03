@@ -18,7 +18,7 @@ public class DelayedExecutionCoverageTests
             () => called = true,
             snooze,
             logger,
-            CancellationToken.None);
+            cancellationToken: CancellationToken.None);
 
         // assert
         called.Should().BeTrue("the action should be executed after the delay");
@@ -38,7 +38,7 @@ public class DelayedExecutionCoverageTests
             () => throw ex,
             null,
             logger,
-            CancellationToken.None);
+            cancellationToken: CancellationToken.None);
 
         // assert
         (await act.Should().ThrowAsync<InvalidOperationException>()).WithMessage("Oops");
@@ -58,7 +58,7 @@ public class DelayedExecutionCoverageTests
             async () => { called = true; await Task.Yield(); },
             null,
             logger,
-            CancellationToken.None);
+            cancellationToken: CancellationToken.None);
 
         // assert
         called.Should().BeTrue("the async action should be executed after the delay");
@@ -78,7 +78,7 @@ public class DelayedExecutionCoverageTests
             async () => { await Task.Yield(); throw ex; },
             null,
             logger,
-            CancellationToken.None);
+            cancellationToken: CancellationToken.None);
 
         // assert
         (await act.Should().ThrowAsync<InvalidOperationException>()).WithMessage("Async fail");
@@ -96,7 +96,7 @@ public class DelayedExecutionCoverageTests
             () => { },
             null,
             logger,
-            CancellationToken.None);
+            cancellationToken: CancellationToken.None);
 
         // assert
         (await act.Should().ThrowAsync<ArgumentOutOfExcusesException>())
@@ -115,7 +115,7 @@ public class DelayedExecutionCoverageTests
             async () => await Task.CompletedTask,
             null,
             logger,
-            CancellationToken.None);
+            cancellationToken: CancellationToken.None);
 
         // assert
         (await act.Should().ThrowAsync<ArgumentOutOfExcusesException>())
@@ -135,7 +135,7 @@ public class DelayedExecutionCoverageTests
             () => { },
             null,
             null,
-            cts.Token);
+            cancellationToken: cts.Token);
 
         // assert
         await act.Should().ThrowAsync<TaskCanceledException>("cancellation should be respected");
@@ -154,7 +154,7 @@ public class DelayedExecutionCoverageTests
             async () => await Task.CompletedTask,
             null,
             null,
-            cts.Token);
+            cancellationToken: cts.Token);
 
         // assert
         await act.Should().ThrowAsync<TaskCanceledException>("cancellation should be respected");

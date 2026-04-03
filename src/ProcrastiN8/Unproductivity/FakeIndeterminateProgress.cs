@@ -14,9 +14,6 @@ public static class FakeIndeterminateProgress
     // Activity source for tracing fake progress
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.FakeIndeterminateProgress");
 
-    // Service for generating excuses (used in progress commentary)
-    private static readonly ExcuseService ExcuseService = new();
-
     // Default update interval for fake indeterminate progress (ms)
     private const int DefaultUpdateIntervalMs = 800;
     // Minimum minutes before fake progress can complete

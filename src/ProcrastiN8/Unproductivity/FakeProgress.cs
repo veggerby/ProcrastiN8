@@ -12,8 +12,6 @@ public static class FakeProgress
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.FakeProgress");
 
-    private static readonly ExcuseService ExcuseService = new();
-
     private static readonly string[] FakeStages = new[]
     {
         "Aligning expectations...",
