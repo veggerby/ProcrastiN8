@@ -13,6 +13,7 @@ public sealed class DefaultProcrastinationStrategyFactory : IProcrastinationStra
         ProcrastinationMode.WeekendFallback => new WeekendFallbackStrategy(),
         ProcrastinationMode.CommitteeReview => new CommitteeReviewStrategy(),
         ProcrastinationMode.AnalysisParalysis => new AnalysisParalysisStrategy(),
+        ProcrastinationMode.LastMinute => new LastMinuteStrategy(),
         _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
     };
 }
