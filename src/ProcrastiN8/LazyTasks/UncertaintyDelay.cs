@@ -17,26 +17,7 @@ public static class UncertaintyDelay
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.LazyTasks.UncertaintyDelay");
     private static readonly TaskDelayProvider SharedDelayProvider = new();
-    private static readonly CommentaryService CommentaryService = new();
-    private static readonly ExcuseService ExcuseService = new();
-    private static IRandomProvider _randomProvider = RandomProvider.Default;
-    private static IProcrastiLogger _defaultLogger = new DefaultLogger();
 
-    /// <summary>
-    /// Allows overriding the default random provider and logger for all future calls (primarily for tests / instrumentation alignment).
-    /// </summary>
-    public static void SetDefaults(IRandomProvider? randomProvider = null, IProcrastiLogger? logger = null)
-    {
-        if (randomProvider is not null)
-        {
-            _randomProvider = randomProvider;
-        }
-
-        if (logger is not null)
-        {
-            _defaultLogger = logger;
-        }
-    }
     /// <summary>
     /// The minimum number of delay rounds to perform.
     /// </summary>
@@ -78,9 +59,12 @@ public static class UncertaintyDelay
             throw new ArgumentOutOfRangeException(nameof(maxDelay), "Maximum delay must be greater than zero.");
         }
 
-        randomProvider ??= _randomProvider;
+        randomProvider ??= RandomProvider.Default;
         delayProvider ??= SharedDelayProvider;
-        logger ??= _defaultLogger;
+        logger ??= new DefaultLogger();
+
+        var excuseService = new ExcuseService(randomProvider);
+        var commentaryService = new CommentaryService(randomProvider);
 
         int actualRounds = rounds.HasValue && rounds.Value > 0
             ? rounds.Value
@@ -115,7 +99,7 @@ public static class UncertaintyDelay
             else
             {
                 // Fall back to synchronous excuse service for parity with other procrastination primitives.
-                var generatedExcuse = ExcuseService.GenerateExcuse();
+                var generatedExcuse = excuseService.GenerateExcuse();
                 logger.Info($"{prefix}: {generatedExcuse} (fallback) Delaying for {delay.TotalMilliseconds:F2} ms.");
                 ProcrastinationMetrics.ExcusesGenerated.Add(1);
                 activity?.AddEvent(new ActivityEvent("uncertainty.excuse", tags: new ActivityTagsCollection
@@ -127,7 +111,7 @@ public static class UncertaintyDelay
 
             if (enableCommentary && i > 0 && (i % 2 == 0))
             {
-                CommentaryService.LogRandomRemark();
+                commentaryService.LogRandomRemark();
                 ProcrastinationMetrics.CommentaryTotal.Add(1);
             }
 

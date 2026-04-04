@@ -1,5 +1,6 @@
 using System.Diagnostics;
 
+using ProcrastiN8.LazyTasks;
 using ProcrastiN8.Metrics;
 using ProcrastiN8.Services;
 
@@ -13,29 +14,28 @@ public static class InfiniteSpinner
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.InfiniteSpinner");
 
-    private static CommentaryService CommentaryService = new();
-
     // Default tick rate for infinite spinner (ms)
     private const int DefaultTickRateMs = 500;
 
     /// <summary>
-    /// Allows test code to inject a custom CommentaryService for mocking or fault injection.
-    /// </summary>
-    public static void SetCommentaryService(CommentaryService service)
-    {
-        CommentaryService = service ?? throw new ArgumentNullException(nameof(service));
-    }
-
-    /// <summary>
     /// Starts an infinite spinner loop that chews CPU cycles, emits fake activity, and accomplishes nothing.
     /// </summary>
+    /// <param name="logger">Optional logger for existential spinner updates.</param>
+    /// <param name="tickRate">Interval between spins. Defaults to 500ms.</param>
+    /// <param name="cancellationToken">Token to eventually end the suffering.</param>
+    /// <param name="commentaryService">Optional commentary service for periodic remarks. If not provided, a default is used.</param>
+    /// <param name="delayProvider">Optional delay provider for tick delays. If not provided, <see cref="TaskDelayProvider"/> is used.</param>
     public static async Task SpinForeverAsync(
         IProcrastiLogger? logger = null,
         TimeSpan? tickRate = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        ICommentaryService? commentaryService = null,
+        IDelayProvider? delayProvider = null)
     {
         logger ??= new DefaultLogger();
         tickRate ??= TimeSpan.FromMilliseconds(DefaultTickRateMs);
+        commentaryService ??= new CommentaryService();
+        delayProvider ??= new TaskDelayProvider();
 
         using var activity = ActivitySource.StartActivity("ProcrastiN8.InfiniteSpinner.Spin", ActivityKind.Internal);
         activity?.SetTag("spinner.tickRate.ms", tickRate.Value.TotalMilliseconds);
@@ -50,12 +50,12 @@ public static class InfiniteSpinner
             while (!cancellationToken.IsCancellationRequested)
             {
                 ProcrastinationMetrics.TotalTimeProcrastinated.Add(
-                    (long)tickRate.Value.TotalSeconds,
+                    (long)Math.Max(1, Math.Ceiling(tickRate.Value.TotalSeconds)),
                     KeyValuePair.Create<string, object?>("component", "InfiniteSpinner"));
 
-                CommentaryService.LogRandomRemark();
+                commentaryService.LogRandomRemark();
 
-                await Task.Delay(tickRate.Value, cancellationToken);
+                await delayProvider.DelayAsync(tickRate.Value, cancellationToken);
             }
 
             activity?.SetStatus(ActivityStatusCode.Ok, "Cancelled");

@@ -25,7 +25,8 @@ public class DefaultDelayStrategy_AbstractionTests
     {
         var delayProvider = Substitute.For<IDelayProvider>();
         var randomProvider = Substitute.For<ProcrastiN8.JustBecause.IRandomProvider>();
-        randomProvider.GetDouble().Returns(0.42); // Always returns 42
+        // min=50, max=150 → GetRandom(50, 151) returns 92; expected delay = 92ms
+        randomProvider.GetRandom(50, 151).Returns(92);
         var strategy = new DefaultDelayStrategy(
             minDelay: TimeSpan.FromMilliseconds(50),
             maxDelay: TimeSpan.FromMilliseconds(150),
@@ -35,7 +36,6 @@ public class DefaultDelayStrategy_AbstractionTests
 
         await strategy.DelayAsync();
 
-        // 50 + 42 = 92
         await delayProvider.Received(1)
             .DelayAsync(TimeSpan.FromMilliseconds(92), Arg.Any<CancellationToken>());
     }

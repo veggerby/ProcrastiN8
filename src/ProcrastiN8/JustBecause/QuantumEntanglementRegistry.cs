@@ -22,10 +22,14 @@ namespace ProcrastiN8.JustBecause;
 /// All operations are traced for metrics and activity, in case auditors wish to observe the collapse of productivity in real time.
 /// </para>
 /// </remarks>
-internal sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behavior = null, IRandomProvider? randomProvider = null) : IQuantumEntanglementRegistry<T>
+internal sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behavior = null, IRandomProvider? randomProvider = null, IQuantumInterpretation? interpretation = null) : IQuantumEntanglementRegistry<T>
 {
     private readonly ConcurrentBag<QuantumPromise<T>> _entangled = [];
-    private readonly ICollapseBehavior<T> _collapseBehavior = behavior ?? CollapseBehaviorFactory.Create<T>(QuantumComplianceLevel.Entanglish);
+    private readonly ICollapseBehavior<T> _collapseBehavior =
+        behavior ??
+        (interpretation is not null
+            ? interpretation.GetCollapseBehavior<T>()
+            : CollapseBehaviorFactory.Create<T>(QuantumComplianceLevel.Entanglish));
     private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumEntanglement");
 
@@ -114,8 +118,8 @@ internal sealed class QuantumEntanglementRegistry<T>(ICollapseBehavior<T>? behav
     /// <summary>
     /// Factory method to create a new QuantumEntanglementRegistry instance.
     /// </summary>
-    public static QuantumEntanglementRegistry<T> Create(ICollapseBehavior<T>? behavior = null, IRandomProvider? randomProvider = null)
+    public static QuantumEntanglementRegistry<T> Create(ICollapseBehavior<T>? behavior = null, IRandomProvider? randomProvider = null, IQuantumInterpretation? interpretation = null)
     {
-        return new QuantumEntanglementRegistry<T>(behavior, randomProvider);
+        return new QuantumEntanglementRegistry<T>(behavior, randomProvider, interpretation);
     }
 }

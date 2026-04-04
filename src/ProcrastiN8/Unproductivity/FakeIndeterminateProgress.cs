@@ -1,5 +1,7 @@
 using System.Diagnostics;
 
+using ProcrastiN8.JustBecause;
+using ProcrastiN8.LazyTasks;
 using ProcrastiN8.Metrics;
 using ProcrastiN8.Services;
 
@@ -13,13 +15,6 @@ public static class FakeIndeterminateProgress
     // Activity source for tracing fake progress
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.FakeIndeterminateProgress");
 
-    // Random number generator for progress simulation
-    private static readonly Random Rng = new();
-    // Service for generating excuses (used in progress commentary)
-    private static readonly ExcuseService ExcuseService = new();
-    // Service for logging random commentary
-    private static CommentaryService CommentaryService = new();
-
     // Default update interval for fake indeterminate progress (ms)
     private const int DefaultUpdateIntervalMs = 800;
     // Minimum minutes before fake progress can complete
@@ -30,16 +25,33 @@ public static class FakeIndeterminateProgress
     /// <summary>
     /// Begins simulating misleading progress with regressions, stalling, and eventual surprise completion.
     /// </summary>
+    /// <param name="logger">Optional logger for progress narration.</param>
+    /// <param name="updateInterval">How often to update the progress value. Defaults to 800ms.</param>
+    /// <param name="minTimeBeforeCompletion">Minimum elapsed time before the bar can reach 100%. Defaults to a random 4–15 minutes.</param>
+    /// <param name="reportProgress">Optional callback receiving the current progress percentage (0–100).</param>
+    /// <param name="cancellationToken">Token to cancel before the inevitable conclusion.</param>
+    /// <param name="randomProvider">Random provider for progress simulation. If not provided, the default provider is used.</param>
+    /// <param name="commentaryService">Commentary service for periodic observations. If not provided, a default is used.</param>
+    /// <param name="timeProvider">Optional time provider for elapsed-time checks. If not provided, the system clock is used.</param>
+    /// <param name="delayProvider">Optional delay provider for update intervals. If not provided, <see cref="TaskDelayProvider"/> is used.</param>
     public static async Task ShowAsync(
         IProcrastiLogger? logger = null,
         TimeSpan? updateInterval = null,
         TimeSpan? minTimeBeforeCompletion = null,
         Action<double>? reportProgress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IRandomProvider? randomProvider = null,
+        ICommentaryService? commentaryService = null,
+        ITimeProvider? timeProvider = null,
+        IDelayProvider? delayProvider = null)
     {
         logger ??= new DefaultLogger();
+        randomProvider ??= RandomProvider.Default;
+        commentaryService ??= new CommentaryService(randomProvider);
+        timeProvider ??= SystemTimeProvider.Default;
+        delayProvider ??= new TaskDelayProvider();
         updateInterval ??= TimeSpan.FromMilliseconds(DefaultUpdateIntervalMs);
-        minTimeBeforeCompletion ??= TimeSpan.FromMinutes(Rng.Next(MinCompletionMinutes, MaxCompletionMinutes + 1)); // 4–15 minutes
+        minTimeBeforeCompletion ??= TimeSpan.FromMinutes(randomProvider.GetRandom(MinCompletionMinutes, MaxCompletionMinutes + 1));
 
         using var activity = ActivitySource.StartActivity("ProcrastiN8.FakeIndeterminateProgress.Show", ActivityKind.Internal);
         activity?.SetTag("progress.style", "infinite-windows-style");
@@ -50,7 +62,7 @@ public static class FakeIndeterminateProgress
         logger.Info("[FakeProgress] Completion will not occur before {Minutes} minutes.", minTimeBeforeCompletion.Value.TotalMinutes);
 
         double progress = 0;
-        var startTime = DateTime.UtcNow;
+        var startTime = timeProvider.GetUtcNow();
         bool stalled = false;
 
         try
@@ -60,12 +72,12 @@ public static class FakeIndeterminateProgress
                 if (!stalled)
                 {
                     // Simulate progress with random jumps and occasional regressions
-                    double delta = Rng.NextDouble() * 10; // Random progress increment (0-10%)
-                    bool regress = Rng.Next(0, 10) == 0; // 10% chance to regress
+                    double delta = randomProvider.GetDouble() * 10; // Random progress increment (0-10%)
+                    bool regress = randomProvider.GetRandom(10) == 0; // 10% chance to regress
 
                     if (regress && progress > 10)
                     {
-                        progress -= Rng.NextDouble() * 5; // Random regression (0-5%)
+                        progress -= randomProvider.GetDouble() * 5; // Random regression (0-5%)
                     }
                     else
                     {
@@ -81,7 +93,7 @@ public static class FakeIndeterminateProgress
                         logger.Info("[FakeProgress] Progress reached 99.9%. Entering eternal patience phase...");
                     }
                 }
-                else if (DateTime.UtcNow - startTime > minTimeBeforeCompletion)
+                else if (timeProvider.GetUtcNow() - startTime > minTimeBeforeCompletion)
                 {
                     // Surprise! It finishes.
                     progress = 100.0;
@@ -102,9 +114,9 @@ public static class FakeIndeterminateProgress
                 ProcrastinationMetrics.ExcusesGenerated.Add(1,
                     KeyValuePair.Create<string, object?>("category", "fake-indeterminate"));
 
-                CommentaryService.LogRandomRemark();
+                commentaryService.LogRandomRemark();
 
-                await Task.Delay(updateInterval.Value, cancellationToken);
+                await delayProvider.DelayAsync(updateInterval.Value, cancellationToken);
             }
 
             logger.Info("[FakeProgress] Cancelled before reaching 100%. That's on you.");
@@ -122,13 +134,5 @@ public static class FakeIndeterminateProgress
             logger.Error(ex, "[FakeProgress] Unexpected error while faking progress.");
             ProcrastinationMetrics.TasksNeverDone.Add(1);
         }
-    }
-
-    /// <summary>
-    /// Allows test code to inject a custom CommentaryService for mocking or fault injection.
-    /// </summary>
-    public static void SetCommentaryService(CommentaryService service)
-    {
-        CommentaryService = service ?? throw new ArgumentNullException(nameof(service));
     }
 }

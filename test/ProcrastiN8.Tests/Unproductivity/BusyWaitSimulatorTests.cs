@@ -12,10 +12,9 @@ public class BusyWaitSimulatorTests
         var logger = Substitute.For<IProcrastiLogger>();
         var cts = new CancellationTokenSource();
         var commentary = new CommentaryService();
-        BusyWaitSimulator.SetCommentaryService(commentary);
 
         // act
-        var busyTask = BusyWaitSimulator.SimulateBusyWaitAsync(TimeSpan.FromSeconds(2), logger, cts.Token);
+        var busyTask = BusyWaitSimulator.SimulateBusyWaitAsync(TimeSpan.FromSeconds(2), logger, cts.Token, commentaryService: commentary);
         await Task.Delay(50); // Let it run a few cycles
         cts.Cancel();
         await busyTask;

@@ -1,14 +1,17 @@
 {
+  "manifestVersion": "1",
+  "generatedBy": "0.1.3",
   "version": "0.1.0",
-  "generated": "2026-02-11T11:46:31.091Z",
+  "generated": "2026-04-04T11:09:25.265Z",
   "baseTemplate": "plain",
   "baseImage": "trixie",
   "overlays": [
     "dotnet",
     "nodejs",
-    "codex",
     "git-helpers",
+    "codex",
     "modern-cli-tools"
   ],
-  "containerName": "ProcrastiN8"
+  "containerName": "ProcrastiN8",
+  "target": "local"
 }

@@ -5,6 +5,14 @@ set -e
 
 echo "🔍 Verifying Codex overlay setup..."
 
+# Check if bubblewrap is installed for Codex sandboxing on Linux
+if ! command -v bwrap &> /dev/null; then
+    echo "✗ bubblewrap is not installed or not in PATH"
+    exit 1
+fi
+
+echo "✓ bubblewrap is installed: $(bwrap --version 2>/dev/null | head -n 1 || echo 'installed')"
+
 # Check if codex CLI is installed
 if ! command -v codex &> /dev/null; then
     echo "✗ codex CLI is not installed or not in PATH"

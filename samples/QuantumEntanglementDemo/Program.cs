@@ -38,29 +38,50 @@ var loggerFactory = LoggerFactory.Create(builder =>
 });
 
 Console.WriteLine("Quantum Entanglement Demo Starting...");
+Console.WriteLine();
 
-// Create a collapse behavior
-var behavior = CollapseBehaviorFactory.Create<int>(QuantumComplianceLevel.Copenhagen);
+// ─── Interpretation-driven collapse ─────────────────────────────────────────
+// IQuantumInterpretation integrates with ICollapseBehavior via
+// CollapseBehaviorFactory.Create<T>(interpretation) — letting the interpretation
+// govern the collapse semantics without requiring the caller to know which
+// concrete behavior class corresponds to which philosophical worldview.
 
-// Create promises
+foreach (var interpretation in QuantumInterpretations.All)
+{
+    Console.WriteLine($"--- {interpretation.Name} interpretation ---");
+    Console.WriteLine($"    {interpretation.Description}");
+
+    // CollapseBehaviorFactory.Create<T>(IQuantumInterpretation) delegates to
+    // interpretation.GetCollapseBehavior<T>(), bridging both abstraction layers.
+    var behavior = CollapseBehaviorFactory.Create<int>(interpretation);
+    Console.WriteLine($"    Collapse behavior: {behavior.GetType().Name}");
+    Console.WriteLine($"    Observation affects outcome: {interpretation.ObservationAffectsOutcome}");
+    Console.WriteLine($"    Parallel timelines real:     {interpretation.ParallelTimelinesAreReal}");
+    Console.WriteLine();
+}
+
+// ─── Live quantum entanglement with Copenhagen interpretation ───────────────
+Console.WriteLine("--- Live entanglement (Copenhagen) ---");
+
+var copenhagenBehavior = CollapseBehaviorFactory.Create<int>(QuantumInterpretations.Copenhagen);
+
 var promise1 = new QuantumPromise<int>(() => Task.FromResult(42), TimeSpan.FromSeconds(2));
 var promise2 = new QuantumPromise<int>(() => Task.FromResult(99), TimeSpan.FromSeconds(2));
 
-// Entangle promises
-promise1.Entangle(behavior, promise2);
+promise1.Entangle(copenhagenBehavior, promise2);
 
-// Simulate some delay before observing
-await Task.Delay(2500); // Simulate some delay before observing
+await Task.Delay(2500);
 
-// Observe promise1 directly
 var result1 = await promise1.ObserveAsync();
 Console.WriteLine($"Observed value of promise1: {result1}");
 
-// Verify promise2 is also observed - with same value (Copenhagen interpretation)
 var result2 = await promise2.ObserveAsync();
 Console.WriteLine($"Observed value of promise2: {result2}");
+Console.WriteLine("(Both collapsed to the same value. Copenhagen: only one truth survives observation.)");
 
+Console.WriteLine();
 Console.WriteLine("Quantum Entanglement Demo Completed.");
+Console.WriteLine("No consensus was reached. This is expected.");
 
 tracerProvider.Dispose();
 meterProvider.Dispose();

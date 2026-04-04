@@ -3,6 +3,15 @@
 
 set -e
 
+# Source shared setup utilities (provides run_spinner)
+# shellcheck source=setup-utils.sh
+source "$(dirname "${BASH_SOURCE[0]}")/setup-utils.sh"
+
+# Suppress the .NET SDK first-run welcome banner and telemetry noise
+export DOTNET_NOLOGO=1
+export DOTNET_CLI_TELEMETRY_OPTOUT=1
+export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+
 # Extract overlay name from script filename (setup-<overlay>.sh -> <overlay>)
 OVERLAY_NAME=$(basename "$0" | sed 's/setup-//;s/\.sh$//')
 
@@ -21,20 +30,18 @@ if [ -f ".devcontainer/global-tools-${OVERLAY_NAME}.txt" ]; then
         if [[ "$line" =~ ^(.+)::(.+)$ ]]; then
             tool="${BASH_REMATCH[1]}"
             version="${BASH_REMATCH[2]}"
-            echo "  Installing $tool version $version..."
-            dotnet tool install --global "$tool" --version "$version" || echo "  ⚠️  $tool already installed or failed"
+            run_spinner "$tool@$version" dotnet tool install --global "$tool" --version "$version" || true
         else
             tool="$line"
-            echo "  Installing $tool..."
-            dotnet tool install --global "$tool" || echo "  ⚠️  $tool already installed or failed"
+            run_spinner "$tool" dotnet tool install --global "$tool" || true
         fi
     done < ".devcontainer/global-tools-${OVERLAY_NAME}.txt"
 else
     # Fallback to hardcoded list
     echo "📦 Installing default .NET global tools..."
-    dotnet tool install --global dotnet-ef || echo "dotnet-ef already installed"
-    dotnet tool install --global dotnet-format || echo "dotnet-format already installed"
-    dotnet tool install --global dotnet-outdated-tool || echo "dotnet-outdated-tool already installed"
+    run_spinner "dotnet-ef" dotnet tool install --global dotnet-ef || true
+    run_spinner "dotnet-format" dotnet tool install --global dotnet-format || true
+    run_spinner "dotnet-outdated-tool" dotnet tool install --global dotnet-outdated-tool || true
 fi
 
 # Verify installations

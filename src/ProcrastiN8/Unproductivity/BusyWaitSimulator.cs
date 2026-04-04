@@ -14,26 +14,27 @@ public static class BusyWaitSimulator
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.BusyWaitSimulator");
 
-    private static CommentaryService CommentaryService = new();
-    private static IRandomProvider _randomProvider = RandomProvider.Default;
-
-    public static void SetRandomProvider(IRandomProvider provider)
-    {
-        _randomProvider = provider;
-    }
-
     // Minimum milliseconds between commentary logs during busy wait
     private const long CommentarySourceBusyWait = 1;
 
     /// <summary>
     /// Runs a CPU-bound busy-wait loop for the given duration or until cancelled.
     /// </summary>
+    /// <param name="duration">How long to simulate intense non-productivity.</param>
+    /// <param name="logger">Optional logger for progress updates. If not provided, a default is used.</param>
+    /// <param name="cancellationToken">Token to cancel the CPU-burning performance.</param>
+    /// <param name="randomProvider">Random provider for waste calculations. If not provided, the default is used.</param>
+    /// <param name="commentaryService">Commentary service for motivational interjections. If not provided, a default is used.</param>
     public static void BurnCpuCycles(
         TimeSpan duration,
         IProcrastiLogger? logger = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IRandomProvider? randomProvider = null,
+        ICommentaryService? commentaryService = null)
     {
         logger ??= new DefaultLogger();
+        randomProvider ??= RandomProvider.Default;
+        commentaryService ??= new CommentaryService(randomProvider);
 
         using var activity = ActivitySource.StartActivity("ProcrastiN8.BusyWaitSimulator.BurnCpuCycles", ActivityKind.Internal);
         activity?.SetTag("busywait.duration.ms", duration.TotalMilliseconds);
@@ -52,7 +53,7 @@ public static class BusyWaitSimulator
                 // Periodically log excuses and commentary
                 if (stopwatch.ElapsedMilliseconds % 1500 < 10)
                 {
-                    CommentaryService.LogRandomRemark();
+                    commentaryService.LogRandomRemark();
 
                     ProcrastinationMetrics.CommentaryTotal.Add(CommentarySourceBusyWait,
                         KeyValuePair.Create<string, object?>("source", "BusyWaitSimulator"));
@@ -62,7 +63,7 @@ public static class BusyWaitSimulator
                 }
 
                 // Waste CPU – do nothing in a tight loop
-                Math.Sqrt(_randomProvider.GetDouble() * 9999); // token calculation to avoid optimizations
+                Math.Sqrt(randomProvider.GetDouble() * 9999); // token calculation to avoid optimizations
             }
 
             stopwatch.Stop();
@@ -83,22 +84,19 @@ public static class BusyWaitSimulator
     /// <summary>
     /// Asynchronously simulates a busy wait by burning CPU cycles for the given duration or until cancelled.
     /// </summary>
-    /// <param name="logger">Logger for busy wait updates.</param>
+    /// <param name="duration">How long to simulate intense non-productivity.</param>
+    /// <param name="logger">Optional logger for busy wait updates.</param>
     /// <param name="cancellationToken">Token to cancel the busy wait.</param>
+    /// <param name="randomProvider">Random provider for waste calculations. If not provided, the default is used.</param>
+    /// <param name="commentaryService">Commentary service for motivational interjections. If not provided, a default is used.</param>
     /// <returns>A task representing the busy wait operation.</returns>
     public static Task SimulateBusyWaitAsync(
         TimeSpan duration,
         IProcrastiLogger? logger = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IRandomProvider? randomProvider = null,
+        ICommentaryService? commentaryService = null)
     {
-        return Task.Run(() => BurnCpuCycles(duration, logger, cancellationToken), cancellationToken);
-    }
-
-    /// <summary>
-    /// Allows test code to inject a custom CommentaryService for mocking or fault injection.
-    /// </summary>
-    public static void SetCommentaryService(CommentaryService service)
-    {
-        CommentaryService = service ?? throw new ArgumentNullException(nameof(service));
+        return Task.Run(() => BurnCpuCycles(duration, logger, cancellationToken, randomProvider, commentaryService), cancellationToken);
     }
 }

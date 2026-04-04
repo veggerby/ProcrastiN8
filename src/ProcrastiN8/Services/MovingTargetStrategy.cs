@@ -15,7 +15,7 @@ public class MovingTargetStrategy : ProcrastinationStrategyBase
 {
     private readonly IPacingGrowthPolicy _growth;
     private readonly IDelayCeilingPolicy _ceiling;
-    private readonly Random _rng;
+    private readonly IRandomProvider _randomProvider;
     private readonly TimeSpan _absoluteDeadlineOffset;
     private readonly TimeSpan _maxSingleDelay;
     private readonly TimeSpan _hardDelayCap;
@@ -36,14 +36,14 @@ public class MovingTargetStrategy : ProcrastinationStrategyBase
     public MovingTargetStrategy(
         IPacingGrowthPolicy? growth = null,
         IDelayCeilingPolicy? ceiling = null,
-        Random? rng = null,
+        IRandomProvider? randomProvider = null,
         TimeSpan? absoluteDeadlineOffset = null,
         TimeSpan? maxSingleDelay = null,
         TimeSpan? hardDelayCap = null)
     {
         _growth = growth ?? DefaultPacingGrowthPolicy.Instance;
         _ceiling = ceiling ?? DefaultDelayCeilingPolicy.Instance;
-        _rng = rng ?? new Random();
+        _randomProvider = randomProvider ?? RandomProvider.Default;
         _absoluteDeadlineOffset = absoluteDeadlineOffset ?? DefaultAbsoluteDeadlineOffset;
         _maxSingleDelay = maxSingleDelay ?? DefaultMaxSingleDelay;
         _hardDelayCap = hardDelayCap ?? DefaultHardDelayCap;
@@ -83,7 +83,7 @@ public class MovingTargetStrategy : ProcrastinationStrategyBase
             IncrementCycle();
             await NotifyCycleAsync(ControlContext, cancellationToken);
             cycles++;
-            delay = _growth.Next(delay, cycles - 1, _rng);
+            delay = _growth.Next(delay, cycles - 1, randomProvider);
             if (delay > _hardDelayCap)
             {
                 delay = _hardDelayCap;
@@ -97,6 +97,12 @@ public class MovingTargetStrategy : ProcrastinationStrategyBase
                 break; // Mission accomplished: start time sufficiently distant.
             }
         }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return; // Cancellation beat the deadline. The task graciously declines to run.
+        }
+
         await task();
         MarkExecuted();
     }

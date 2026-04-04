@@ -12,9 +12,6 @@ public static class FakeProgress
 {
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.Unproductivity.FakeProgress");
 
-    private static readonly ExcuseService ExcuseService = new();
-    private static CommentaryService CommentaryService = new();
-
     private static readonly string[] FakeStages = new[]
     {
         "Aligning expectations...",
@@ -32,15 +29,22 @@ public static class FakeProgress
     /// <summary>
     /// Fakes a sequence of progress updates, optionally configurable in length and pacing.
     /// </summary>
+    /// <param name="stepDuration">Duration per fake step. Defaults to 750ms.</param>
+    /// <param name="steps">Number of steps to fake. Defaults to the built-in stage count.</param>
+    /// <param name="logger">Optional logger for ceremonial progress updates.</param>
+    /// <param name="commentaryService">Optional commentary service for motivational interjections. If not provided, a default is used.</param>
+    /// <param name="cancellationToken">Token to cancel the performance mid-act.</param>
     public static async Task ShowFakeProgressAsync(
         TimeSpan? stepDuration = null,
         int? steps = null,
         IProcrastiLogger? logger = null,
+        ICommentaryService? commentaryService = null,
         CancellationToken cancellationToken = default)
     {
         logger ??= new DefaultLogger();
         stepDuration ??= TimeSpan.FromMilliseconds(DefaultStepDurationMs);
         steps ??= FakeStages.Length;
+        commentaryService ??= new CommentaryService();
 
         using var activity = ActivitySource.StartActivity("ProcrastiN8.FakeProgress.Show", ActivityKind.Internal);
         activity?.SetTag("progress.steps", steps);
@@ -58,7 +62,7 @@ public static class FakeProgress
                 ProcrastinationMetrics.ExcusesGenerated.Add(1,
                     KeyValuePair.Create<string, object?>("category", "fake-progress"));
 
-                CommentaryService.LogRandomRemark();
+                commentaryService.LogRandomRemark();
 
                 ProcrastinationMetrics.TotalTimeProcrastinated.Add(
                     (long)stepDuration.Value.TotalSeconds,
@@ -84,13 +88,5 @@ public static class FakeProgress
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
         }
-    }
-
-    /// <summary>
-    /// Allows test code to inject a custom CommentaryService for mocking or fault injection.
-    /// </summary>
-    public static void SetCommentaryService(CommentaryService service)
-    {
-        CommentaryService = service ?? throw new ArgumentNullException(nameof(service));
     }
 }

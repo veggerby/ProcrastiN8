@@ -21,7 +21,7 @@ public class DefaultDelayStrategyTests
     {
         // arrange
         var randomProvider = Substitute.For<IRandomProvider>();
-        randomProvider.GetDouble().Returns(0D);
+        randomProvider.GetRandom(Arg.Any<int>(), Arg.Any<int>()).Returns(0);
         var strategy = new DefaultDelayStrategy(
             TimeSpan.FromMilliseconds(100),
             TimeSpan.FromMilliseconds(200),
@@ -30,8 +30,8 @@ public class DefaultDelayStrategyTests
         // act
         await strategy.DelayAsync();
 
-        // assert
-        randomProvider.Received(1).GetDouble();
+        // assert — the strategy should consult GetRandom for its procrastination arithmetic
+        randomProvider.Received(1).GetRandom(Arg.Any<int>(), Arg.Any<int>());
     }
 
     [Fact]

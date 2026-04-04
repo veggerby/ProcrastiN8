@@ -12,10 +12,9 @@ public class FakeProgressTests
         var logger = Substitute.For<IProcrastiLogger>();
         var cts = new CancellationTokenSource();
         var commentary = new CommentaryService();
-        FakeProgress.SetCommentaryService(commentary);
 
         // act
-        var progressTask = FakeProgress.ShowFakeProgressAsync(logger: logger, cancellationToken: cts.Token);
+        var progressTask = FakeProgress.ShowFakeProgressAsync(logger: logger, commentaryService: commentary, cancellationToken: cts.Token);
         await Task.Delay(100); // Let it run a few stages
         cts.Cancel();
         await progressTask;

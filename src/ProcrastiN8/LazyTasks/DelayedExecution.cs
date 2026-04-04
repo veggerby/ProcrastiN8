@@ -14,7 +14,6 @@ public static class DelayedExecution
 
     private static readonly ExcuseService ExcuseService = new();
     private static readonly DelayService DelayService = new();
-    private static readonly CommentaryService CommentaryService = new();
 
     // Minimum allowed delay for delayed execution (ms)
     private const int MinDelayMs = 500;
@@ -22,11 +21,18 @@ public static class DelayedExecution
     /// <summary>
     /// Executes a synchronous action after a delay, possibly with a snooze buffer and existential commentary.
     /// </summary>
+    /// <param name="delay">How long to pretend to be busy before executing.</param>
+    /// <param name="action">The action to eventually, reluctantly run.</param>
+    /// <param name="snooze">Optional additional delay to hit before the main delay. For when even starting the delay feels premature.</param>
+    /// <param name="logger">Optional logger for progress reports nobody asked for.</param>
+    /// <param name="commentaryService">Optional commentary service for unsolicited observations. If not provided, a default is used.</param>
+    /// <param name="cancellationToken">Token to cancel if productivity threatens to break out.</param>
     public static async Task RunAfterThinkingAboutIt(
         TimeSpan delay,
         Action action,
         TimeSpan? snooze = null,
         IProcrastiLogger? logger = null,
+        ICommentaryService? commentaryService = null,
         CancellationToken cancellationToken = default)
     {
         if (delay < TimeSpan.FromMilliseconds(MinDelayMs))
@@ -35,6 +41,7 @@ public static class DelayedExecution
         }
 
         logger ??= new DefaultLogger();
+        commentaryService ??= new CommentaryService();
         var excuse = ExcuseService.GenerateExcuse();
 
         using var activity = ActivitySource.StartActivity("ProcrastiN8.DelayedExecution.Sync", ActivityKind.Internal);
@@ -51,7 +58,7 @@ public static class DelayedExecution
             await DelayService.DelayWithProcrastinationAsync("snooze", snooze.Value, cancellationToken);
         }
 
-        CommentaryService.LogRandomRemark();
+        commentaryService.LogRandomRemark();
 
         await DelayService.DelayWithProcrastinationAsync(excuse, delay, cancellationToken);
 
@@ -74,11 +81,18 @@ public static class DelayedExecution
     /// <summary>
     /// Executes an asynchronous action after a delay, possibly with a snooze buffer and spiritual detachment.
     /// </summary>
+    /// <param name="delay">How long to stall before executing the async operation.</param>
+    /// <param name="action">The async action to run, eventually.</param>
+    /// <param name="snooze">Optional extra buffer before the main delay, for the indecisive procrastinator.</param>
+    /// <param name="logger">Optional logger for earnest status updates.</param>
+    /// <param name="commentaryService">Optional commentary service for mid-wait philosophical interjections. If not provided, a default is used.</param>
+    /// <param name="cancellationToken">Token to cancel before any work is done. Recommended.</param>
     public static async Task RunWhenYouFeelLikeIt(
         TimeSpan delay,
         Func<Task> action,
         TimeSpan? snooze = null,
         IProcrastiLogger? logger = null,
+        ICommentaryService? commentaryService = null,
         CancellationToken cancellationToken = default)
     {
         if (delay < TimeSpan.FromMilliseconds(MinDelayMs))
@@ -87,6 +101,7 @@ public static class DelayedExecution
         }
 
         logger ??= new DefaultLogger();
+        commentaryService ??= new CommentaryService();
         var excuse = ExcuseService.GenerateExcuse();
 
         using var activity = ActivitySource.StartActivity("ProcrastiN8.DelayedExecution.Async", ActivityKind.Internal);
@@ -103,7 +118,7 @@ public static class DelayedExecution
             await DelayService.DelayWithProcrastinationAsync("snooze", snooze.Value, cancellationToken);
         }
 
-        CommentaryService.LogRandomRemark();
+        commentaryService.LogRandomRemark();
 
         await DelayService.DelayWithProcrastinationAsync(excuse, delay, cancellationToken);
 

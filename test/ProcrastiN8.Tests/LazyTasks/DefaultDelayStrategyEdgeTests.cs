@@ -25,9 +25,11 @@ public class DefaultDelayStrategyEdgeTests
     [Fact]
     public async Task Range_Swap_When_Min_Greater_Than_Max()
     {
-        // arrange
+        // arrange — strategy constructed with min > max; expects them to be swapped before invoking GetRandom
         var delayProvider = Substitute.For<IDelayProvider>();
-        var strategy = new DefaultDelayStrategy(TimeSpan.FromMilliseconds(30), TimeSpan.FromMilliseconds(10), delayProvider: delayProvider, randomProvider: Substitute.For<IRandomProvider>());
+        var randomProvider = Substitute.For<IRandomProvider>();
+        randomProvider.GetRandom(10, 31).Returns(10); // swapped: min=10, max=30 → GetRandom(10, 31) → 10
+        var strategy = new DefaultDelayStrategy(TimeSpan.FromMilliseconds(30), TimeSpan.FromMilliseconds(10), delayProvider: delayProvider, randomProvider: randomProvider);
 
         // act
         await strategy.DelayAsync();
