@@ -25,6 +25,7 @@ public sealed class Procrastinable<T>
     private readonly IProcrastiLogger? _logger;
 
     private Task<T>? _evaluationTask;
+    private readonly SemaphoreSlim _initializationGate = new(1, 1);
 
     // Minimum deliberation delay before committing to evaluation (ms)
     private const int MinDeliberationMs = 10;
@@ -69,16 +70,31 @@ public sealed class Procrastinable<T>
             return await _evaluationTask;
         }
 
-        var deliberationMs = _randomProvider.GetRandom(MinDeliberationMs, MaxDeliberationMs);
-        _logger?.Info("[Procrastinable] After {DeliberationMs}ms of careful consideration, proceeding with evaluation.", deliberationMs);
+        await _initializationGate.WaitAsync(cancellationToken);
+        try
+        {
+            // Double-checked — another thread may have evaluated while we waited.
+            if (_evaluationTask?.IsCompletedSuccessfully == true)
+            {
+                _logger?.Debug("[Procrastinable] Returning cached result (another thread did the heavy lifting).");
+                return await _evaluationTask;
+            }
 
-        await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(deliberationMs), cancellationToken);
+            var deliberationMs = _randomProvider.GetRandom(MinDeliberationMs, MaxDeliberationMs);
+            _logger?.Info("[Procrastinable] After {DeliberationMs}ms of careful consideration, proceeding with evaluation.", deliberationMs);
 
-        _evaluationTask = _factory();
-        var result = await _evaluationTask;
+            await _delayProvider.DelayAsync(TimeSpan.FromMilliseconds(deliberationMs), cancellationToken);
 
-        _logger?.Info("[Procrastinable] Evaluation complete. Results filed for future reference.");
-        return result;
+            _evaluationTask = _factory();
+            var result = await _evaluationTask;
+
+            _logger?.Info("[Procrastinable] Evaluation complete. Results filed for future reference.");
+            return result;
+        }
+        finally
+        {
+            _initializationGate.Release();
+        }
     }
 
     /// <summary>

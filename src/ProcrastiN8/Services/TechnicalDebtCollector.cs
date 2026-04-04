@@ -67,8 +67,9 @@ public sealed class TechnicalDebtCollector
         /// </summary>
         public DebtItem? MostOptimisticItem =>
             _items
-                .Where(i => i.Category == "SomedayMaybe")
-                .MaxBy(i => ExtractEstimatedYear(i.Member));
+                .Where(i => i.Category == "SomedayMaybe" && ExtractEstimatedYear(i.Member) > 0)
+                .OrderByDescending(i => ExtractEstimatedYear(i.Member))
+                .FirstOrDefault();
 
         /// <summary>
         /// Produces a formatted technical debt report suitable for presentation to leadership,
@@ -123,11 +124,12 @@ public sealed class TechnicalDebtCollector
             return sb.ToString();
         }
 
-        private static int ExtractEstimatedYear(MemberInfo member)
-        {
-            var attr = member.GetCustomAttribute<SomedayMaybeAttribute>();
-            return attr?.EstimatedYear ?? 0;
-        }
+        private static int ExtractEstimatedYear(MemberInfo member) =>
+            member
+                .GetCustomAttributes<SomedayMaybeAttribute>()
+                .Select(attr => attr.EstimatedYear)
+                .DefaultIfEmpty(0)
+                .Max();
     }
 
     /// <summary>

@@ -66,7 +66,7 @@ public static class Eventually
 
         logger.Info("Eventually scheduled in {DelaySeconds:0.0}s. Reason: {Excuse}", delay.TotalSeconds, excuse);
 
-        var chatter = ProcrastinationChatter(delay, logger, commentaryService, cancellationToken);
+        var chatter = ProcrastinationChatter(logger, commentaryService, cancellationToken);
         var succeeded = false;
 
         try
@@ -115,7 +115,7 @@ public static class Eventually
     /// <param name="commentaryService">Service responsible for emitting remarks.</param>
     /// <param name="cancellationToken">Token to cancel commentary.</param>
     /// <returns>A Timer that can be disposed to stop commentary.</returns>
-    private static Timer ProcrastinationChatter(TimeSpan delay, IProcrastiLogger logger, ICommentaryService commentaryService, CancellationToken cancellationToken)
+    private static Timer ProcrastinationChatter(IProcrastiLogger logger, ICommentaryService commentaryService, CancellationToken cancellationToken)
     {
         var timer = new Timer(_ =>
         {

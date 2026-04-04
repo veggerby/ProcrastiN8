@@ -42,6 +42,9 @@ public static class RetryInSuperposition
 
         logger?.Info("[RetryInSuperposition] Collapsing {Count} parallel attempt(s) into a single observable outcome.", maxAttempts);
 
+        // Create a linked CTS so we can cancel surviving timelines the moment one succeeds.
+        using var collapseSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
         var tasks = Enumerable
             .Range(0, maxAttempts)
             .Select(i =>
@@ -53,7 +56,6 @@ public static class RetryInSuperposition
                 }
                 catch (Exception ex)
                 {
-                    // The operation threw synchronously — wrap in a faulted task so WhenAny can handle it
                     return Task.FromException<T>(ex);
                 }
             })
@@ -71,6 +73,11 @@ public static class RetryInSuperposition
             if (completed.IsCompletedSuccessfully)
             {
                 logger?.Info("[RetryInSuperposition] Reality collapsed successfully. Discarding {Count} surviving timeline(s).", tasks.Count);
+
+                // Cancel surviving timelines and observe them to avoid unhandled task exceptions.
+                collapseSource.Cancel();
+                await Task.WhenAll(tasks.Select(t => t.ContinueWith(_ => { }, TaskContinuationOptions.None)));
+
                 return await completed;
             }
 

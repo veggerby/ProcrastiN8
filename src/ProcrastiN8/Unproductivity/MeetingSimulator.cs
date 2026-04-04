@@ -107,7 +107,7 @@ public static class MeetingSimulator
                 await delayProvider.DelayAsync(tickDuration, cancellationToken);
 
                 ProcrastinationMetrics.TotalTimeProcrastinated.Add(
-                    (long)tickDuration.TotalSeconds,
+                    (long)Math.Max(1, Math.Ceiling(tickDuration.TotalSeconds)),
                     KeyValuePair.Create<string, object?>("component", "MeetingSimulator"));
             }
 

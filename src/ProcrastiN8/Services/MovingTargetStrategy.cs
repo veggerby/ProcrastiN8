@@ -83,7 +83,7 @@ public class MovingTargetStrategy : ProcrastinationStrategyBase
             IncrementCycle();
             await NotifyCycleAsync(ControlContext, cancellationToken);
             cycles++;
-            delay = _growth.Next(delay, cycles - 1, _randomProvider);
+            delay = _growth.Next(delay, cycles - 1, randomProvider);
             if (delay > _hardDelayCap)
             {
                 delay = _hardDelayCap;
@@ -97,6 +97,12 @@ public class MovingTargetStrategy : ProcrastinationStrategyBase
                 break; // Mission accomplished: start time sufficiently distant.
             }
         }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return; // Cancellation beat the deadline. The task graciously declines to run.
+        }
+
         await task();
         MarkExecuted();
     }

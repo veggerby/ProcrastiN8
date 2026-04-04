@@ -102,6 +102,16 @@ public sealed class ScopeCreepSimulator
     /// <returns>The requirements that were added.</returns>
     public IReadOnlyList<string> AddRequirements(int count)
     {
+        if (count < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), "Cannot reduce scope. Scope reduction is not a supported enterprise concept.");
+        }
+
+        if (count == 0)
+        {
+            return [];
+        }
+
         var added = new List<string>(count);
         for (var i = 0; i < count; i++)
         {

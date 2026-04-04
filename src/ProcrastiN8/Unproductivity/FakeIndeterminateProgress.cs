@@ -1,6 +1,7 @@
 using System.Diagnostics;
 
 using ProcrastiN8.JustBecause;
+using ProcrastiN8.LazyTasks;
 using ProcrastiN8.Metrics;
 using ProcrastiN8.Services;
 
@@ -31,6 +32,8 @@ public static class FakeIndeterminateProgress
     /// <param name="cancellationToken">Token to cancel before the inevitable conclusion.</param>
     /// <param name="randomProvider">Random provider for progress simulation. If not provided, the default provider is used.</param>
     /// <param name="commentaryService">Commentary service for periodic observations. If not provided, a default is used.</param>
+    /// <param name="timeProvider">Optional time provider for elapsed-time checks. If not provided, the system clock is used.</param>
+    /// <param name="delayProvider">Optional delay provider for update intervals. If not provided, <see cref="TaskDelayProvider"/> is used.</param>
     public static async Task ShowAsync(
         IProcrastiLogger? logger = null,
         TimeSpan? updateInterval = null,
@@ -38,11 +41,15 @@ public static class FakeIndeterminateProgress
         Action<double>? reportProgress = null,
         CancellationToken cancellationToken = default,
         IRandomProvider? randomProvider = null,
-        ICommentaryService? commentaryService = null)
+        ICommentaryService? commentaryService = null,
+        ITimeProvider? timeProvider = null,
+        IDelayProvider? delayProvider = null)
     {
         logger ??= new DefaultLogger();
         randomProvider ??= RandomProvider.Default;
         commentaryService ??= new CommentaryService(randomProvider);
+        timeProvider ??= SystemTimeProvider.Default;
+        delayProvider ??= new TaskDelayProvider();
         updateInterval ??= TimeSpan.FromMilliseconds(DefaultUpdateIntervalMs);
         minTimeBeforeCompletion ??= TimeSpan.FromMinutes(randomProvider.GetRandom(MinCompletionMinutes, MaxCompletionMinutes + 1));
 
@@ -55,7 +62,7 @@ public static class FakeIndeterminateProgress
         logger.Info("[FakeProgress] Completion will not occur before {Minutes} minutes.", minTimeBeforeCompletion.Value.TotalMinutes);
 
         double progress = 0;
-        var startTime = DateTime.UtcNow;
+        var startTime = timeProvider.GetUtcNow();
         bool stalled = false;
 
         try
@@ -86,7 +93,7 @@ public static class FakeIndeterminateProgress
                         logger.Info("[FakeProgress] Progress reached 99.9%. Entering eternal patience phase...");
                     }
                 }
-                else if (DateTime.UtcNow - startTime > minTimeBeforeCompletion)
+                else if (timeProvider.GetUtcNow() - startTime > minTimeBeforeCompletion)
                 {
                     // Surprise! It finishes.
                     progress = 100.0;
@@ -109,7 +116,7 @@ public static class FakeIndeterminateProgress
 
                 commentaryService.LogRandomRemark();
 
-                await Task.Delay(updateInterval.Value, cancellationToken);
+                await delayProvider.DelayAsync(updateInterval.Value, cancellationToken);
             }
 
             logger.Info("[FakeProgress] Cancelled before reaching 100%. That's on you.");

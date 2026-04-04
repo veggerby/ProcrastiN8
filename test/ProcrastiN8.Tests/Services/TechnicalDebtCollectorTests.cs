@@ -99,14 +99,17 @@ public class TechnicalDebtCollectorTests
     [Fact]
     public void Collect_EmptyAssemblyList_ScansCallingAssembly()
     {
-        // arrange — when no assemblies are specified, the collector should scan something
+        // arrange — when no assemblies are specified, the collector scans the calling assembly
         var collector = new TechnicalDebtCollector();
 
-        // act — calling with no arguments scans the calling assembly
-        var report = collector.Collect(TestAssembly);
+        // act — calling with no arguments; the implementation scans Assembly.GetCallingAssembly()
+        // which from within the library is the test assembly itself
+        var report = collector.Collect();
 
-        // assert
+        // assert — the test assembly contains deliberate debt annotations, so this should find something
         report.Should().NotBeNull("a report is always produced, even for pristine codebases");
         report.GeneratedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, precision: TimeSpan.FromSeconds(5));
+        // The calling assembly path exercises the fallback branch; the result is non-null regardless
+        report.TotalDebt.Should().BeGreaterThanOrEqualTo(0, "debt count is never negative, regardless of moral position");
     }
 }

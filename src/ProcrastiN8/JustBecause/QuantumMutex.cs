@@ -20,7 +20,8 @@ namespace ProcrastiN8.JustBecause;
 /// </remarks>
 public sealed class QuantumMutex : IDisposable
 {
-    private readonly ConcurrentDictionary<int, SemaphoreSlim> _universalLocks = new();
+    private readonly ConcurrentDictionary<int, SemaphoreSlim> _semaphores = new();
+    private readonly ConcurrentDictionary<int, int> _reentrantCounts = new();
     private readonly IProcrastiLogger? _logger;
     private volatile int _holderCount;
     private bool _disposed;
@@ -56,19 +57,25 @@ public sealed class QuantumMutex : IDisposable
         }
 
         var threadId = Environment.CurrentManagedThreadId;
-        var semaphore = _universalLocks.GetOrAdd(threadId, _ => new SemaphoreSlim(1, 1));
+        var semaphore = _semaphores.GetOrAdd(threadId, _ => new SemaphoreSlim(1, 1));
 
-        await semaphore.WaitAsync(cancellationToken);
+        var reentrant = _reentrantCounts.GetOrAdd(threadId, 0);
+        if (reentrant == 0)
+        {
+            // First acquisition on this thread — wait for the per-thread gate.
+            await semaphore.WaitAsync(cancellationToken);
+        }
 
+        _reentrantCounts[threadId] = reentrant + 1;
         var count = Interlocked.Increment(ref _holderCount);
-        _logger?.Debug("[QuantumMutex] Thread {ThreadId} acquired lock. {Count} simultaneous holder(s). All equally valid.", threadId, count);
+        _logger?.Debug("[QuantumMutex] Thread {ThreadId} acquired lock (depth={Depth}). {Count} simultaneous holder(s). All equally valid.", threadId, reentrant + 1, count);
 
         if (count > 1)
         {
             _logger?.Info("[QuantumMutex] {Count} threads currently hold this 'exclusive' lock. Entanglement confirmed.", count);
         }
 
-        return new QuantumLockHandle(semaphore, () =>
+        return new QuantumLockHandle(semaphore, threadId, _reentrantCounts, () =>
         {
             var remaining = Interlocked.Decrement(ref _holderCount);
             _logger?.Debug("[QuantumMutex] Thread {ThreadId} released lock. {Count} holder(s) remaining.", threadId, remaining);
@@ -81,15 +88,20 @@ public sealed class QuantumMutex : IDisposable
         if (!_disposed)
         {
             _disposed = true;
-            foreach (var (_, semaphore) in _universalLocks)
+            foreach (var (_, semaphore) in _semaphores)
             {
                 semaphore.Dispose();
             }
-            _universalLocks.Clear();
+            _semaphores.Clear();
+            _reentrantCounts.Clear();
         }
     }
 
-    private sealed class QuantumLockHandle(SemaphoreSlim semaphore, Action onRelease) : IDisposable
+    private sealed class QuantumLockHandle(
+        SemaphoreSlim semaphore,
+        int threadId,
+        ConcurrentDictionary<int, int> reentrantCounts,
+        Action onRelease) : IDisposable
     {
         private bool _released;
 
@@ -98,7 +110,13 @@ public sealed class QuantumMutex : IDisposable
             if (_released) { return; }
             _released = true;
             onRelease();
-            semaphore.Release();
+
+            var newDepth = reentrantCounts.AddOrUpdate(threadId, 0, (_, c) => Math.Max(0, c - 1));
+            if (newDepth == 0)
+            {
+                // Last holder on this thread — actually release the semaphore.
+                semaphore.Release();
+            }
         }
     }
 }
