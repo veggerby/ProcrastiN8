@@ -16,8 +16,8 @@
       "ppa": true
     },
     "./features/cross-distro-packages": {
-      "apt": "bash-completion curl wget vim less xdg-utils pass sshpass build-essential netcat-traditional iputils-ping dnsutils git-lfs sqlite3",
-      "apk": "bash-completion curl wget vim less xdg-utils pass sshpass build-base netcat-openbsd iputils bind-tools git-lfs sqlite"
+      "apt": "bash-completion curl wget vim less xdg-utils pass sshpass build-essential netcat-traditional iputils-ping dnsutils git-lfs sqlite3 bubblewrap jq ripgrep fd-find bat",
+      "apk": "bash-completion curl wget vim less xdg-utils pass sshpass build-base netcat-openbsd iputils bind-tools git-lfs sqlite bubblewrap jq ripgrep fd bat"
     },
     "ghcr.io/devcontainers/features/dotnet:2": {
       "version": "10.0"
@@ -35,7 +35,8 @@
       "installYarnUsingApt": true
     },
     "ghcr.io/devcontainers/features/git-lfs:1": {
-      "version": "latest"
+      "version": "latest",
+      "autoPull": false
     }
   },
   "customizations": {
@@ -117,8 +118,8 @@
   "postCreateCommand": {
     "setup-dotnet": "bash .devcontainer/scripts/setup-dotnet.sh",
     "setup-nodejs": "bash .devcontainer/scripts/setup-nodejs.sh",
-    "setup-codex": "bash .devcontainer/scripts/setup-codex.sh",
     "setup-git-helpers": "bash .devcontainer/scripts/setup-git-helpers.sh",
+    "setup-codex": "bash .devcontainer/scripts/setup-codex.sh",
     "setup-modern-cli-tools": "bash .devcontainer/scripts/setup-modern-cli-tools.sh"
   }
 }

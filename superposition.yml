@@ -1,0 +1,11 @@
+stack: plain
+baseImage: trixie
+containerName: ProcrastiN8
+overlays:
+  - git-helpers
+  - dotnet
+  - nodejs
+  - codex
+  - modern-cli-tools
+outputPath: ./.devcontainer
+

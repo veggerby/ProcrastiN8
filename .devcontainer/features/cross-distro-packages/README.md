@@ -6,6 +6,7 @@ A devcontainer feature that installs system packages with automatic distribution
 
 - 🔍 **Auto-detection**: Automatically detects whether the container uses apt or apk
 - 📦 **Distro-specific packages**: Specify different package names for each distribution
+- 🔁 **Fallback package names**: Use `pkgA|pkgB` when Debian/Ubuntu variants expose different names
 - 🧹 **Clean installation**: Cleans up package manager caches to minimize image size
 - ⚡ **Fast**: No unnecessary updates or cache rebuilds
 
@@ -25,6 +26,19 @@ A devcontainer feature that installs system packages with automatic distribution
 ```
 
 ### Real-World Examples
+
+**Fallback package names within apt-based distros:**
+
+```json
+{
+    "features": {
+        "./features/cross-distro-packages": {
+            "apt": "fonts-carlito|fonts-crosextra-carlito",
+            "apk": ""
+        }
+    }
+}
+```
 
 **Node.js Build Tools:**
 
@@ -84,6 +98,10 @@ A devcontainer feature that installs system packages with automatic distribution
 | ------ | ------ | ------- | ----------------------------------------------------------------------------- |
 | `apt`  | string | `""`    | Space-separated list of packages for apt-based distributions (Debian, Ubuntu) |
 | `apk`  | string | `""`    | Space-separated list of packages for apk-based distributions (Alpine Linux)   |
+
+Package entries may include fallback candidates separated by `|`, for example
+`fonts-carlito|fonts-crosextra-carlito`. The feature selects the first package
+name that exists for the detected package manager.
 
 ## Package Name Differences
 
