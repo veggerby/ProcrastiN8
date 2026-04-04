@@ -44,6 +44,7 @@ public sealed class CollapseOnReview<T>
 
     private readonly T _productionValue;
     private readonly T _reviewValue;
+    private readonly IQuantumInterpretation _interpretation;
     private readonly IProcrastiLogger? _logger;
 
     /// <summary>
@@ -51,11 +52,20 @@ public sealed class CollapseOnReview<T>
     /// </summary>
     /// <param name="productionValue">The real value, returned when nobody is reviewing.</param>
     /// <param name="reviewValue">The sanitised, reviewed value, returned under observation.</param>
+    /// <param name="interpretation">
+    /// The quantum mechanics interpretation governing collapse behaviour.
+    /// Defaults to <see cref="QuantumInterpretations.Copenhagen"/>.
+    /// Under <see cref="QuantumInterpretations.ManyWorlds"/>, observation does not cause collapse
+    /// and the production value is always returned — all outcomes are equally real.
+    /// Under <see cref="QuantumInterpretations.PilotWave"/>, the result is predetermined and
+    /// the production value is returned regardless of observation.
+    /// </param>
     /// <param name="logger">Optional logger for waveform collapse announcements.</param>
-    public CollapseOnReview(T productionValue, T reviewValue, IProcrastiLogger? logger = null)
+    public CollapseOnReview(T productionValue, T reviewValue, IQuantumInterpretation? interpretation = null, IProcrastiLogger? logger = null)
     {
         _productionValue = productionValue;
         _reviewValue = reviewValue;
+        _interpretation = interpretation ?? QuantumInterpretations.Copenhagen;
         _logger = logger;
     }
 
@@ -64,22 +74,34 @@ public sealed class CollapseOnReview<T>
     /// </summary>
     public bool IsUnderReview => DetectReviewContext();
 
+    /// <summary>Gets the quantum interpretation governing collapse behaviour.</summary>
+    public IQuantumInterpretation Interpretation => _interpretation;
+
     /// <summary>
     /// Resolves the value. Returns the production value unless review tooling is detected on the call stack,
-    /// in which case the reviewed value is returned instead.
+    /// in which case the reviewed value is returned instead — subject to the active interpretation.
     /// </summary>
     /// <returns>
-    /// <see cref="ReviewValue"/> if the waveform collapses under observation; otherwise <see cref="ProductionValue"/>.
+    /// <see cref="ReviewValue"/> if the waveform collapses under observation (and interpretation permits collapse);
+    /// otherwise <see cref="ProductionValue"/>.
     /// </returns>
     public T Resolve()
     {
+        if (!_interpretation.ObservationAffectsOutcome)
+        {
+            _logger?.Debug(
+                "[CollapseOnReview] Interpretation '{Interpretation}' holds that observation does not cause collapse. Returning production value.",
+                _interpretation.Name);
+            return _productionValue;
+        }
+
         if (DetectReviewContext())
         {
-            _logger?.Info("[CollapseOnReview] Review context detected. Collapsing to reviewed value. Nothing to see here.");
+            _logger?.Info("[CollapseOnReview] Review context detected ({Interpretation}). Collapsing to reviewed value. Nothing to see here.", _interpretation.Name);
             return _reviewValue;
         }
 
-        _logger?.Debug("[CollapseOnReview] No observer detected. Returning production value.");
+        _logger?.Debug("[CollapseOnReview] No observer detected. Returning production value ({Interpretation}).", _interpretation.Name);
         return _productionValue;
     }
 

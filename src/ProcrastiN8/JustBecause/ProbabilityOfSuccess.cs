@@ -28,6 +28,13 @@ public static class ProbabilityOfSuccess
     /// Defaults to 0.5, because on average, things are fine.
     /// </param>
     /// <param name="randomProvider">Injectable random source. Defaults to <see cref="RandomProvider.Default"/>.</param>
+    /// <param name="interpretation">
+    /// Optional quantum interpretation governing how probability is evaluated.
+    /// Defaults to <see cref="QuantumInterpretations.Copenhagen"/>.
+    /// Under <see cref="QuantumInterpretations.QBist"/>, stated probability is boosted by personal conviction.
+    /// Under <see cref="QuantumInterpretations.PilotWave"/>, probability collapses to 0 or 1.
+    /// Under <see cref="QuantumInterpretations.Transactional"/>, high probabilities are amplified and low ones decay.
+    /// </param>
     /// <param name="cancellationToken">Token to cancel before fate can decide.</param>
     /// <returns>The result of the operation, if fate permits.</returns>
     /// <exception cref="QuantumUncertaintyException">Thrown when fate declines to cooperate.</exception>
@@ -35,6 +42,7 @@ public static class ProbabilityOfSuccess
         Func<Task<T>> operation,
         double successProbability = 0.5,
         IRandomProvider? randomProvider = null,
+        IQuantumInterpretation? interpretation = null,
         CancellationToken cancellationToken = default)
     {
         if (successProbability is < 0.0 or > 1.0)
@@ -43,10 +51,14 @@ public static class ProbabilityOfSuccess
         }
 
         randomProvider ??= RandomProvider.Default;
+        interpretation ??= QuantumInterpretations.Copenhagen;
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (randomProvider.GetDouble() >= successProbability)
+        var rawSample = randomProvider.GetDouble();
+        var effectiveProbability = interpretation.InterpretProbability(rawSample, successProbability);
+
+        if (rawSample >= effectiveProbability)
         {
             throw new QuantumUncertaintyException(successProbability);
         }
@@ -61,18 +73,21 @@ public static class ProbabilityOfSuccess
     /// <param name="operation">The async action to potentially execute.</param>
     /// <param name="successProbability">Probability between 0.0 and 1.0. Defaults to 0.5.</param>
     /// <param name="randomProvider">Injectable random source.</param>
+    /// <param name="interpretation">Optional quantum interpretation. Defaults to <see cref="QuantumInterpretations.Copenhagen"/>.</param>
     /// <param name="cancellationToken">Token to cancel before fate decides.</param>
     /// <exception cref="QuantumUncertaintyException">Thrown when fate declines to cooperate.</exception>
     public static async Task ExecuteAsync(
         Func<Task> operation,
         double successProbability = 0.5,
         IRandomProvider? randomProvider = null,
+        IQuantumInterpretation? interpretation = null,
         CancellationToken cancellationToken = default)
     {
         await ExecuteAsync<int>(
             async () => { await operation(); return 0; },
             successProbability,
             randomProvider,
+            interpretation,
             cancellationToken);
     }
 }

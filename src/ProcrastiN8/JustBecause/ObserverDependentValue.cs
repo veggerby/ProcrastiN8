@@ -24,6 +24,7 @@ public sealed class ObserverDependentValue<T>
 {
     private readonly Dictionary<string, T> _observerValues = new(StringComparer.Ordinal);
     private readonly T _defaultValue;
+    private readonly IQuantumInterpretation _interpretation;
     private readonly IProcrastiLogger? _logger;
 
     /// <summary>
@@ -31,10 +32,19 @@ public sealed class ObserverDependentValue<T>
     /// returned to observers who have not been specifically targeted.
     /// </summary>
     /// <param name="defaultValue">The value returned to unregistered, anonymous, or insufficiently important callers.</param>
+    /// <param name="interpretation">
+    /// The quantum mechanics interpretation governing observation behaviour.
+    /// Defaults to <see cref="QuantumInterpretations.Copenhagen"/>.
+    /// Under <see cref="QuantumInterpretations.ManyWorlds"/>, observation does not affect outcome —
+    /// all callers receive the default value regardless of registration.
+    /// Under <see cref="QuantumInterpretations.PilotWave"/>, outcome is predetermined and cannot be
+    /// altered by observer-specific registration.
+    /// </param>
     /// <param name="logger">Optional logger for observation event commentary.</param>
-    public ObserverDependentValue(T defaultValue, IProcrastiLogger? logger = null)
+    public ObserverDependentValue(T defaultValue, IQuantumInterpretation? interpretation = null, IProcrastiLogger? logger = null)
     {
         _defaultValue = defaultValue;
+        _interpretation = interpretation ?? QuantumInterpretations.Copenhagen;
         _logger = logger;
     }
 
@@ -62,15 +72,26 @@ public sealed class ObserverDependentValue<T>
     {
         var observerKey = callerMemberName ?? "<unknown>";
 
+        if (!_interpretation.ObservationAffectsOutcome)
+        {
+            _logger?.Debug(
+                "[ObserverDependentValue] Interpretation '{Interpretation}' holds that observation does not affect outcome. Returning default for all observers.",
+                _interpretation.Name);
+            return _defaultValue;
+        }
+
         if (_observerValues.TryGetValue(observerKey, out var specificValue))
         {
-            _logger?.Debug("[ObserverDependentValue] Observer '{Observer}' receives their specific truth.", observerKey);
+            _logger?.Debug("[ObserverDependentValue] Observer '{Observer}' receives their specific truth ({Interpretation}).", observerKey, _interpretation.Name);
             return specificValue;
         }
 
-        _logger?.Debug("[ObserverDependentValue] Unknown observer '{Observer}' receives the default truth. All truths are valid.", observerKey);
+        _logger?.Debug("[ObserverDependentValue] Unknown observer '{Observer}' receives the default truth. All truths are valid ({Interpretation}).", observerKey, _interpretation.Name);
         return _defaultValue;
     }
+
+    /// <summary>Gets the quantum interpretation governing this instance's observation behaviour.</summary>
+    public IQuantumInterpretation Interpretation => _interpretation;
 
     /// <summary>
     /// Returns the number of registered observer-specific values.

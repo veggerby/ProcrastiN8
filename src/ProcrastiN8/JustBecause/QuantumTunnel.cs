@@ -29,6 +29,14 @@ public static class QuantumTunnel
     /// <param name="tunnelingProbability">Probability (0–1) that tunnelling succeeds. Defaults to 1.0 (always tunnels).
     /// When set below 1.0, there is a chance the exception is re-thrown — simulating partial barrier penetration.</param>
     /// <param name="randomProvider">Random provider for tunnelling probability evaluation.</param>
+    /// <param name="interpretation">
+    /// Optional quantum interpretation governing barrier penetration.
+    /// Defaults to <see cref="QuantumInterpretations.Copenhagen"/>.
+    /// When an interpretation has <see cref="IQuantumInterpretation.TunnellingPermitted"/> set to <c>false</c>,
+    /// tunnelling probability is forced to 0 and all exceptions are re-thrown with classical authority.
+    /// The interpretation may also modify the effective tunnelling probability via
+    /// <see cref="IQuantumInterpretation.InterpretProbability"/>.
+    /// </param>
     /// <param name="logger">Optional logger for tunnelling event commentary.</param>
     /// <param name="cancellationToken">Token to cancel the operation before tunnelling is needed.</param>
     /// <returns>The result of the operation, or <paramref name="fallback"/> if the barrier was tunnelled.</returns>
@@ -37,11 +45,13 @@ public static class QuantumTunnel
         T fallback = default!,
         double tunnelingProbability = 1.0,
         IRandomProvider? randomProvider = null,
+        IQuantumInterpretation? interpretation = null,
         IProcrastiLogger? logger = null,
         CancellationToken cancellationToken = default)
     {
         randomProvider ??= RandomProvider.Default;
-        tunnelingProbability = Math.Clamp(tunnelingProbability, 0.0, 1.0);
+        interpretation ??= QuantumInterpretations.Copenhagen;
+        var statedProbability = Math.Clamp(tunnelingProbability, 0.0, 1.0);
 
         try
         {
@@ -54,19 +64,35 @@ public static class QuantumTunnel
         }
         catch (Exception ex)
         {
-            var tunnelled = randomProvider.GetDouble() < tunnelingProbability;
+            double effectiveProbability;
+            if (!interpretation.TunnellingPermitted)
+            {
+                logger?.Debug(
+                    "[QuantumTunnel] Interpretation '{Interpretation}' disallows tunnelling. All barriers retain classical authority.",
+                    interpretation.Name);
+                effectiveProbability = 0.0;
+            }
+            else
+            {
+                // Draw once — the same sample both informs the interpretation's probability adjustment
+                // and determines the tunnelling outcome. No disconnect between adjustment and decision.
+                var sample = randomProvider.GetDouble();
+                effectiveProbability = interpretation.InterpretProbability(sample, statedProbability);
+            }
+
+            var tunnelled = effectiveProbability >= 1.0 || randomProvider.GetDouble() < effectiveProbability;
 
             if (tunnelled)
             {
                 logger?.Info(
-                    "[QuantumTunnel] Barrier '{ExceptionType}' encountered and tunnelled. Proceeding with fallback value. Classical physics need not apply.",
-                    ex.GetType().Name);
+                    "[QuantumTunnel] Barrier '{ExceptionType}' encountered and tunnelled ({Interpretation}). Proceeding with fallback value. Classical physics need not apply.",
+                    ex.GetType().Name, interpretation.Name);
                 return fallback;
             }
 
             logger?.Warn(
-                "[QuantumTunnel] Tunnelling failed ({Probability:P0} probability). The exception '{ExceptionType}' retains classical authority in this timeline.",
-                tunnelingProbability, ex.GetType().Name);
+                "[QuantumTunnel] Tunnelling failed ({Probability:P0} probability, {Interpretation}). The exception '{ExceptionType}' retains classical authority in this timeline.",
+                effectiveProbability, interpretation.Name, ex.GetType().Name);
             throw;
         }
     }
@@ -78,12 +104,14 @@ public static class QuantumTunnel
     /// <param name="operation">The action that may encounter exception barriers.</param>
     /// <param name="tunnelingProbability">Probability (0–1) that tunnelling succeeds. Defaults to 1.0.</param>
     /// <param name="randomProvider">Random provider for probability evaluation.</param>
+    /// <param name="interpretation">Optional quantum interpretation. Defaults to <see cref="QuantumInterpretations.Copenhagen"/>.</param>
     /// <param name="logger">Optional logger for tunnelling commentary.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     public static async Task TunnelAsync(
         Func<Task> operation,
         double tunnelingProbability = 1.0,
         IRandomProvider? randomProvider = null,
+        IQuantumInterpretation? interpretation = null,
         IProcrastiLogger? logger = null,
         CancellationToken cancellationToken = default)
     {
@@ -92,6 +120,7 @@ public static class QuantumTunnel
             fallback: 0,
             tunnelingProbability,
             randomProvider,
+            interpretation,
             logger,
             cancellationToken);
     }
@@ -104,6 +133,7 @@ public static class QuantumTunnel
     /// <param name="fallback">The value to return if the barrier is tunnelled.</param>
     /// <param name="tunnelingProbability">Probability that tunnelling succeeds. Defaults to 1.0.</param>
     /// <param name="randomProvider">Random provider for probability evaluation.</param>
+    /// <param name="interpretation">Optional quantum interpretation. Defaults to <see cref="QuantumInterpretations.Copenhagen"/>.</param>
     /// <param name="logger">Optional logger.</param>
     /// <returns>The result of the operation, or <paramref name="fallback"/> if tunnelled.</returns>
     public static T Tunnel<T>(
@@ -111,10 +141,12 @@ public static class QuantumTunnel
         T fallback = default!,
         double tunnelingProbability = 1.0,
         IRandomProvider? randomProvider = null,
+        IQuantumInterpretation? interpretation = null,
         IProcrastiLogger? logger = null)
     {
         randomProvider ??= RandomProvider.Default;
-        tunnelingProbability = Math.Clamp(tunnelingProbability, 0.0, 1.0);
+        interpretation ??= QuantumInterpretations.Copenhagen;
+        var statedProbability = Math.Clamp(tunnelingProbability, 0.0, 1.0);
 
         try
         {
@@ -122,17 +154,28 @@ public static class QuantumTunnel
         }
         catch (Exception ex)
         {
-            var tunnelled = randomProvider.GetDouble() < tunnelingProbability;
+            double effectiveProbability;
+            if (!interpretation.TunnellingPermitted)
+            {
+                effectiveProbability = 0.0;
+            }
+            else
+            {
+                var sample = randomProvider.GetDouble();
+                effectiveProbability = interpretation.InterpretProbability(sample, statedProbability);
+            }
+
+            var tunnelled = effectiveProbability >= 1.0 || randomProvider.GetDouble() < effectiveProbability;
 
             if (tunnelled)
             {
-                logger?.Info("[QuantumTunnel] Barrier '{ExceptionType}' tunnelled synchronously. Proceeding with fallback.", ex.GetType().Name);
+                logger?.Info("[QuantumTunnel] Barrier '{ExceptionType}' tunnelled synchronously ({Interpretation}). Proceeding with fallback.", ex.GetType().Name, interpretation.Name);
                 return fallback;
             }
 
             logger?.Warn(
-                "[QuantumTunnel] Synchronous tunnel failed. Exception '{ExceptionType}' retained classical authority.",
-                ex.GetType().Name);
+                "[QuantumTunnel] Synchronous tunnel failed ({Interpretation}). Exception '{ExceptionType}' retained classical authority.",
+                interpretation.Name, ex.GetType().Name);
             throw;
         }
     }

@@ -45,6 +45,7 @@ public static class ManyWorldsScheduler
         TimeSpan? jitterPerUniverse = null,
         IRandomProvider? randomProvider = null,
         IDelayProvider? delayProvider = null,
+        IQuantumInterpretation? interpretation = null,
         IProcrastiLogger? logger = null,
         CancellationToken cancellationToken = default)
     {
@@ -55,9 +56,10 @@ public static class ManyWorldsScheduler
 
         randomProvider ??= RandomProvider.Default;
         delayProvider ??= new TaskDelayProvider();
+        interpretation ??= QuantumInterpretations.Copenhagen;
         var jitter = jitterPerUniverse ?? TimeSpan.FromMilliseconds(5);
 
-        logger?.Info("[ManyWorlds] Spawning {Count} parallel universe(s). Each is equally real. Only one will matter.", universeCount);
+        logger?.Info("[ManyWorlds] Spawning {Count} parallel universe(s) under the {Interpretation} interpretation. Each is equally real. Only one will matter.", universeCount, interpretation.Name);
 
         using var collapseSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
@@ -89,11 +91,21 @@ public static class ManyWorldsScheduler
             if (first is Task<T> typedFirst && first.IsCompletedSuccessfully)
             {
                 var result = await typedFirst;
-                logger?.Info("[ManyWorlds] Timeline collapsed. {Remaining} alternate universe(s) decoherent.", remaining.Count);
 
-                // Signal remaining universes to stop.
-                collapseSource.Cancel();
-                await Task.WhenAll(remaining.Select(t => t.ContinueWith(_ => { }, TaskContinuationOptions.None)));
+                if (interpretation.ParallelTimelinesAreReal)
+                {
+                    // Many-Worlds: all universes are real — do not cancel surviving timelines.
+                    // Observe them to avoid unhandled exceptions, but let them complete.
+                    logger?.Info("[ManyWorlds] Prime timeline resolved. {Remaining} parallel universe(s) continue to exist ({Interpretation}).", remaining.Count, interpretation.Name);
+                    await Task.WhenAll(remaining.Select(t => t.ContinueWith(_ => { }, TaskContinuationOptions.None)));
+                }
+                else
+                {
+                    // Copenhagen et al.: collapse. Cancel and observe surviving universes.
+                    logger?.Info("[ManyWorlds] Timeline collapsed ({Interpretation}). {Remaining} alternate universe(s) decoherent.", interpretation.Name, remaining.Count);
+                    collapseSource.Cancel();
+                    await Task.WhenAll(remaining.Select(t => t.ContinueWith(_ => { }, TaskContinuationOptions.None)));
+                }
 
                 return result;
             }
@@ -123,6 +135,7 @@ public static class ManyWorldsScheduler
     /// <param name="jitterPerUniverse">Startup jitter per universe. Defaults to 5ms.</param>
     /// <param name="randomProvider">Random provider for jitter.</param>
     /// <param name="delayProvider">Optional delay provider.</param>
+    /// <param name="interpretation">Optional quantum interpretation. Defaults to <see cref="QuantumInterpretations.Copenhagen"/>.</param>
     /// <param name="logger">Optional logger.</param>
     /// <param name="cancellationToken">Cancels all universes.</param>
     public static Task<T> ScheduleAsync<T>(
@@ -131,6 +144,7 @@ public static class ManyWorldsScheduler
         TimeSpan? jitterPerUniverse = null,
         IRandomProvider? randomProvider = null,
         IDelayProvider? delayProvider = null,
+        IQuantumInterpretation? interpretation = null,
         IProcrastiLogger? logger = null,
         CancellationToken cancellationToken = default) =>
         ScheduleAsync<T>(
@@ -139,6 +153,7 @@ public static class ManyWorldsScheduler
             jitterPerUniverse,
             randomProvider,
             delayProvider,
+            interpretation,
             logger,
             cancellationToken);
 }
