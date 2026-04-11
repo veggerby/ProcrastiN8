@@ -60,6 +60,14 @@ public sealed class ProcrastinationHandle : IProcrastinationExecutionControl
         }
     }
 
+    internal void Fault(Exception exception)
+    {
+        if (!_tcs.Task.IsCompleted)
+        {
+            _tcs.TrySetException(exception);
+        }
+    }
+
     bool IProcrastinationExecutionControl.TriggerNowRequested => _triggerNow == 1;
     bool IProcrastinationExecutionControl.AbandonRequested => _abandon == 1;
 

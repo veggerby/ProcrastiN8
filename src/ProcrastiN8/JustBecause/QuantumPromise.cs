@@ -21,8 +21,8 @@ public sealed class QuantumPromise<T>(Func<Task<T>> lazyInitializer, TimeSpan sc
     private static readonly ActivitySource ActivitySource = new("ProcrastiN8.JustBecause.QuantumPromise");
 
     private readonly Lazy<Task<T>> _lazyInitializer = new Lazy<Task<T>>(lazyInitializer) ?? throw new ArgumentNullException(nameof(lazyInitializer));
-    private readonly ITimeProvider _timeProvider = timeProvider ?? new SystemTimeProvider();
-    private readonly DateTimeOffset _creationTime = (timeProvider ?? new SystemTimeProvider()).GetUtcNow();
+    private readonly ITimeProvider _timeProvider = timeProvider ?? SystemTimeProvider.Default;
+    private readonly DateTimeOffset _creationTime = (timeProvider ?? SystemTimeProvider.Default).GetUtcNow();
     private readonly IDelayStrategy _delayStrategy = delayStrategy ?? new DefaultDelayStrategy();
     private readonly IRandomProvider _randomProvider = randomProvider ?? RandomProvider.Default;
 

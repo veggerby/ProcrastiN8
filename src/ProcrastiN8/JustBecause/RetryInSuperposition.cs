@@ -76,7 +76,15 @@ public static class RetryInSuperposition
 
                 // Cancel surviving timelines and observe them to avoid unhandled task exceptions.
                 collapseSource.Cancel();
-                await Task.WhenAll(tasks.Select(t => t.ContinueWith(_ => { }, TaskContinuationOptions.None)));
+                await Task.WhenAll(tasks.Select(t => t.ContinueWith(
+                    discarded =>
+                    {
+                        if (discarded.IsFaulted)
+                        {
+                            logger?.Debug("[RetryInSuperposition] Discarded timeline faulted: {Exception}", discarded.Exception?.Message);
+                        }
+                    },
+                    TaskContinuationOptions.ExecuteSynchronously)));
 
                 return await completed;
             }

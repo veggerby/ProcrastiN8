@@ -43,7 +43,9 @@ public sealed class CopenhagenCollapseBehavior<T>(IObserverContext? context = nu
                 }
                 else
                 {
-                    try { await p.ObserveAsync(cancellationToken); } catch { /* Suppress exceptions for quantum harmony */ }
+                    try { await p.ObserveAsync(cancellationToken); }
+                    catch (OperationCanceledException) { throw; }
+                    catch { /* Suppress non-cancellation exceptions for quantum harmony */ }
                 }
             });
         await Task.WhenAll(collapseTasks);

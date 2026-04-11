@@ -145,9 +145,9 @@ public static class ProcrastinationScheduler
             {
                 handle.Complete(new ProcrastinationResult { Mode = mode, Executed = false });
             }
-            catch
+            catch (Exception ex)
             {
-                handle.Cancel();
+                handle.Fault(ex);
             }
         }, CancellationToken.None);
 

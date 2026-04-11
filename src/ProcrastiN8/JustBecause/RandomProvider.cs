@@ -5,14 +5,13 @@ namespace ProcrastiN8.JustBecause;
 /// </summary>
 /// <remarks>
 /// This provider ensures testability and consistency in randomness across ProcrastiN8 components.
+/// Uses <see cref="Random.Shared"/>, which is thread-safe for concurrent access.
 /// </remarks>
 public class RandomProvider : IRandomProvider
 {
-    private readonly Random _random = new();
-
     public static readonly IRandomProvider Default = new RandomProvider();
 
     private RandomProvider() { }
 
-    public double GetDouble() => _random.NextDouble();
+    public double GetDouble() => Random.Shared.NextDouble();
 }
