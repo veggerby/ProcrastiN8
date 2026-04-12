@@ -49,7 +49,25 @@ public class OpenAIExcuseProvider(string apiKey, HttpClient httpClient) : IExcus
         response.EnsureSuccessStatusCode();
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-        var jsonResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
-        return jsonResponse.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? "No excuse available.";
+        try
+        {
+            var jsonResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+            if (jsonResponse.ValueKind == JsonValueKind.Object &&
+                jsonResponse.TryGetProperty("choices", out var choices) &&
+                choices.ValueKind == JsonValueKind.Array &&
+                choices.GetArrayLength() > 0)
+            {
+                var firstChoice = choices[0];
+                if (firstChoice.ValueKind == JsonValueKind.Object &&
+                    firstChoice.TryGetProperty("message", out var message) &&
+                    message.ValueKind == JsonValueKind.Object &&
+                    message.TryGetProperty("content", out var content))
+                {
+                    return content.GetString() ?? "No excuse available.";
+                }
+            }
+        }
+        catch (JsonException) { }
+        return "No excuse available.";
     }
 }
