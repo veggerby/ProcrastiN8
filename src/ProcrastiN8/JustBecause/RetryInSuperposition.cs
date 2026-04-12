@@ -84,7 +84,9 @@ public static class RetryInSuperposition
                             logger?.Debug("[RetryInSuperposition] Discarded timeline faulted: {Exception}", discarded.Exception?.Message);
                         }
                     },
-                    TaskContinuationOptions.ExecuteSynchronously)));
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default)));
 
                 return await completed;
             }

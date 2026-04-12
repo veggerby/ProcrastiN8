@@ -52,12 +52,19 @@ public class OpenAIExcuseProvider(string apiKey, HttpClient httpClient) : IExcus
         try
         {
             var jsonResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
-            if (jsonResponse.TryGetProperty("choices", out var choices) &&
-                choices.GetArrayLength() > 0 &&
-                choices[0].TryGetProperty("message", out var message) &&
-                message.TryGetProperty("content", out var content))
+            if (jsonResponse.ValueKind == JsonValueKind.Object &&
+                jsonResponse.TryGetProperty("choices", out var choices) &&
+                choices.ValueKind == JsonValueKind.Array &&
+                choices.GetArrayLength() > 0)
             {
-                return content.GetString() ?? "No excuse available.";
+                var firstChoice = choices[0];
+                if (firstChoice.ValueKind == JsonValueKind.Object &&
+                    firstChoice.TryGetProperty("message", out var message) &&
+                    message.ValueKind == JsonValueKind.Object &&
+                    message.TryGetProperty("content", out var content))
+                {
+                    return content.GetString() ?? "No excuse available.";
+                }
             }
         }
         catch (JsonException) { }
